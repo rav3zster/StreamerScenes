@@ -184,7 +184,7 @@ export const BottomStatusBar: React.FC = () => {
 
       {/* OBS link */}
       <button
-        onClick={() => window.open('/obs', '_blank')}
+        onClick={() => window.open('/output', '_blank')}
         style={{ ...statusBtn, color: 'var(--color-cyan)', display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'none' }}
         title="Open OBS Output"
       >

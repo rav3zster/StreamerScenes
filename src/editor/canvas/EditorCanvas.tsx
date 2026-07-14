@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import Moveable from 'react-moveable';
 import { useEditorStore, type SceneWidget, type UserGuide } from '../../store/editorStore';
-import { WidgetRenderer } from './WidgetRenderer';
+import { WidgetRenderer } from '../../renderer/WidgetRenderer';
 
 export const CANVAS_W = 1920;
 export const CANVAS_H = 1080;
@@ -709,7 +709,7 @@ export const EditorCanvas: React.FC = () => {
                   overflow: 'hidden',
                   borderRadius: widget.style?.borderRadius ? `${widget.style.borderRadius}px` : 0
                 }}>
-                  <WidgetRenderer widget={widget} zoom={zoom} />
+                  <WidgetRenderer widget={widget} zoom={zoom} animated={false} />
                 </div>
 
                 {/* Bounding dimensions badge (Figma style) */}

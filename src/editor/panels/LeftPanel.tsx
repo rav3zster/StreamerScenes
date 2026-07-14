@@ -114,11 +114,11 @@ const ProjectsTab: React.FC = () => {
 
       <div className="output-url-card" style={{ marginBottom: 12 }}>
         <div className="output-url-label">OBS Web Endpoint</div>
-        <div className="output-url-text">http://localhost:5173/obs</div>
+        <div className="output-url-text">http://localhost:5173/output</div>
         <button
           className="btn btn-secondary"
           style={{ marginTop: 8, fontSize: 10, padding: '4px 10px', alignSelf: 'flex-start' }}
-          onClick={() => navigator.clipboard.writeText('http://localhost:5173/obs')}
+          onClick={() => navigator.clipboard.writeText('http://localhost:5173/output')}
         >
           Copy Endpoint URL
         </button>

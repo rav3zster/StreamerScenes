@@ -1,0 +1,70 @@
+import React from 'react';
+import type { WidgetProps } from '../types';
+import { buildBaseStyle, buildTextStyle } from '../../renderer/styleHelpers';
+
+interface MockMessage {
+  user: string;
+  text: string;
+  color: string;
+}
+
+const MOCK_MESSAGES: MockMessage[] = [
+  { user: 'StreamFan42',  text: 'POG that was insane!',        color: '#a855f7' },
+  { user: 'NightOwl99',   text: 'LUL LUL LUL',                color: '#5cffe2' },
+  { user: 'VibeMaster',   text: 'first time watching, love it!', color: '#f472b6' },
+  { user: 'retro_racer',  text: 'clip it clip it!!',            color: '#f59e0b' },
+  { user: 'glitchwave',   text: 'GGs this run was perfect',     color: '#ec4899' },
+  { user: 'catviewer',    text: ':) nice stream',                color: '#10b981' },
+];
+
+/**
+ * ChatBoxWidget — renders a simulated chat feed.
+ * In output mode this will be replaced by a real chat integration.
+ */
+export const ChatBoxWidget: React.FC<WidgetProps> = ({ widget, zoom }) => {
+  const { style: s, content } = widget;
+  const max = content.settings?.maxMessages ?? 8;
+  const messages = MOCK_MESSAGES.slice(0, max);
+
+  return (
+    <div
+      style={{
+        ...buildBaseStyle(s),
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        alignItems: 'flex-start',
+        gap: `${6 * zoom}px`,
+        padding: `${(s.padding ?? 12) * zoom}px`,
+        overflow: 'hidden',
+      }}
+    >
+      {messages.map((m, i) => (
+        <div key={i} style={{ display: 'flex', gap: `${5 * zoom}px`, alignItems: 'flex-start', maxWidth: '100%' }}>
+          <span
+            style={{
+              fontFamily: s.fontFamily ?? 'Inter, sans-serif',
+              fontSize: `${(s.fontSize ?? 13) * zoom}px`,
+              fontWeight: '700',
+              color: m.color,
+              flexShrink: 0,
+              lineHeight: 1.4,
+            }}
+          >
+            {m.user}:
+          </span>
+          <span
+            style={{
+              ...buildTextStyle(s, zoom),
+              fontSize: `${(s.fontSize ?? 13) * zoom}px`,
+              color: s.fontColor ?? '#e5e5e5',
+              lineHeight: 1.4,
+              textAlign: 'left',
+            }}
+          >
+            {m.text}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};

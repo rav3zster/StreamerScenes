@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
 
+import { persistenceService } from '../../persistence/persistenceService';
+
 export const TopToolbar: React.FC = () => {
   const {
     zoom, setZoom, zoomIn, zoomOut, resetView,
@@ -27,7 +29,13 @@ export const TopToolbar: React.FC = () => {
   const handleSave = () => {
     setSaveFlash(true);
     setTimeout(() => setSaveFlash(false), 1200);
-    // Project auto-saves via store — this is visual feedback only
+    persistenceService.saveProject({
+      projectName: useEditorStore.getState().projectName,
+      scenes: useEditorStore.getState().scenes,
+      liveSceneId: useEditorStore.getState().liveSceneId,
+      editingSceneId: useEditorStore.getState().editingSceneId,
+      updatedAt: Date.now(),
+    });
   };
 
   const handleGoLive = () => {
@@ -224,7 +232,7 @@ export const TopToolbar: React.FC = () => {
 
 // ── Preview Canvas ────────────────────────────────────────────────────────────
 import { CANVAS_W, CANVAS_H } from '../canvas/EditorCanvas';
-import { WidgetRenderer } from '../canvas/WidgetRenderer';
+import { SceneRenderer } from '../../renderer/SceneRenderer';
 
 const PreviewCanvas: React.FC = () => {
   const { getDraftWidgets } = useEditorStore();
@@ -237,21 +245,11 @@ const PreviewCanvas: React.FC = () => {
       position: 'relative', overflow: 'hidden',
       boxShadow: '0 0 0 1px rgba(255,255,255,0.1), 0 40px 100px rgba(0,0,0,0.8)',
     }}>
-      {[...widgets].sort((a, b) => a.zIndex - b.zIndex).map(w => (
-        <div key={w.id} style={{
-          position: 'absolute',
-          left: w.x * scale, top: w.y * scale,
-          width: w.width * scale, height: w.height * scale,
-          transform: `rotate(${w.rotation}deg)`,
-          opacity: w.visible ? w.opacity / 100 : 0,
-          zIndex: w.zIndex,
-          transformOrigin: 'top left',
-          overflow: 'hidden',
-          borderRadius: w.style?.borderRadius ? `${w.style.borderRadius * scale}px` : 0,
-        }}>
-          <WidgetRenderer widget={w} zoom={scale} />
-        </div>
-      ))}
+      <SceneRenderer
+        widgets={widgets}
+        zoom={scale}
+        animated={true}
+      />
     </div>
   );
 };

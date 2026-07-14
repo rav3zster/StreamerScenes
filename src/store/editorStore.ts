@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { STREAM_PACKS } from '../data/streamPacks';
+import { persistenceService } from '../persistence/persistenceService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -210,6 +211,9 @@ interface EditorState {
 
   // Apply preset
   applyPreset: (widgets: Omit<SceneWidget, 'id'>[]) => void;
+
+  // Load project data
+  loadProjectData: (data: { projectName: string; scenes: Scene[]; liveSceneId: string | null; editingSceneId: string | null; }) => void;
 }
 
 export type LeftTab = 'projects' | 'scenes' | 'layers' | 'assets' | 'widgets' | 'presets' | 'design-systems';
@@ -217,6 +221,27 @@ export type LeftTab = 'projects' | 'scenes' | 'layers' | 'assets' | 'widgets' | 
 const MAX_HISTORY = 50;
 
 const makeId = () => `w-${crypto.randomUUID()}`;
+
+// ─── Inspector History Debounce ───────────────────────────────────────────────
+// Tracks whether we are mid-"edit session" for inspector changes.
+// The session starts on the first updateWidget call (when not dragging/resizing)
+// and resets after 600ms of inactivity. History is pushed ONCE at session start,
+// capturing the before-state, so Ctrl+Z reverts the full change batch.
+let _editSessionActive = false;
+let _editSessionTimer: ReturnType<typeof setTimeout> | null = null;
+
+function _beginEditSession(pushFn: () => void, isDragging: boolean, isResizing: boolean) {
+  if (isDragging || isResizing) return; // drag-end handles its own history
+  if (!_editSessionActive) {
+    _editSessionActive = true;
+    pushFn(); // capture before-state
+  }
+  if (_editSessionTimer) clearTimeout(_editSessionTimer);
+  _editSessionTimer = setTimeout(() => {
+    _editSessionActive = false;
+    _editSessionTimer = null;
+  }, 600);
+}
 
 function _pushHistory(
   history: Record<string, SceneWidget[][]>,
@@ -405,8 +430,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   updateWidget: (id, updates) => {
-    const { editingSceneId } = get();
+    const { editingSceneId, isDragging, isResizing } = get();
     if (!editingSceneId) return;
+    _beginEditSession(get().pushHistory, isDragging, isResizing);
     set(s => ({
       scenes: s.scenes.map(sc =>
         sc.id === editingSceneId
@@ -717,4 +743,22 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       selectedIds: [],
     }));
   },
+
+  loadProjectData: (data) => set({
+    projectName: data.projectName,
+    scenes: data.scenes,
+    liveSceneId: data.liveSceneId,
+    editingSceneId: data.editingSceneId,
+    isWelcomeActive: false,
+  }),
 }));
+
+useEditorStore.subscribe((state) => {
+  persistenceService.triggerAutoSave(() => ({
+    projectName: state.projectName,
+    scenes: state.scenes,
+    liveSceneId: state.liveSceneId,
+    editingSceneId: state.editingSceneId,
+    updatedAt: Date.now(),
+  }));
+});

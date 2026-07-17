@@ -103,6 +103,17 @@ export const TopToolbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [fileMenuOpen]);
 
+  // Listen for Escape key on window to exit preview mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showPreviewMode) {
+        togglePreviewMode();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPreviewMode, togglePreviewMode]);
+
   return (
     <div className="top-toolbar">
       {/* ── File Menu ────────────────────────────────────────────── */}
@@ -318,29 +329,35 @@ export const TopToolbar: React.FC = () => {
       {/* Preview Mode Overlay */}
       {showPreviewMode && (
         <div
+          onClick={togglePreviewMode}
           style={{
             position: 'fixed', inset: 0, zIndex: 9999,
-            background: '#000',
+            background: 'rgba(0,0,0,0.95)',
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
+            cursor: 'zoom-out',
           }}
-          onKeyDown={e => { if (e.key === 'Escape') togglePreviewMode(); }}
-          tabIndex={0}
+          title="Click background to exit preview"
         >
-          <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10000, display: 'flex', gap: 8 }}>
+          <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10000, display: 'flex', gap: 8 }} onClick={e => e.stopPropagation()}>
             <button
               onClick={togglePreviewMode}
               style={{
-                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff', borderRadius: 8, padding: '6px 16px', cursor: 'pointer',
-                fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-sans)',
+                background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+                color: '#fff', borderRadius: 8, padding: '8px 18px', cursor: 'pointer',
+                fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-sans)',
                 display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'all var(--transition-fast)',
               }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
             >
-              <Maximize2 size={13} /> Exit Preview
+              <Maximize2 size={13} /> Exit Preview (Esc)
             </button>
           </div>
-          <PreviewCanvas />
+          <div onClick={e => e.stopPropagation()} style={{ cursor: 'default' }}>
+            <PreviewCanvas />
+          </div>
         </div>
       )}
     </div>

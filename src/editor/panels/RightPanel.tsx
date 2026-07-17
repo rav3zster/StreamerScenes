@@ -179,6 +179,9 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
       {/* Main sections */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
         
+        {/* Dynamic widget content settings */}
+        <WidgetSettingsSection widget={widget} />
+
         {/* General options */}
         <InspectorSection title="General" icon={<Settings2 size={12} />} defaultOpen>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -591,4 +594,348 @@ const ColorPickerPanel: React.FC<ColorPickerPanelProps> = ({ label, value, onCha
       )}
     </div>
   );
+};
+
+// ─── Widget-Specific Content Settings ──────────────────────────────────────────
+
+const WidgetSettingsSection: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
+  const { updateWidget } = useEditorStore();
+  const uc = (settings: Record<string, any>) => {
+    updateWidget(widget.id, {
+      content: {
+        ...widget.content,
+        settings: {
+          ...(widget.content.settings || {}),
+          ...settings,
+        },
+      },
+    });
+  };
+
+  const settings = widget.content.settings || {};
+
+  switch (widget.type) {
+    case 'text':
+    case 'animated-text':
+    case 'typing-text':
+    case 'now-playing-text':
+      return (
+        <InspectorSection title="Text Content" icon={<Type size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Display Text</div>
+            <textarea
+              className="input"
+              value={settings.text ?? ''}
+              onChange={e => uc({ text: e.target.value })}
+              style={{ width: '100%', minHeight: 60, padding: 8, fontSize: 12, fontFamily: 'inherit', resize: 'vertical' }}
+              placeholder="Enter text..."
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'scrolling-text':
+      return (
+        <InspectorSection title="Scrolling Text" icon={<Type size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Display Text</div>
+            <textarea
+              className="input"
+              value={settings.text ?? ''}
+              onChange={e => uc({ text: e.target.value })}
+              style={{ width: '100%', minHeight: 60, padding: 8, fontSize: 12, fontFamily: 'inherit', resize: 'vertical' }}
+              placeholder="Enter text..."
+            />
+          </div>
+          <div className="input-group" style={{ marginTop: 6 }}>
+            <div className="input-group-label">Scroll Speed</div>
+            <input
+              type="number"
+              className="input"
+              value={settings.speed ?? 50}
+              onChange={e => uc({ speed: parseInt(e.target.value) || 0 })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'countdown-timer':
+      return (
+        <InspectorSection title="Countdown Settings" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Duration (seconds)</div>
+            <input
+              type="number"
+              className="input"
+              value={settings.duration ?? 600}
+              onChange={e => uc({ duration: parseInt(e.target.value) || 0 })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600 }}>Paused</span>
+            <ToggleRow value={!!settings.paused} onChange={v => uc({ paused: v })} label={settings.paused ? 'Paused' : 'Counting'} />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'latest-follower':
+    case 'latest-subscriber':
+    case 'latest-donation':
+      return (
+        <InspectorSection title="Event Settings" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Header Label</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.label ?? ''}
+              onChange={e => uc({ label: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="Latest Follower"
+            />
+          </div>
+          <div className="input-group" style={{ marginTop: 6 }}>
+            <div className="input-group-label">Username</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.username ?? ''}
+              onChange={e => uc({ username: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="Username"
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'goal-counter':
+    case 'goal-bar':
+      return (
+        <InspectorSection title="Goal Settings" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Goal Label</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.label ?? ''}
+              onChange={e => uc({ label: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="Follower Goal"
+            />
+          </div>
+          <div className="input-row" style={{ marginTop: 6 }}>
+            <div className="input-with-label" style={{ flex: 1 }}>
+              <input
+                type="number"
+                className="input"
+                value={settings.current ?? 0}
+                onChange={e => uc({ current: parseInt(e.target.value) || 0 })}
+                style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              />
+              <span className="input-sub-label">Current</span>
+            </div>
+            <div className="input-with-label" style={{ flex: 1 }}>
+              <input
+                type="number"
+                className="input"
+                value={settings.target ?? 100}
+                onChange={e => uc({ target: parseInt(e.target.value) || 0 })}
+                style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              />
+              <span className="input-sub-label">Target Goal</span>
+            </div>
+          </div>
+        </InspectorSection>
+      );
+
+    case 'chat-box':
+      return (
+        <InspectorSection title="Chat Settings" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Max Messages Displayed</div>
+            <input
+              type="number"
+              className="input"
+              value={settings.maxMessages ?? 8}
+              onChange={e => uc({ maxMessages: parseInt(e.target.value) || 0 })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'spotify':
+      return (
+        <InspectorSection title="Now Playing Content" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Track Title</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.trackName ?? ''}
+              onChange={e => uc({ trackName: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="Track Title"
+            />
+          </div>
+          <div className="input-group" style={{ marginTop: 6 }}>
+            <div className="input-group-label">Artist Name</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.artistName ?? ''}
+              onChange={e => uc({ artistName: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="Artist"
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'badge':
+      return (
+        <InspectorSection title="Badge Content" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Badge Text / Icon</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.badgeText ?? settings.text ?? ''}
+              onChange={e => uc({ badgeText: e.target.value, text: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="☕ or Label"
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'camera-frame':
+      return (
+        <InspectorSection title="Camera Settings" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Frame Label</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.frameLabel ?? ''}
+              onChange={e => uc({ frameLabel: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="e.g. CAMERA, LIVE"
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'image':
+    case 'gif':
+      return (
+        <InspectorSection title="Image Source" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Image URL / Source</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.url ?? ''}
+              onChange={e => uc({ url: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="https://example.com/image.png"
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'video':
+      return (
+        <InspectorSection title="Video Source" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Video URL / MP4 Source</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.url ?? ''}
+              onChange={e => uc({ url: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="https://example.com/video.mp4"
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'social-links': {
+      const links = settings.links ?? [
+        { platform: 'twitch', handle: '/yourchannel' },
+        { platform: 'twitter', handle: '@yourhandle' },
+        { platform: 'discord', handle: 'discord.gg/xyz' },
+      ];
+      const getHandle = (plat: string) => links.find((l: any) => l.platform === plat)?.handle ?? '';
+      const setHandle = (plat: string, val: string) => {
+        let newLinks = [...links];
+        const idx = newLinks.findIndex((l: any) => l.platform === plat);
+        if (idx >= 0) {
+          if (val === '') {
+            newLinks.splice(idx, 1);
+          } else {
+            newLinks[idx] = { ...newLinks[idx], handle: val };
+          }
+        } else if (val !== '') {
+          newLinks.push({ platform: plat, handle: val });
+        }
+        uc({ links: newLinks });
+      };
+
+      return (
+        <InspectorSection title="Social Handles" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Twitch</div>
+            <input
+              type="text"
+              className="input"
+              value={getHandle('twitch')}
+              onChange={e => setHandle('twitch', e.target.value)}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="/yourchannel"
+            />
+          </div>
+          <div className="input-group" style={{ marginTop: 6 }}>
+            <div className="input-group-label">Twitter / X</div>
+            <input
+              type="text"
+              className="input"
+              value={getHandle('twitter')}
+              onChange={e => setHandle('twitter', e.target.value)}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="@yourhandle"
+            />
+          </div>
+          <div className="input-group" style={{ marginTop: 6 }}>
+            <div className="input-group-label">Discord Link</div>
+            <input
+              type="text"
+              className="input"
+              value={getHandle('discord')}
+              onChange={e => setHandle('discord', e.target.value)}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="discord.gg/xyz"
+            />
+          </div>
+          <div className="input-group" style={{ marginTop: 6 }}>
+            <div className="input-group-label">YouTube</div>
+            <input
+              type="text"
+              className="input"
+              value={getHandle('youtube')}
+              onChange={e => setHandle('youtube', e.target.value)}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="/c/yourchannel"
+            />
+          </div>
+        </InspectorSection>
+      );
+    }
+
+    default:
+      return null;
+  }
 };

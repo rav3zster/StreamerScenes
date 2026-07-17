@@ -785,3 +785,40 @@ html, body, #root {
   --color-bg: #0b1625; --color-surface: #122238; --color-surface-2: #192e4a; --color-surface-3: #223c5e;
   --color-accent: #f5831f; --color-border: rgba(135,206,235,0.15); --color-border-hover: #87ceeb; --color-border-active: #f5831f;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIGHT MODE EDITOR CHROME OVERRIDES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.app-shell.theme-editor-light {
+  --color-bg:           #f3f4f6 !important;
+  --color-surface:      #ffffff !important;
+  --color-surface-2:    #f9fafb !important;
+  --color-surface-3:    #f3f4f6 !important;
+  --color-border:       #e5e7eb !important;
+  --color-border-hover: #d1d5db !important;
+  --color-border-active:#9ca3af !important;
+
+  --color-text:      #111827 !important;
+  --color-text-2:    #374151 !important;
+  --color-text-3:    #4b5563 !important;
+  --color-text-muted:#9ca3af !important;
+}
+
+/* Override glassmorphism elements in light mode so contrast is clear */
+.app-shell.theme-editor-light.theme-glassmorphism .left-panel,
+.app-shell.theme-editor-light.theme-glassmorphism .right-panel,
+.app-shell.theme-editor-light.theme-glassmorphism .top-toolbar {
+  background: rgba(255,255,255,0.8) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+.app-shell.theme-editor-light .sidebar-btn:hover {
+  background: rgba(0,0,0,0.05) !important;
+}
+
+.app-shell.theme-editor-light .sidebar-btn.active {
+  background: rgba(0,0,0,0.08) !important;
+  color: var(--color-accent) !important;
+}
+

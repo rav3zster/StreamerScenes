@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Undo2, Redo2, ZoomIn, ZoomOut, Grid3x3, Magnet, Ruler,
   Eye, Save, Radio, ChevronRight, Layers, Maximize2,
+  ChevronDown, FolderOpen, FilePlus, Sun, Moon, Monitor as MonitorIcon,
+  Download, Copy,
 } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
 
@@ -14,9 +16,14 @@ export const TopToolbar: React.FC = () => {
     canUndo, canRedo, undo, redo,
     scenes, editingSceneId, liveSceneId, setLiveScene,
     projectName, showPreviewMode, togglePreviewMode,
+    setAppView,
   } = useEditorStore();
 
   const [saveFlash, setSaveFlash] = useState(false);
+  const [fileMenuOpen, setFileMenuOpen] = useState(false);
+  const [editorTheme, setEditorTheme] = useState<'dark' | 'light'>('dark');
+  const fileMenuRef = useRef<HTMLDivElement>(null);
+
   const editingScene = scenes.find(s => s.id === editingSceneId);
   const isLive = editingSceneId === liveSceneId;
   const zoomPct = Math.round(zoom * 100);
@@ -42,22 +49,119 @@ export const TopToolbar: React.FC = () => {
     if (editingSceneId) setLiveScene(editingSceneId);
   };
 
+  const handleNewProject = () => {
+    setFileMenuOpen(false);
+    setAppView('welcome');
+  };
+
+  const handleBrowsePacks = () => {
+    setFileMenuOpen(false);
+    setAppView('pack-browser');
+  };
+
+  const handleExport = () => {
+    setFileMenuOpen(false);
+    const state = useEditorStore.getState();
+    const data = JSON.stringify({
+      projectName: state.projectName,
+      scenes: state.scenes,
+      liveSceneId: state.liveSceneId,
+      editingSceneId: state.editingSceneId,
+      exportedAt: new Date().toISOString(),
+    }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${state.projectName.replace(/\s+/g, '-')}.vibe.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopyOBS = () => {
+    setFileMenuOpen(false);
+    navigator.clipboard.writeText('http://localhost:5173/output');
+  };
+
+  const toggleEditorTheme = () => {
+    const next = editorTheme === 'dark' ? 'light' : 'dark';
+    setEditorTheme(next);
+    const shell = document.querySelector('.app-shell');
+    if (shell) {
+      shell.classList.toggle('theme-editor-light', next === 'light');
+    }
+  };
+
+  // Close file menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (fileMenuRef.current && !fileMenuRef.current.contains(e.target as Node)) {
+        setFileMenuOpen(false);
+      }
+    };
+    if (fileMenuOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [fileMenuOpen]);
+
   return (
     <div className="top-toolbar">
-      {/* ── Logo + Brand ─────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 4, flexShrink: 0 }}>
+      {/* ── File Menu ────────────────────────────────────────────── */}
+      <div ref={fileMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+        <button
+          id="toolbar-file-menu"
+          onClick={() => setFileMenuOpen(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            background: fileMenuOpen ? 'var(--color-surface-2)' : 'transparent',
+            border: '1px solid transparent',
+            borderRadius: 7, padding: '5px 10px',
+            color: fileMenuOpen ? 'var(--color-text)' : 'var(--color-text-2)',
+            fontSize: 12, fontWeight: 600,
+            cursor: 'pointer', transition: 'all 100ms ease',
+            fontFamily: 'var(--font-sans)',
+          }}
+          onMouseEnter={e => { if (!fileMenuOpen) e.currentTarget.style.background = 'var(--color-surface-2)'; }}
+          onMouseLeave={e => { if (!fileMenuOpen) e.currentTarget.style.background = 'transparent'; }}
+        >
+          File <ChevronDown size={11} />
+        </button>
+
+        {fileMenuOpen && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 6px)', left: 0,
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 10, padding: '5px',
+            boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
+            minWidth: 200, zIndex: 99999,
+            animation: 'slide-up 150ms ease',
+          }}>
+            <FileMenuItem icon={<FilePlus size={13} />} label="New Project" shortcut="⌘N" onClick={handleNewProject} />
+            <FileMenuItem icon={<FolderOpen size={13} />} label="Browse Broadcast Packs" onClick={handleBrowsePacks} />
+            <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
+            <FileMenuItem icon={<Save size={13} />} label="Save" shortcut="⌘S" onClick={() => { handleSave(); setFileMenuOpen(false); }} />
+            <FileMenuItem icon={<Download size={13} />} label="Export Project (.json)" onClick={handleExport} />
+            <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
+            <FileMenuItem icon={<Copy size={13} />} label="Copy OBS Endpoint URL" onClick={handleCopyOBS} />
+            <FileMenuItem icon={<MonitorIcon size={13} />} label="Open OBS Output" onClick={() => { setFileMenuOpen(false); window.open('/output', '_blank'); }} />
+          </div>
+        )}
+      </div>
+
+      {/* ── Logo + Brand ─────────────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 4, marginRight: 4, flexShrink: 0 }}>
         <div style={{
-          width: 30, height: 30, borderRadius: 8,
+          width: 26, height: 26, borderRadius: 7,
           background: 'linear-gradient(135deg,#a855f7,#ec4899)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 12px rgba(168,85,247,0.4)',
-          fontSize: 14, flexShrink: 0,
+          boxShadow: '0 0 10px rgba(168,85,247,0.4)',
+          fontSize: 13, flexShrink: 0,
         }}>
           ⚡
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 800, color: 'var(--color-text)', letterSpacing: -0.3 }}>VibeOverlay</span>
-          <span style={{ fontSize: 9, color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: 0.5 }}>STUDIO</span>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: 11, fontWeight: 800, color: 'var(--color-text)', letterSpacing: -0.3 }}>VibeOverlay</span>
+          <span style={{ fontSize: 8, color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: 0.5 }}>STUDIO</span>
         </div>
       </div>
 
@@ -149,7 +253,19 @@ export const TopToolbar: React.FC = () => {
       <div className="toolbar-spacer" />
 
       {/* ── Right actions ──────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* Editor theme toggle */}
+        <button
+          id="toolbar-theme-toggle"
+          className="btn-icon"
+          onClick={toggleEditorTheme}
+          title={editorTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {editorTheme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+        </button>
+
+        <div className="toolbar-divider" />
+
         {/* Preview */}
         <button
           className={`btn btn-secondary${showPreviewMode ? ' active' : ''}`}
@@ -174,6 +290,7 @@ export const TopToolbar: React.FC = () => {
 
         {/* Go Live */}
         <button
+          id="toolbar-go-live"
           onClick={handleGoLive}
           disabled={!editingSceneId}
           style={{
@@ -229,6 +346,34 @@ export const TopToolbar: React.FC = () => {
     </div>
   );
 };
+
+// ── File Menu Item ────────────────────────────────────────────────────────────
+
+const FileMenuItem: React.FC<{ icon: React.ReactNode; label: string; shortcut?: string; onClick: () => void }> = ({ icon, label, shortcut, onClick }) => (
+  <button
+    onClick={onClick}
+    style={{
+      display: 'flex', alignItems: 'center', gap: 9,
+      width: '100%', padding: '7px 10px', borderRadius: 6,
+      background: 'transparent', border: 'none',
+      color: 'var(--color-text-2)', fontSize: 12, fontWeight: 500,
+      cursor: 'pointer', transition: 'all 100ms ease',
+      fontFamily: 'var(--font-sans)', textAlign: 'left',
+    }}
+    onMouseEnter={e => {
+      e.currentTarget.style.background = 'var(--color-surface-2)';
+      e.currentTarget.style.color = 'var(--color-text)';
+    }}
+    onMouseLeave={e => {
+      e.currentTarget.style.background = 'transparent';
+      e.currentTarget.style.color = 'var(--color-text-2)';
+    }}
+  >
+    <span style={{ color: 'var(--color-text-muted)', flexShrink: 0 }}>{icon}</span>
+    <span style={{ flex: 1 }}>{label}</span>
+    {shortcut && <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{shortcut}</span>}
+  </button>
+);
 
 // ── Preview Canvas ────────────────────────────────────────────────────────────
 import { CANVAS_W, CANVAS_H } from '../canvas/EditorCanvas';

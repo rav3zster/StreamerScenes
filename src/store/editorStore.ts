@@ -110,9 +110,10 @@ interface EditorState {
   scenes: Scene[];
   liveSceneId: string | null;
 
-  // Onboarding wizard
-  isWelcomeActive: boolean;
-  selectedPackId: string | null;
+  // App navigation
+  appView: AppView;
+  selectedPackId: string | null;   // committed pack (used in project)
+  previewPackId: string | null;    // browsing/detail page pack
 
   // Canvas Options
   zoom: number;
@@ -208,6 +209,8 @@ interface EditorState {
   setIsDragging: (v: boolean) => void;
   setIsResizing: (v: boolean) => void;
   togglePreviewMode: () => void;
+  setAppView: (view: AppView) => void;
+  setPreviewPackId: (id: string | null) => void;
 
   // Apply preset
   applyPreset: (widgets: Omit<SceneWidget, 'id'>[]) => void;
@@ -216,7 +219,8 @@ interface EditorState {
   loadProjectData: (data: { projectName: string; scenes: Scene[]; liveSceneId: string | null; editingSceneId: string | null; }) => void;
 }
 
-export type LeftTab = 'projects' | 'scenes' | 'layers' | 'assets' | 'widgets' | 'presets' | 'design-systems';
+export type LeftTab = 'scenes' | 'layers' | 'assets' | 'widgets';
+export type AppView = 'welcome' | 'pack-browser' | 'pack-detail' | 'editor';
 
 const MAX_HISTORY = 50;
 
@@ -292,9 +296,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   scenes: [],
   liveSceneId: null,
 
-  // Onboarding default state
-  isWelcomeActive: true,
+  // App navigation
+  appView: 'welcome',
   selectedPackId: null,
+  previewPackId: null,
 
   // Canvas Options defaults
   zoom: 0.5,
@@ -367,8 +372,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       projectName,
       scenes: instantiatedScenes,
       editingSceneId: instantiatedScenes[0]?.id || null,
-      isWelcomeActive: false,
+      appView: 'editor',
       selectedPackId: packId,
+      previewPackId: null,
       selectedIds: [],
     });
 
@@ -718,6 +724,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setIsDragging: (v) => set({ isDragging: v }),
   setIsResizing: (v) => set({ isResizing: v }),
   togglePreviewMode: () => set(s => ({ showPreviewMode: !s.showPreviewMode, selectedIds: [] })),
+  setAppView: (view) => set({ appView: view }),
+  setPreviewPackId: (id) => set({ previewPackId: id }),
 
   // ── Apply Preset ─────────────────────────────────────────────────────────────
 
@@ -749,7 +757,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     scenes: data.scenes,
     liveSceneId: data.liveSceneId,
     editingSceneId: data.editingSceneId,
-    isWelcomeActive: false,
+    appView: 'editor',
   }),
 }));
 

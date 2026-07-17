@@ -4,26 +4,27 @@ import { RightPanel } from '../editor/panels/RightPanel';
 import { EditorCanvas } from '../editor/canvas/EditorCanvas';
 import { TopToolbar } from '../editor/toolbar/TopToolbar';
 import { BottomStatusBar } from '../editor/toolbar/BottomStatusBar';
-import { WelcomeWizard } from '../components/WelcomeWizard';
 import { useEditorStore } from '../store/editorStore';
 import { persistenceService } from '../persistence/persistenceService';
 
 export const EditorPage: React.FC = () => {
-  const { isWelcomeActive } = useEditorStore();
+  const { appView, loadProjectData } = useEditorStore();
 
   useEffect(() => {
-    persistenceService.loadProject().then(data => {
-      if (data) {
-        useEditorStore.getState().loadProjectData(data);
-      }
-    });
+    // Only attempt to load a saved project on first mount when still on welcome view
+    if (appView === 'welcome') {
+      persistenceService.loadProject().then(data => {
+        if (data && data.scenes && data.scenes.length > 0) {
+          // Don't auto-load into editor — let WelcomePage handle this choice
+          // Data is available if user clicks "Continue"
+        }
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {/* Welcome Wizard Onboarding Page */}
-      {isWelcomeActive && <WelcomeWizard />}
-
       {/* Top Toolbar — full width */}
       <TopToolbar />
 

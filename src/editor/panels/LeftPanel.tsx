@@ -1,26 +1,21 @@
 import React, { useState, useRef } from 'react';
 import {
-  FolderOpen, Film, Layers, Image, Layout, Palette, Cpu,
+  Film, Layers, Image, Layout,
   Plus, Trash2, Eye, EyeOff, Lock, Unlock, GripVertical,
-  Search, ChevronDown, ChevronUp, CheckCircle, Copy, Heart, Clock,
+  Search, ChevronDown, ChevronUp, Copy, Heart, Clock,
 } from 'lucide-react';
 import { useEditorStore, type LeftTab, type SceneWidget } from '../../store/editorStore';
 import { WIDGET_CATEGORIES } from '../../data/widgetCatalog';
 import { WIDGET_TEMPLATES } from '../../data/widgetTemplates';
-import { PRESETS, PRESET_CATEGORIES } from '../../data/presets';
-import { DESIGN_SYSTEMS } from '../../data/designSystems';
 import { MOCK_ASSETS, type VisualAsset } from '../../data/assets';
 
 // ─── Sidebar Rail ─────────────────────────────────────────────────────────────
 
 const TABS: { id: LeftTab; icon: React.ReactNode; label: string }[] = [
-  { id: 'projects', icon: <FolderOpen size={16} />, label: 'Project' },
   { id: 'scenes', icon: <Film size={16} />, label: 'Scenes' },
   { id: 'layers', icon: <Layers size={16} />, label: 'Layers' },
   { id: 'assets', icon: <Image size={16} />, label: 'Assets' },
   { id: 'widgets', icon: <Layout size={16} />, label: 'Add' },
-  { id: 'presets', icon: <Cpu size={16} />, label: 'Presets' },
-  { id: 'design-systems', icon: <Palette size={16} />, label: 'Design' },
 ];
 
 export const SidebarRail: React.FC = () => {
@@ -53,23 +48,17 @@ export const LeftPanel: React.FC = () => {
   const { leftTab } = useEditorStore();
 
   const content: Record<LeftTab, React.ReactNode> = {
-    'projects': <ProjectsTab />,
     'scenes': <ScenesTab />,
     'layers': <LayersTab />,
     'assets': <AssetsTab />,
     'widgets': <WidgetsTab />,
-    'presets': <PresetsTab />,
-    'design-systems': <DesignSystemsTab />,
   };
 
   const labels: Record<LeftTab, string> = {
-    projects: 'Project Info',
     scenes: 'Scene Manager',
     layers: 'Layers Outline',
     assets: 'Assets Browser',
     widgets: 'Widget Library',
-    presets: 'Preset Templates',
-    'design-systems': 'Design Systems',
   };
 
   return (
@@ -84,52 +73,7 @@ export const LeftPanel: React.FC = () => {
   );
 };
 
-// ─── Projects Tab ─────────────────────────────────────────────────────────────
-
-const ProjectsTab: React.FC = () => {
-  const { projectName, scenes } = useEditorStore();
-  const [name, setName] = useState(projectName);
-
-  return (
-    <div className="panel-body">
-      <div className="project-info-card" style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>Project Name</label>
-          <input
-            className="input"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="My Stream Overlay"
-          />
-        </div>
-        <div className="project-stat">
-          <span className="project-stat-label">Scenes Count</span>
-          <span className="project-stat-value">{scenes.length}</span>
-        </div>
-        <div className="project-stat">
-          <span className="project-stat-label">Target Area</span>
-          <span className="project-stat-value">1920×1080 (16:9)</span>
-        </div>
-      </div>
-
-      <div className="output-url-card" style={{ marginBottom: 12 }}>
-        <div className="output-url-label">OBS Web Endpoint</div>
-        <div className="output-url-text">http://localhost:5173/output</div>
-        <button
-          className="btn btn-secondary"
-          style={{ marginTop: 8, fontSize: 10, padding: '4px 10px', alignSelf: 'flex-start' }}
-          onClick={() => navigator.clipboard.writeText('http://localhost:5173/output')}
-        >
-          Copy Endpoint URL
-        </button>
-      </div>
-
-      <button className="btn btn-secondary" style={{ width: '100%', fontSize: 11, justifyContent: 'flex-start', gap: 8 }}>
-        <FolderOpen size={13} /> Export Stream Scenes
-      </button>
-    </div>
-  );
-};
+// ─── (ProjectsTab removed — project management moved to File menu) ────────────
 
 // ─── Scenes Tab ───────────────────────────────────────────────────────────────
 
@@ -620,151 +564,9 @@ const WidgetsTab: React.FC = () => {
   );
 };
 
-// ─── Presets Tab ─────────────────────────────────────────────────────────────
+// ─── (PresetsTab removed — presets are now part of Broadcast Packs) ──────────
 
-const PresetsTab: React.FC = () => {
-  const { applyPreset } = useEditorStore();
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [applying, setApplying] = useState<string | null>(null);
-
-  const filtered = activeCategory === 'All'
-    ? PRESETS
-    : PRESETS.filter(p => p.category === activeCategory);
-
-  const handleApply = (preset: typeof PRESETS[0]) => {
-    setApplying(preset.id);
-    applyPreset(preset.widgets as Parameters<typeof applyPreset>[0]);
-    setTimeout(() => setApplying(null), 1200);
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <div style={{ padding: '8px 12px', overflowX: 'auto', flexShrink: 0 }}>
-        <div className="category-pills" style={{ flexWrap: 'nowrap', paddingBottom: 2 }}>
-          {PRESET_CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              className={`category-pill${activeCategory === cat ? ' active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {filtered.map(preset => (
-          <div key={preset.id} className="preset-card">
-            <div className="preset-preview" style={{ background: preset.bgColors[0] }}>
-              <div style={{
-                width: '100%', height: '100%',
-                background: `linear-gradient(135deg,${preset.bgColors[0]},${preset.bgColors[1]})`,
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}>
-                <div style={{
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontSize: 11, fontWeight: 800,
-                  color: preset.accentColor,
-                  textTransform: 'uppercase',
-                  letterSpacing: 2,
-                  textShadow: `0 0 12px ${preset.accentColor}80`,
-                  textAlign: 'center',
-                  marginTop: 20,
-                }}>
-                  {preset.name}
-                </div>
-              </div>
-
-              <div className="preset-preview-overlay">
-                <button
-                  className="btn btn-primary"
-                  style={{ fontSize: 11 }}
-                  onClick={() => handleApply(preset)}
-                >
-                  {applying === preset.id ? <><CheckCircle size={13} /> Applied!</> : 'Apply Preset'}
-                </button>
-              </div>
-            </div>
-
-            <div className="preset-body">
-              <div className="preset-name">{preset.name}</div>
-              <div className="preset-desc">{preset.desc}</div>
-              <div className="preset-color-dots">
-                {[preset.accentColor, preset.bgColors[0], preset.bgColors[1]].map((c, i) => (
-                  <div key={i} className="preset-color-dot" style={{ background: c }} />
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ─── Design Systems Tab ───────────────────────────────────────────────────────
-
-const DesignSystemsTab: React.FC = () => {
-  const [activeTheme, setActiveTheme] = useState('cyber-synth');
-
-  const handleApply = (ds: typeof DESIGN_SYSTEMS[0]) => {
-    setActiveTheme(ds.id);
-    const shell = document.querySelector('.app-shell');
-    if (shell) {
-      DESIGN_SYSTEMS.forEach(d => shell.classList.remove(`theme-${d.id}`));
-      shell.classList.add(`theme-${ds.id}`);
-    }
-  };
-
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {DESIGN_SYSTEMS.map(ds => (
-        <div
-          key={ds.id}
-          className={`design-system-card${activeTheme === ds.id ? ' active' : ''}`}
-          onClick={() => handleApply(ds)}
-        >
-          <div className="design-system-preview" style={{ background: ds.previewBg }}>
-            <div style={{
-              width: '100%', height: '100%',
-              background: ds.previewBg,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'flex-start', justifyContent: 'flex-end',
-              padding: '8px 10px',
-            }}>
-              <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
-                <div style={{ width: 28, height: 4, borderRadius: 99, background: ds.accentColor, opacity: 0.9 }} />
-                <div style={{ width: 16, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.15)' }} />
-              </div>
-              <div style={{ fontSize: 9, fontFamily: ds.fontFamily, fontWeight: 700, color: ds.accentColor, letterSpacing: 1, textTransform: 'uppercase' }}>
-                {ds.name}
-              </div>
-            </div>
-
-            {activeTheme === ds.id && (
-              <div className="design-system-check">
-                <CheckCircle size={12} color="white" fill="white" />
-              </div>
-            )}
-          </div>
-
-          <div className="design-system-body">
-            <div className="design-system-name">{ds.name}</div>
-            <div className="design-system-desc">{ds.desc}</div>
-            <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: ds.accentColor, border: '1px solid rgba(255,255,255,0.15)' }} />
-              <span style={{ fontSize: 9, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginLeft: 2 }}>
-                {ds.borderRadius} • {ds.fontFamily}
-              </span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
+// ─── (DesignSystemsTab removed — design systems live inside Broadcast Packs) ─
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

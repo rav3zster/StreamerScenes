@@ -11,6 +11,7 @@ interface Guide { x?: number; y?: number }
 
 // ─── Ruler Horizontal Component ──────────────────────────────────────────────
 const RulerHorizontal: React.FC<{ zoom: number; panX: number; onDragStart: (e: React.MouseEvent) => void }> = ({ zoom, panX, onDragStart }) => {
+  const { editorTheme } = useEditorStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -27,18 +28,19 @@ const RulerHorizontal: React.FC<{ zoom: number; panX: number; onDragStart: (e: R
     const width = rect.width;
     const height = rect.height;
 
-    ctx.fillStyle = '#0c0a1a';
+    const isLight = editorTheme === 'light';
+    ctx.fillStyle = isLight ? '#ffffff' : '#0c0a1a';
     ctx.fillRect(0, 0, width, height);
 
-    ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)';
+    ctx.strokeStyle = isLight ? '#e5e7eb' : 'rgba(139, 92, 246, 0.15)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, height - 0.5);
     ctx.lineTo(width, height - 0.5);
     ctx.stroke();
 
-    ctx.strokeStyle = '#42385a';
-    ctx.fillStyle = '#7c6fa0';
+    ctx.strokeStyle = isLight ? '#9ca3af' : '#42385a';
+    ctx.fillStyle = isLight ? '#6b7280' : '#7c6fa0';
     ctx.font = '8px monospace';
     ctx.textAlign = 'left';
 
@@ -70,7 +72,7 @@ const RulerHorizontal: React.FC<{ zoom: number; panX: number; onDragStart: (e: R
         ctx.stroke();
       }
     }
-  }, [zoom, panX]);
+  }, [zoom, panX, editorTheme]);
 
   return (
     <div
@@ -84,6 +86,7 @@ const RulerHorizontal: React.FC<{ zoom: number; panX: number; onDragStart: (e: R
 
 // ─── Ruler Vertical Component ────────────────────────────────────────────────
 const RulerVertical: React.FC<{ zoom: number; panY: number; onDragStart: (e: React.MouseEvent) => void }> = ({ zoom, panY, onDragStart }) => {
+  const { editorTheme } = useEditorStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -100,18 +103,19 @@ const RulerVertical: React.FC<{ zoom: number; panY: number; onDragStart: (e: Rea
     const width = rect.width;
     const height = rect.height;
 
-    ctx.fillStyle = '#0c0a1a';
+    const isLight = editorTheme === 'light';
+    ctx.fillStyle = isLight ? '#ffffff' : '#0c0a1a';
     ctx.fillRect(0, 0, width, height);
 
-    ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)';
+    ctx.strokeStyle = isLight ? '#e5e7eb' : 'rgba(139, 92, 246, 0.15)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(width - 0.5, 0);
     ctx.lineTo(width - 0.5, height);
     ctx.stroke();
 
-    ctx.strokeStyle = '#42385a';
-    ctx.fillStyle = '#7c6fa0';
+    ctx.strokeStyle = isLight ? '#9ca3af' : '#42385a';
+    ctx.fillStyle = isLight ? '#6b7280' : '#7c6fa0';
     ctx.font = '8px monospace';
     ctx.textAlign = 'right';
 
@@ -147,7 +151,7 @@ const RulerVertical: React.FC<{ zoom: number; panY: number; onDragStart: (e: Rea
         ctx.stroke();
       }
     }
-  }, [zoom, panY]);
+  }, [zoom, panY, editorTheme]);
 
   return (
     <div
@@ -835,6 +839,7 @@ export const EditorCanvas: React.FC = () => {
       {/* Moveable Bounding Box resize handlers */}
       {selectedWidgets.length > 0 && !selectedWidgets.some(w => w.locked) && (
         <Moveable
+          key={selectedIds.join(',')}
           ref={moveableRef}
           target={selectedWidgets.map(w => stageRef.current?.querySelector(`[data-id="${w.id}"]`) as HTMLElement).filter(Boolean)}
           container={canvasAreaRef.current}

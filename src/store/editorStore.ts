@@ -138,6 +138,7 @@ interface EditorState {
   isResizing: boolean;
   leftTab: LeftTab;
   showPreviewMode: boolean;
+  editorTheme: 'dark' | 'light';
 
   // Favorites and Recents
   favoriteWidgets: string[];
@@ -211,6 +212,7 @@ interface EditorState {
   togglePreviewMode: () => void;
   setAppView: (view: AppView) => void;
   setPreviewPackId: (id: string | null) => void;
+  setEditorTheme: (theme: 'dark' | 'light') => void;
 
   // Apply preset
   applyPreset: (widgets: Omit<SceneWidget, 'id'>[]) => void;
@@ -319,6 +321,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isResizing: false,
   leftTab: 'scenes',
   showPreviewMode: false,
+  editorTheme: 'dark',
 
   favoriteWidgets: [],
   recentWidgets: [],
@@ -726,6 +729,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   togglePreviewMode: () => set(s => ({ showPreviewMode: !s.showPreviewMode, selectedIds: [] })),
   setAppView: (view) => set({ appView: view }),
   setPreviewPackId: (id) => set({ previewPackId: id }),
+  setEditorTheme: (theme) => set({ editorTheme: theme }),
 
   // ── Apply Preset ─────────────────────────────────────────────────────────────
 

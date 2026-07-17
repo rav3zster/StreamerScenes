@@ -17,11 +17,11 @@ export const TopToolbar: React.FC = () => {
     scenes, editingSceneId, liveSceneId, setLiveScene,
     projectName, showPreviewMode, togglePreviewMode,
     setAppView,
+    editorTheme, setEditorTheme,
   } = useEditorStore();
 
   const [saveFlash, setSaveFlash] = useState(false);
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
-  const [editorTheme, setEditorTheme] = useState<'dark' | 'light'>('dark');
   const fileMenuRef = useRef<HTMLDivElement>(null);
 
   const editingScene = scenes.find(s => s.id === editingSceneId);

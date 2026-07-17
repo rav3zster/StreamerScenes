@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useEditorStore } from '../store/editorStore';
 import { SceneRenderer } from '../renderer/SceneRenderer';
 import { CANVAS_W, CANVAS_H } from '../editor/canvas/EditorCanvas';
@@ -55,6 +57,44 @@ export const OutputPage: React.FC = () => {
         position: 'relative',
       }}
     >
+      {/* Subtle hover-reveal back button: invisible in OBS capture (low idle opacity) but clickable in browser */}
+      <Link
+        to="/"
+        style={{
+          position: 'absolute',
+          bottom: 20,
+          left: 20,
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          background: 'rgba(12,10,26,0.9)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: 8,
+          padding: '8px 14px',
+          color: '#fff',
+          fontSize: 12,
+          fontWeight: 700,
+          textDecoration: 'none',
+          cursor: 'pointer',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+          transition: 'all 0.15s ease',
+          opacity: 0.05,
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.opacity = '1';
+          e.currentTarget.style.background = 'var(--color-accent)';
+          e.currentTarget.style.borderColor = 'var(--color-accent)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.opacity = '0.05';
+          e.currentTarget.style.background = 'rgba(12,10,26,0.9)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+        }}
+      >
+        <ArrowLeft size={13} /> Return to Studio
+      </Link>
+
       <div
         style={{
           width: `${CANVAS_W * scale}px`,

@@ -257,13 +257,13 @@ html, body, #root {
 
 .canvas-stage.grid-lines {
   background-image:
-    linear-gradient(rgba(168,85,247,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(168,85,247,0.08) 1px, transparent 1px);
+    linear-gradient(rgba(168, 85, 247, 0.24) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.24) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
 .canvas-stage.grid-dots {
-  background-image: radial-gradient(rgba(168,85,247,0.2) 1.2px, transparent 0);
+  background-image: radial-gradient(rgba(168, 85, 247, 0.45) 1.5px, transparent 0);
   background-size: 24px 24px;
 }
 

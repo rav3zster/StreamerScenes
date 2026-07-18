@@ -16,7 +16,7 @@ const TABS: { id: LeftTab; icon: React.ReactNode; label: string }[] = [
   { id: 'scenes', icon: <Film size={16} />, label: 'Scenes' },
   { id: 'layers', icon: <Layers size={16} />, label: 'Layers' },
   { id: 'assets', icon: <Image size={16} />, label: 'Assets' },
-  { id: 'widgets', icon: <Layout size={16} />, label: 'Add' },
+  { id: 'widgets', icon: <Layout size={16} />, label: 'Widgets' },
 ];
 
 export const SidebarRail: React.FC = () => {

@@ -30,4 +30,5 @@ export interface WidgetProps {
    * placeholder labels are shown for non-visual widgets.
    */
   animated: boolean;
+  timerSource?: 'live' | 'preview';
 }

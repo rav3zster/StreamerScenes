@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import Moveable from 'react-moveable';
 import { useEditorStore, type SceneWidget, type UserGuide } from '../../store/editorStore';
-import { WidgetRenderer } from '../../renderer/WidgetRenderer';
+import { SceneRenderer } from '../../renderer/SceneRenderer';
 
 export const CANVAS_W = 1920;
 export const CANVAS_H = 1080;
@@ -774,74 +774,27 @@ export const EditorCanvas: React.FC = () => {
                 </>
               )}
 
-              {/* Widgets list */}
-              {[...widgets].sort((a, b) => a.zIndex - b.zIndex).map(widget => (
-                <div
-                  key={widget.id}
-                  data-id={widget.id}
-                  className={[
-                    'canvas-widget',
-                    selectedIds.includes(widget.id) ? 'selected' : '',
-                    hoveredId === widget.id && !selectedIds.includes(widget.id) ? 'hovered' : '',
-                    widget.locked ? 'locked' : '',
-                  ].join(' ')}
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    width: widget.width * zoom,
-                    height: widget.height * zoom,
-                    transform: `translate(${widget.x * zoom}px, ${widget.y * zoom}px) rotate(${widget.rotation}deg)`,
-                    opacity: widget.visible ? widget.opacity / 100 : 0,
-                    zIndex: widget.zIndex,
-                    transformOrigin: 'top left',
-                    pointerEvents: widget.locked ? 'none' : 'all',
-                  }}
-                  onMouseEnter={() => setHovered(widget.id)}
-                  onMouseLeave={() => setHovered(null)}
-                  onMouseDown={e => {
-                    if (widget.locked) return;
-                    e.stopPropagation();
-                    selectWidget(widget.id, e.shiftKey || e.metaKey || e.ctrlKey);
-                  }}
-                  onContextMenu={e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    selectWidget(widget.id);
-                    setContextMenu({ x: e.clientX, y: e.clientY, widgetId: widget.id });
-                  }}
-                >
-                  <div style={{
-                    width: '100%', height: '100%',
-                    overflow: 'hidden',
-                    borderRadius: widget.style?.borderRadius ? `${widget.style.borderRadius}px` : 0
-                  }}>
-                    <WidgetRenderer widget={widget} zoom={zoom} animated={false} />
-                  </div>
-
-                  {/* Bounding dimensions badge (Figma style) */}
-                  {selectedIds.includes(widget.id) && (isDragging || isResizing) && (
-                    <div style={{
-                      position: 'absolute',
-                      bottom: -22,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: 'var(--color-accent)',
-                      color: 'white',
-                      fontSize: 9,
-                      fontFamily: 'var(--font-mono)',
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                      whiteSpace: 'nowrap',
-                      zIndex: 1000,
-                      pointerEvents: 'none',
-                      boxShadow: 'var(--shadow-sm)',
-                    }}>
-                      {Math.round(widget.width)} × {Math.round(widget.height)}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {/* Unified SceneRenderer for widgets */}
+              <SceneRenderer
+                widgets={widgets}
+                zoom={zoom}
+                animated={false}
+                interactive={true}
+                selectedIds={selectedIds}
+                hoveredId={hoveredId}
+                isDragging={isDragging}
+                isResizing={isResizing}
+                onWidgetMouseEnter={setHovered}
+                onWidgetMouseLeave={() => setHovered(null)}
+                onWidgetMouseDown={(id, e) => {
+                  selectWidget(id, e.shiftKey || e.metaKey || e.ctrlKey);
+                }}
+                onWidgetContextMenu={(id, e) => {
+                  selectWidget(id);
+                  setContextMenu({ x: e.clientX, y: e.clientY, widgetId: id });
+                }}
+                timerSource="preview"
+              />
 
               {/* Smart snapping guides */}
               {showGuides && activeGuides.map((g, i) => (

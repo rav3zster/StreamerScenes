@@ -3,6 +3,7 @@ import type { Scene } from '../store/editorStore';
 export interface ProjectData {
   projectName: string;
   scenes: Scene[];
+  liveScenes?: Scene[];
   liveSceneId: string | null;
   editingSceneId: string | null;
   updatedAt: number;

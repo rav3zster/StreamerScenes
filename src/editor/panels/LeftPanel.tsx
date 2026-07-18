@@ -8,6 +8,7 @@ import { useEditorStore, type LeftTab, type SceneWidget } from '../../store/edit
 import { WIDGET_CATEGORIES } from '../../data/widgetCatalog';
 import { WIDGET_TEMPLATES } from '../../data/widgetTemplates';
 import { MOCK_ASSETS, type VisualAsset } from '../../data/assets';
+import { LiveControlPanel } from './LiveControlPanel';
 
 // ─── Sidebar Rail ─────────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ const ScenesTab: React.FC = () => {
               >
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scene.label}</span>
                 <div style={{ display: 'flex', gap: 2 }} className="scene-item-actions">
-                  <button className="btn-icon" style={{ width: 22, height: 22 }} title="Go Live"
+                  <button className="btn-icon" style={{ width: 22, height: 22 }} title="Set Live Scene"
                     onClick={e => { e.stopPropagation(); setLiveScene(scene.id); }}>
                     <Radio size={11} />
                   </button>
@@ -140,6 +141,9 @@ const ScenesTab: React.FC = () => {
             <Plus size={13} /> Add Scene
           </button>
         )}
+      </div>
+      <div style={{ padding: '12px', borderTop: '1px solid var(--color-border)' }}>
+        <LiveControlPanel />
       </div>
     </div>
   );

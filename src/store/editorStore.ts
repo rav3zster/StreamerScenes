@@ -102,6 +102,19 @@ export interface UserGuide {
   val: number;
 }
 
+export interface TimerRuntime {
+  duration: number;
+  startedAt: number | null;
+  pausedAt: number | null;
+  timeOffset: number;
+  isRunning: boolean;
+  isFinished: boolean;
+  finishBehavior: 'freeze' | 'replace-text' | 'hide' | 'switch-scene';
+  replaceText?: string;
+  replaceTransition?: 'fade' | 'zoom' | 'slide' | 'none';
+  switchTargetSceneId?: string | null;
+}
+
 // ─── Store State ──────────────────────────────────────────────────────────────
 
 interface EditorState {
@@ -109,6 +122,9 @@ interface EditorState {
   editingSceneId: string | null;
   scenes: Scene[];
   liveSceneId: string | null;
+  liveScenes: Scene[];
+  liveTimer: TimerRuntime;
+  previewTimer: TimerRuntime;
 
   // App navigation
   appView: AppView;
@@ -221,12 +237,48 @@ interface EditorState {
   // Apply preset
   applyPreset: (widgets: Omit<SceneWidget, 'id'>[]) => void;
 
+  // Actions — Timer Runtime
+  startLiveTimer: (duration?: number, finishBehavior?: any, settings?: any) => void;
+  pauseLiveTimer: () => void;
+  resumeLiveTimer: () => void;
+  adjustLiveTimer: (seconds: number) => void;
+  resetLiveTimer: (duration?: number) => void;
+  finishLiveTimer: () => void;
+
+  startPreviewTimer: (duration?: number, finishBehavior?: any, settings?: any) => void;
+  pausePreviewTimer: () => void;
+  resumePreviewTimer: () => void;
+  adjustPreviewTimer: (seconds: number) => void;
+  resetPreviewTimer: (duration?: number) => void;
+  finishPreviewTimer: () => void;
+
+  switchDraftToLive: () => void;
+
   // Load project data
-  loadProjectData: (data: { projectName: string; scenes: Scene[]; liveSceneId: string | null; editingSceneId: string | null; }) => void;
+  loadProjectData: (data: { projectName: string; scenes: Scene[]; liveScenes?: Scene[]; liveSceneId: string | null; editingSceneId: string | null; }) => void;
 }
 
 export type LeftTab = 'scenes' | 'layers' | 'assets' | 'widgets';
 export type AppView = 'welcome' | 'pack-browser' | 'pack-detail' | 'editor';
+
+export const getTimerRemaining = (timer: TimerRuntime): number => {
+  if (!timer.isRunning) {
+    if (timer.startedAt === null) {
+      return Math.max(0, timer.duration + timer.timeOffset);
+    }
+    if (timer.pausedAt !== null) {
+      const elapsed = (timer.pausedAt - timer.startedAt) / 1000;
+      return Math.max(0, timer.duration + timer.timeOffset - elapsed);
+    }
+  }
+  
+  if (timer.startedAt !== null) {
+    const elapsed = (Date.now() - timer.startedAt) / 1000;
+    return Math.max(0, timer.duration + timer.timeOffset - elapsed);
+  }
+  
+  return Math.max(0, timer.duration + timer.timeOffset);
+};
 
 const MAX_HISTORY = 50;
 
@@ -301,6 +353,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   editingSceneId: null,
   scenes: [],
   liveSceneId: null,
+  liveScenes: [],
+  liveTimer: {
+    duration: 600,
+    startedAt: null,
+    pausedAt: null,
+    timeOffset: 0,
+    isRunning: false,
+    isFinished: false,
+    finishBehavior: 'freeze',
+  },
+  previewTimer: {
+    duration: 600,
+    startedAt: null,
+    pausedAt: null,
+    timeOffset: 0,
+    isRunning: false,
+    isFinished: false,
+    finishBehavior: 'freeze',
+  },
 
   // App navigation
   appView: 'welcome',
@@ -830,21 +901,267 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
   },
 
+  // Actions — Timer Runtime
+  startLiveTimer: (duration, finishBehavior, settings) => set(s => {
+    const dur = duration !== undefined ? duration : s.liveTimer.duration;
+    return {
+      liveTimer: {
+        ...s.liveTimer,
+        duration: dur,
+        startedAt: Date.now(),
+        pausedAt: null,
+        timeOffset: 0,
+        isRunning: true,
+        isFinished: false,
+        finishBehavior: finishBehavior || s.liveTimer.finishBehavior,
+        ...settings
+      }
+    };
+  }),
+
+  pauseLiveTimer: () => set(s => {
+    if (!s.liveTimer.isRunning || s.liveTimer.isFinished) return {};
+    return {
+      liveTimer: {
+        ...s.liveTimer,
+        isRunning: false,
+        pausedAt: Date.now()
+      }
+    };
+  }),
+
+  resumeLiveTimer: () => set(s => {
+    if (s.liveTimer.isRunning || s.liveTimer.isFinished || s.liveTimer.startedAt === null) return {};
+    const pauseDuration = s.liveTimer.pausedAt ? (Date.now() - s.liveTimer.pausedAt) : 0;
+    return {
+      liveTimer: {
+        ...s.liveTimer,
+        isRunning: true,
+        startedAt: s.liveTimer.startedAt + pauseDuration,
+        pausedAt: null
+      }
+    };
+  }),
+
+  adjustLiveTimer: (seconds) => set(s => {
+    return {
+      liveTimer: {
+        ...s.liveTimer,
+        timeOffset: s.liveTimer.timeOffset + seconds
+      }
+    };
+  }),
+
+  resetLiveTimer: (duration) => set(s => {
+    const dur = duration !== undefined ? duration : s.liveTimer.duration;
+    return {
+      liveTimer: {
+        ...s.liveTimer,
+        duration: dur,
+        startedAt: null,
+        pausedAt: null,
+        timeOffset: 0,
+        isRunning: false,
+        isFinished: false
+      }
+    };
+  }),
+
+  finishLiveTimer: () => {
+    const { liveTimer, liveSceneId } = get();
+    if (!liveTimer.isRunning || liveTimer.isFinished) return;
+    
+    let nextLiveSceneId = liveSceneId;
+    if (liveTimer.finishBehavior === 'switch-scene' && liveTimer.switchTargetSceneId) {
+      nextLiveSceneId = liveTimer.switchTargetSceneId;
+    }
+
+    set({
+      liveSceneId: nextLiveSceneId,
+      liveTimer: {
+        ...liveTimer,
+        isRunning: false,
+        isFinished: true
+      }
+    });
+  },
+
+  startPreviewTimer: (duration, finishBehavior, settings) => set(s => {
+    const dur = duration !== undefined ? duration : s.previewTimer.duration;
+    return {
+      previewTimer: {
+        ...s.previewTimer,
+        duration: dur,
+        startedAt: Date.now(),
+        pausedAt: null,
+        timeOffset: 0,
+        isRunning: true,
+        isFinished: false,
+        finishBehavior: finishBehavior || s.previewTimer.finishBehavior,
+        ...settings
+      }
+    };
+  }),
+
+  pausePreviewTimer: () => set(s => {
+    if (!s.previewTimer.isRunning || s.previewTimer.isFinished) return {};
+    return {
+      previewTimer: {
+        ...s.previewTimer,
+        isRunning: false,
+        pausedAt: Date.now()
+      }
+    };
+  }),
+
+  resumePreviewTimer: () => set(s => {
+    if (s.previewTimer.isRunning || s.previewTimer.isFinished || s.previewTimer.startedAt === null) return {};
+    const pauseDuration = s.previewTimer.pausedAt ? (Date.now() - s.previewTimer.pausedAt) : 0;
+    return {
+      previewTimer: {
+        ...s.previewTimer,
+        isRunning: true,
+        startedAt: s.previewTimer.startedAt + pauseDuration,
+        pausedAt: null
+      }
+    };
+  }),
+
+  adjustPreviewTimer: (seconds) => set(s => {
+    return {
+      previewTimer: {
+        ...s.previewTimer,
+        timeOffset: s.previewTimer.timeOffset + seconds
+      }
+    };
+  }),
+
+  resetPreviewTimer: (duration) => set(s => {
+    const dur = duration !== undefined ? duration : s.previewTimer.duration;
+    return {
+      previewTimer: {
+        ...s.previewTimer,
+        duration: dur,
+        startedAt: null,
+        pausedAt: null,
+        timeOffset: 0,
+        isRunning: false,
+        isFinished: false
+      }
+    };
+  }),
+
+  finishPreviewTimer: () => {
+    const { previewTimer, editingSceneId } = get();
+    if (!previewTimer.isRunning || previewTimer.isFinished) return;
+
+    let nextEditingSceneId = editingSceneId;
+    if (previewTimer.finishBehavior === 'switch-scene' && previewTimer.switchTargetSceneId) {
+      nextEditingSceneId = previewTimer.switchTargetSceneId;
+    }
+
+    set({
+      editingSceneId: nextEditingSceneId,
+      previewTimer: {
+        ...previewTimer,
+        isRunning: false,
+        isFinished: true
+      }
+    });
+  },
+
+  switchDraftToLive: () => {
+    const { scenes, liveSceneId } = get();
+    // Clones draft scenes to liveScenes
+    const clonedScenes = JSON.parse(JSON.stringify(scenes));
+    
+    // Find countdown widget in live scene to sync default duration/behavior
+    const activeLiveId = liveSceneId || (clonedScenes[0]?.id ?? null);
+    const liveScene = clonedScenes.find((s: Scene) => s.id === activeLiveId);
+    let timerSettings = {
+      duration: 600,
+      finishBehavior: 'freeze' as const,
+      replaceText: '',
+      replaceTransition: 'none' as const,
+      switchTargetSceneId: null,
+    };
+    if (liveScene) {
+      const widget = liveScene.widgets.find((w: SceneWidget) => w.type === 'countdown-timer');
+      if (widget) {
+        timerSettings = {
+          duration: widget.content.settings?.duration ?? 600,
+          finishBehavior: widget.content.settings?.finishBehavior ?? 'freeze',
+          replaceText: widget.content.settings?.replaceText ?? '',
+          replaceTransition: widget.content.settings?.replaceTransition ?? 'none',
+          switchTargetSceneId: widget.content.settings?.switchTargetSceneId ?? null,
+        };
+      }
+    }
+
+    set(s => ({
+      liveScenes: clonedScenes,
+      liveTimer: {
+        ...s.liveTimer,
+        ...timerSettings,
+      }
+    }));
+  },
+
   loadProjectData: (data) => set({
     projectName: data.projectName,
     scenes: data.scenes,
+    liveScenes: data.liveScenes || data.scenes,
     liveSceneId: data.liveSceneId,
     editingSceneId: data.editingSceneId,
     appView: 'editor',
   }),
 }));
 
+const syncChannel = typeof window !== 'undefined' ? new BroadcastChannel('vibeoverlay-state-sync') : null;
+
 useEditorStore.subscribe((state) => {
   persistenceService.triggerAutoSave(() => ({
     projectName: state.projectName,
     scenes: state.scenes,
+    liveScenes: state.liveScenes,
     liveSceneId: state.liveSceneId,
     editingSceneId: state.editingSceneId,
     updatedAt: Date.now(),
   }));
+
+  // Broadcast state to other tabs
+  syncChannel?.postMessage({
+    type: 'STATE_UPDATE',
+    payload: {
+      projectName: state.projectName,
+      scenes: state.scenes,
+      liveScenes: state.liveScenes,
+      liveSceneId: state.liveSceneId,
+      editingSceneId: state.editingSceneId,
+      liveTimer: state.liveTimer,
+      previewTimer: state.previewTimer,
+    }
+  });
 });
+
+if (syncChannel) {
+  syncChannel.onmessage = (event) => {
+    if (event.data && event.data.type === 'STATE_UPDATE') {
+      const current = useEditorStore.getState();
+      const next = event.data.payload;
+      
+      // Deep check to prevent circular posts loops
+      if (
+        current.projectName !== next.projectName ||
+        current.editingSceneId !== next.editingSceneId ||
+        current.liveSceneId !== next.liveSceneId ||
+        JSON.stringify(current.scenes) !== JSON.stringify(next.scenes) ||
+        JSON.stringify(current.liveScenes) !== JSON.stringify(next.liveScenes) ||
+        JSON.stringify(current.liveTimer) !== JSON.stringify(next.liveTimer) ||
+        JSON.stringify(current.previewTimer) !== JSON.stringify(next.previewTimer)
+      ) {
+        useEditorStore.setState(next);
+      }
+    }
+  };
+}

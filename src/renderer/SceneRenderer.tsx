@@ -42,6 +42,19 @@ export interface SceneRendererProps {
    */
   canvasWidth?: number;
   canvasHeight?: number;
+
+  timerSource?: 'live' | 'preview';
+
+  // Interactive/Editor mode props
+  interactive?: boolean;
+  selectedIds?: string[];
+  hoveredId?: string | null;
+  isDragging?: boolean;
+  isResizing?: boolean;
+  onWidgetMouseEnter?: (id: string) => void;
+  onWidgetMouseLeave?: () => void;
+  onWidgetMouseDown?: (id: string, e: React.MouseEvent) => void;
+  onWidgetContextMenu?: (id: string, e: React.MouseEvent) => void;
 }
 
 export const SceneRenderer: React.FC<SceneRendererProps> = ({
@@ -50,6 +63,16 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
   animated = false,
   canvasWidth = CANVAS_W,
   canvasHeight = CANVAS_H,
+  timerSource = 'preview',
+  interactive = false,
+  selectedIds = [],
+  hoveredId = null,
+  isDragging = false,
+  isResizing = false,
+  onWidgetMouseEnter,
+  onWidgetMouseLeave,
+  onWidgetMouseDown,
+  onWidgetContextMenu,
 }) => {
   // Inject CSS keyframes once when this renderer first mounts.
   useEffect(() => {
@@ -61,28 +84,99 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
   return (
     <>
       {sorted.map(w => {
-        if (!w.visible) return null;
+        // In editor, we still want to render invisible widgets so they can be selected,
+        // but with opacity 0. In live/preview display mode, we hide them entirely.
+        if (!w.visible && !interactive) return null;
+
+        const isSelected = selectedIds.includes(w.id);
+        const isHovered = hoveredId === w.id && !isSelected;
+
+        const className = interactive
+          ? [
+              'canvas-widget',
+              isSelected ? 'selected' : '',
+              isHovered ? 'hovered' : '',
+              w.locked ? 'locked' : '',
+            ].join(' ')
+          : undefined;
+
+        // Position styles must match exactly between editor and OBS Output for visual fidelity.
+        // We use translate layout and transform-origin top left which aligns with the Moveable logic.
+        const containerStyle: React.CSSProperties = interactive
+          ? {
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: w.width * zoom,
+              height: w.height * zoom,
+              transform: `translate(${w.x * zoom}px, ${w.y * zoom}px) rotate(${w.rotation}deg)`,
+              opacity: w.visible ? w.opacity / 100 : 0,
+              zIndex: w.zIndex,
+              transformOrigin: 'top left',
+              pointerEvents: w.locked ? 'none' : 'all',
+            }
+          : {
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: w.width * zoom,
+              height: w.height * zoom,
+              transform: `translate(${w.x * zoom}px, ${w.y * zoom}px) rotate(${w.rotation}deg)`,
+              transformOrigin: 'top left',
+              opacity: w.opacity / 100,
+              zIndex: w.zIndex,
+              pointerEvents: 'none',
+              overflow: 'hidden',
+            };
 
         return (
           <div
             key={w.id}
+            data-id={interactive ? w.id : undefined}
             data-widget-id={w.id}
             data-widget-type={w.type}
-            style={{
-              position: 'absolute',
-              left:   w.x * zoom,
-              top:    w.y * zoom,
-              width:  w.width  * zoom,
-              height: w.height * zoom,
-              transform:       `rotate(${w.rotation}deg)`,
-              transformOrigin: 'center center',
-              opacity:         w.opacity / 100,
-              zIndex:          w.zIndex,
-              overflow:        'hidden',
-              pointerEvents:   'none',   // SceneRenderer is display-only; editor chrome handles interaction
-            }}
+            className={className}
+            style={containerStyle}
+            onMouseEnter={interactive ? () => onWidgetMouseEnter?.(w.id) : undefined}
+            onMouseLeave={interactive ? onWidgetMouseLeave : undefined}
+            onMouseDown={interactive ? (e) => {
+              if (w.locked) return;
+              onWidgetMouseDown?.(w.id, e);
+            } : undefined}
+            onContextMenu={interactive ? (e) => {
+              onWidgetContextMenu?.(w.id, e);
+            } : undefined}
           >
-            <WidgetRenderer widget={w} zoom={zoom} animated={!!animated} />
+            <div style={{
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden',
+              borderRadius: w.style?.borderRadius ? `${w.style.borderRadius * zoom}px` : 0,
+            }}>
+              <WidgetRenderer widget={w} zoom={zoom} animated={!!animated} timerSource={timerSource} />
+            </div>
+
+            {/* Bounding dimensions badge (Figma style) */}
+            {interactive && isSelected && (isDragging || isResizing) && (
+              <div style={{
+                position: 'absolute',
+                bottom: -22,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'var(--color-accent)',
+                color: 'white',
+                fontSize: 9,
+                fontFamily: 'var(--font-mono)',
+                padding: '2px 6px',
+                borderRadius: 4,
+                whiteSpace: 'nowrap',
+                zIndex: 1000,
+                pointerEvents: 'none',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                {Math.round(w.width)} × {Math.round(w.height)}
+              </div>
+            )}
           </div>
         );
       })}

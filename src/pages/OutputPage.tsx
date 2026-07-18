@@ -6,11 +6,11 @@ import { SceneRenderer } from '../renderer/SceneRenderer';
 import { CANVAS_W, CANVAS_H } from '../editor/canvas/EditorCanvas';
 
 export const OutputPage: React.FC = () => {
-  const { scenes, liveSceneId } = useEditorStore();
+  const { liveScenes, liveSceneId } = useEditorStore();
   const [scale, setScale] = useState(1);
 
   // Find the live scene, or fall back to the first available scene
-  const liveScene = scenes.find(s => s.id === liveSceneId) ?? scenes[0];
+  const liveScene = liveScenes.find(s => s.id === liveSceneId) ?? liveScenes[0];
 
   useEffect(() => {
     const handleResize = () => {
@@ -107,6 +107,7 @@ export const OutputPage: React.FC = () => {
           widgets={liveScene.widgets}
           zoom={scale}
           animated={true} // Animations ENABLED for live output
+          timerSource="live"
         />
       </div>
     </div>

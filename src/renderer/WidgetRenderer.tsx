@@ -21,10 +21,11 @@ interface WidgetRendererProps {
    * When false (editor mode): animations are suppressed, placeholders visible.
    */
   animated: boolean;
+  timerSource?: 'live' | 'preview';
 }
 
 export const WidgetRenderer: React.FC<WidgetRendererProps> = React.memo(
-  ({ widget, zoom, animated }) => {
+  ({ widget, zoom, animated, timerSource }) => {
     const Component = resolveWidget(widget.type);
 
     // Apply animation as a wrapper style so the widget component itself
@@ -39,7 +40,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = React.memo(
           ...animationStyle,
         }}
       >
-        <Component widget={widget} zoom={zoom} animated={animated} />
+        <Component widget={widget} zoom={zoom} animated={animated} timerSource={timerSource} />
       </div>
     );
   },
@@ -47,6 +48,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = React.memo(
   (prev, next) =>
     prev.zoom === next.zoom &&
     prev.animated === next.animated &&
+    prev.timerSource === next.timerSource &&
     prev.widget === next.widget
 );
 

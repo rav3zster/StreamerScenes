@@ -14,11 +14,13 @@ export const TopToolbar: React.FC = () => {
     zoom, setZoom, zoomIn, zoomOut, resetView,
     snapEnabled, gridMode, showGuides, toggleSnap, setGridMode, toggleGuides,
     canUndo, canRedo, undo, redo,
-    scenes, editingSceneId, liveSceneId, setLiveScene,
+    scenes, liveScenes, editingSceneId, liveSceneId, setLiveScene, switchDraftToLive,
     projectName, showPreviewMode, togglePreviewMode,
     setAppView,
     editorTheme, setEditorTheme,
   } = useEditorStore();
+
+  const isSynced = JSON.stringify(scenes) === JSON.stringify(liveScenes);
 
   const [saveFlash, setSaveFlash] = useState(false);
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
@@ -299,30 +301,30 @@ export const TopToolbar: React.FC = () => {
           {saveFlash ? 'Saved!' : 'Save'}
         </button>
 
-        {/* Go Live */}
+        {/* Switch To Live */}
         <button
           id="toolbar-go-live"
-          onClick={handleGoLive}
+          onClick={switchDraftToLive}
           disabled={!editingSceneId}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '6px 14px', borderRadius: 8,
             border: 'none', cursor: 'pointer',
-            background: isLive
+            background: isSynced
               ? 'rgba(239,68,68,0.15)'
               : 'linear-gradient(135deg,#ef4444,#dc2626)',
-            color: isLive ? '#ef4444' : '#fff',
+            color: isSynced ? '#ef4444' : '#fff',
             fontSize: 11, fontWeight: 800,
             letterSpacing: '0.06em', textTransform: 'uppercase',
-            boxShadow: isLive ? 'none' : '0 4px 14px rgba(239,68,68,0.3)',
+            boxShadow: isSynced ? 'none' : '0 4px 14px rgba(239,68,68,0.3)',
             transition: 'all 150ms ease',
             fontFamily: 'var(--font-sans)',
           }}
-          onMouseEnter={e => { if (!isLive) e.currentTarget.style.filter = 'brightness(1.1)'; }}
+          onMouseEnter={e => { if (!isSynced) e.currentTarget.style.filter = 'brightness(1.1)'; }}
           onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
         >
-          <Radio size={13} />
-          {isLive ? 'Live Now' : 'Go Live'}
+          <Radio size={13} style={{ animation: isSynced ? 'none' : 'live-pulse 2s ease-in-out infinite' }} />
+          {isSynced ? 'Live (Synced)' : 'Switch To Live'}
         </button>
       </div>
 

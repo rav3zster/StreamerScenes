@@ -5,6 +5,7 @@ import {
   Copy, Trash2, Layers, RotateCcw,
 } from 'lucide-react';
 import { useEditorStore, type SceneWidget } from '../../store/editorStore';
+import { LiveControlPanel } from './LiveControlPanel';
 
 const GOOGLE_FONTS = [
   'Inter', 'Space Grotesk', 'JetBrains Mono', 'Outfit',
@@ -21,8 +22,8 @@ export const RightPanel: React.FC = () => {
 
   if (selectedIds.length === 0) {
     return (
-      <div className="right-panel" style={{ width: rightPanelWidth }}>
-        <div className="inspector-empty">
+      <div className="right-panel" style={{ width: rightPanelWidth, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="inspector-empty" style={{ flex: 1 }}>
           <div className="inspector-empty-icon">
             <MousePointer2 size={24} style={{ opacity: 0.5 }} />
           </div>
@@ -32,6 +33,9 @@ export const RightPanel: React.FC = () => {
           <div style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.5, textAlign: 'center' }}>
             Click an element on the canvas to inspect its layout, styles, and animation properties
           </div>
+        </div>
+        <div style={{ padding: '12px', borderTop: '1px solid var(--color-border)' }}>
+          <LiveControlPanel />
         </div>
       </div>
     );
@@ -599,7 +603,7 @@ const ColorPickerPanel: React.FC<ColorPickerPanelProps> = ({ label, value, onCha
 // ─── Widget-Specific Content Settings ──────────────────────────────────────────
 
 const WidgetSettingsSection: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
-  const { updateWidget } = useEditorStore();
+  const { updateWidget, scenes } = useEditorStore();
   const uc = (settings: Record<string, any>) => {
     updateWidget(widget.id, {
       content: {
@@ -677,6 +681,68 @@ const WidgetSettingsSection: React.FC<{ widget: SceneWidget }> = ({ widget }) =>
             <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600 }}>Paused</span>
             <ToggleRow value={!!settings.paused} onChange={v => uc({ paused: v })} label={settings.paused ? 'Paused' : 'Counting'} />
           </div>
+
+          <div className="input-group" style={{ marginTop: 8 }}>
+            <div className="input-group-label">Finish Behaviour</div>
+            <select
+              className="select"
+              value={settings.finishBehavior ?? 'freeze'}
+              onChange={e => uc({ finishBehavior: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 4, color: 'var(--color-text)' }}
+            >
+              <option value="freeze">Freeze (00:00)</option>
+              <option value="replace-text">Replace with Text</option>
+              <option value="hide">Hide Clock</option>
+              <option value="switch-scene">Switch Scene</option>
+            </select>
+          </div>
+
+          {settings.finishBehavior === 'replace-text' && (
+            <>
+              <div className="input-group" style={{ marginTop: 8 }}>
+                <div className="input-group-label">Replacement Text</div>
+                <input
+                  type="text"
+                  className="input"
+                  value={settings.replaceText ?? ''}
+                  onChange={e => uc({ replaceText: e.target.value })}
+                  placeholder="STARTING NOW!"
+                  style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+                />
+              </div>
+              <div className="input-group" style={{ marginTop: 8 }}>
+                <div className="input-group-label">Transition Animation</div>
+                <select
+                  className="select"
+                  value={settings.replaceTransition ?? 'none'}
+                  onChange={e => uc({ replaceTransition: e.target.value })}
+                  style={{ width: '100%', fontSize: 11, padding: '4px 6px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 4, color: 'var(--color-text)' }}
+                >
+                  <option value="none">None</option>
+                  <option value="fade">Fade In</option>
+                  <option value="zoom">Zoom In</option>
+                  <option value="slide">Slide In (Up)</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {settings.finishBehavior === 'switch-scene' && (
+            <div className="input-group" style={{ marginTop: 8 }}>
+              <div className="input-group-label">Target Scene</div>
+              <select
+                className="select"
+                value={settings.switchTargetSceneId ?? ''}
+                onChange={e => uc({ switchTargetSceneId: e.target.value || null })}
+                style={{ width: '100%', fontSize: 11, padding: '4px 6px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 4, color: 'var(--color-text)' }}
+              >
+                <option value="">-- Select Scene --</option>
+                {scenes.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </InspectorSection>
       );
 

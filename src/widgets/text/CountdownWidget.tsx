@@ -42,7 +42,7 @@ export const CountdownWidget: React.FC<WidgetProps> = ({ widget, zoom, animated,
     }, 100);
 
     return () => clearInterval(interval);
-  }, [timer.isRunning, timer.isFinished, animated, finishTimer]);
+  }, [timer, animated, finishTimer]);
 
   // Handle "hide" finish behavior in final/preview rendering
   if (timer.isFinished && timer.finishBehavior === 'hide' && animated) {

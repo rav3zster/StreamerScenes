@@ -66,7 +66,7 @@ export const LiveControlPanel: React.FC = () => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [liveTimer.isRunning, liveTimer.isFinished]);
+  }, [liveTimer]);
 
   const minutes = Math.floor(remaining / 60);
   const seconds = Math.round(remaining % 60);

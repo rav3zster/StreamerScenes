@@ -451,6 +451,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({
       projectName,
       scenes: instantiatedScenes,
+      liveScenes: JSON.parse(JSON.stringify(instantiatedScenes)),
+      liveSceneId: instantiatedScenes[0]?.id || null,
       editingSceneId: instantiatedScenes[0]?.id || null,
       appView: 'editor',
       selectedPackId: packId,
@@ -1119,6 +1121,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
 const syncChannel = typeof window !== 'undefined' ? new BroadcastChannel('vibeoverlay-state-sync') : null;
 
+// Track last-sent live properties to prevent redundant messages and loops
+let lastLiveScenesStr = '';
+let lastLiveSceneId = '';
+let lastLiveTimerStr = '';
+
 useEditorStore.subscribe((state) => {
   persistenceService.triggerAutoSave(() => ({
     projectName: state.projectName,
@@ -1129,36 +1136,43 @@ useEditorStore.subscribe((state) => {
     updatedAt: Date.now(),
   }));
 
-  // Broadcast state to other tabs
-  syncChannel?.postMessage({
-    type: 'STATE_UPDATE',
-    payload: {
-      projectName: state.projectName,
-      scenes: state.scenes,
-      liveScenes: state.liveScenes,
-      liveSceneId: state.liveSceneId,
-      editingSceneId: state.editingSceneId,
-      liveTimer: state.liveTimer,
-      previewTimer: state.previewTimer,
-    }
-  });
+  // Detect change in live-only broadcast state
+  const liveScenesStr = JSON.stringify(state.liveScenes);
+  const liveTimerStr = JSON.stringify(state.liveTimer);
+  const liveSceneId = state.liveSceneId;
+
+  if (
+    liveScenesStr !== lastLiveScenesStr ||
+    liveSceneId !== lastLiveSceneId ||
+    liveTimerStr !== lastLiveTimerStr
+  ) {
+    lastLiveScenesStr = liveScenesStr;
+    lastLiveSceneId = liveSceneId || '';
+    lastLiveTimerStr = liveTimerStr;
+
+    // Send only live-specific parameters to OBS Output page
+    syncChannel?.postMessage({
+      type: 'LIVE_UPDATE',
+      payload: {
+        liveScenes: state.liveScenes,
+        liveSceneId: state.liveSceneId,
+        liveTimer: state.liveTimer,
+      }
+    });
+  }
 });
 
 if (syncChannel) {
   syncChannel.onmessage = (event) => {
-    if (event.data && event.data.type === 'STATE_UPDATE') {
+    if (event.data && event.data.type === 'LIVE_UPDATE') {
       const current = useEditorStore.getState();
       const next = event.data.payload;
       
-      // Deep check to prevent circular posts loops
+      // Update only when live configurations changed
       if (
-        current.projectName !== next.projectName ||
-        current.editingSceneId !== next.editingSceneId ||
         current.liveSceneId !== next.liveSceneId ||
-        JSON.stringify(current.scenes) !== JSON.stringify(next.scenes) ||
         JSON.stringify(current.liveScenes) !== JSON.stringify(next.liveScenes) ||
-        JSON.stringify(current.liveTimer) !== JSON.stringify(next.liveTimer) ||
-        JSON.stringify(current.previewTimer) !== JSON.stringify(next.previewTimer)
+        JSON.stringify(current.liveTimer) !== JSON.stringify(next.liveTimer)
       ) {
         useEditorStore.setState(next);
       }

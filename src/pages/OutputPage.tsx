@@ -4,13 +4,24 @@ import { ArrowLeft } from 'lucide-react';
 import { useEditorStore } from '../store/editorStore';
 import { SceneRenderer } from '../renderer/SceneRenderer';
 import { CANVAS_W, CANVAS_H } from '../editor/canvas/EditorCanvas';
+import { persistenceService } from '../persistence/persistenceService';
 
 export const OutputPage: React.FC = () => {
-  const { liveScenes, liveSceneId } = useEditorStore();
+  const liveScenes = useEditorStore(state => state.liveScenes);
+  const liveSceneId = useEditorStore(state => state.liveSceneId);
+  const loadProjectData = useEditorStore(state => state.loadProjectData);
   const [scale, setScale] = useState(1);
 
   // Find the live scene, or fall back to the first available scene
   const liveScene = liveScenes.find(s => s.id === liveSceneId) ?? liveScenes[0];
+
+  useEffect(() => {
+    persistenceService.loadProject().then(data => {
+      if (data) {
+        loadProjectData(data);
+      }
+    });
+  }, [loadProjectData]);
 
   useEffect(() => {
     const handleResize = () => {

@@ -45,7 +45,7 @@ export const SidebarRail: React.FC = () => {
 // ─── Main Panel ───────────────────────────────────────────────────────────────
 
 export const LeftPanel: React.FC = () => {
-  const { leftTab } = useEditorStore();
+  const { leftTab, leftPanelWidth } = useEditorStore();
 
   const content: Record<LeftTab, React.ReactNode> = {
     'scenes': <ScenesTab />,
@@ -62,7 +62,7 @@ export const LeftPanel: React.FC = () => {
   };
 
   return (
-    <div className="left-panel">
+    <div className="left-panel" style={{ width: leftPanelWidth }}>
       <div className="panel-header">
         <span className="panel-title">{labels[leftTab]}</span>
       </div>

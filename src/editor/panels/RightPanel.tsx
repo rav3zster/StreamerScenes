@@ -16,12 +16,12 @@ const RECENT_COLORS_KEY = 'vibe-recent-colors';
 // ─── Right Panel (Inspector) ──────────────────────────────────────────────────
 
 export const RightPanel: React.FC = () => {
-  const { selectedIds, getSelectedWidgets } = useEditorStore();
+  const { selectedIds, getSelectedWidgets, rightPanelWidth } = useEditorStore();
   const selected = getSelectedWidgets();
 
   if (selectedIds.length === 0) {
     return (
-      <div className="right-panel">
+      <div className="right-panel" style={{ width: rightPanelWidth }}>
         <div className="inspector-empty">
           <div className="inspector-empty-icon">
             <MousePointer2 size={24} style={{ opacity: 0.5 }} />
@@ -39,7 +39,7 @@ export const RightPanel: React.FC = () => {
 
   if (selectedIds.length > 1) {
     return (
-      <div className="right-panel">
+      <div className="right-panel" style={{ width: rightPanelWidth }}>
         <div className="panel-header">
           <span className="panel-title">Multi-Selection ({selectedIds.length})</span>
         </div>
@@ -52,7 +52,7 @@ export const RightPanel: React.FC = () => {
   if (!widget) return null;
 
   return (
-    <div className="right-panel">
+    <div className="right-panel" style={{ width: rightPanelWidth }}>
       <SingleInspector widget={widget} />
     </div>
   );

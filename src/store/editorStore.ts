@@ -139,6 +139,8 @@ interface EditorState {
   leftTab: LeftTab;
   showPreviewMode: boolean;
   editorTheme: 'dark' | 'light';
+  leftPanelWidth: number;
+  rightPanelWidth: number;
 
   // Favorites and Recents
   favoriteWidgets: string[];
@@ -213,6 +215,8 @@ interface EditorState {
   setAppView: (view: AppView) => void;
   setPreviewPackId: (id: string | null) => void;
   setEditorTheme: (theme: 'dark' | 'light') => void;
+  setLeftPanelWidth: (w: number) => void;
+  setRightPanelWidth: (w: number) => void;
 
   // Apply preset
   applyPreset: (widgets: Omit<SceneWidget, 'id'>[]) => void;
@@ -322,6 +326,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   leftTab: 'scenes',
   showPreviewMode: false,
   editorTheme: 'dark',
+  leftPanelWidth: 280,
+  rightPanelWidth: 300,
 
   favoriteWidgets: [],
   recentWidgets: [],
@@ -647,17 +653,74 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   // ── Canvas & Guides ──────────────────────────────────────────────────────────
 
-  setZoom: (z) => set({ zoom: Math.max(0.1, Math.min(4, z)) }),
-  setPan: (p) => set({ pan: p }),
-  zoomIn: () => set(s => ({ zoom: Math.min(4, parseFloat((s.zoom + 0.1).toFixed(2))) })),
-  zoomOut: () => set(s => ({ zoom: Math.max(0.1, parseFloat((s.zoom - 0.1).toFixed(2))) })),
-  resetView: () => set({ zoom: 0.5, pan: { x: 0, y: 0 } }),
+  setZoom: (z) => {
+    const nextZoom = Math.max(0.1, Math.min(4, z));
+    const { pan, leftPanelWidth, rightPanelWidth } = get();
+    const width = window.innerWidth - 56 - leftPanelWidth - rightPanelWidth;
+    const height = window.innerHeight - 80;
+    const stageW = 1920 * nextZoom;
+    const stageH = 1080 * nextZoom;
+
+    const centerOffset = (width - stageW) / 2;
+    const minX = -stageW + 150 - centerOffset;
+    const maxX = width - 150 - centerOffset;
+
+    const centerOffsetY = (height - stageH) / 2;
+    const minY = -stageH + 100 - centerOffsetY;
+    const maxY = height - 100 - centerOffsetY;
+
+    set({
+      zoom: nextZoom,
+      pan: {
+        x: Math.max(minX, Math.min(maxX, pan.x)),
+        y: Math.max(minY, Math.min(maxY, pan.y))
+      }
+    });
+  },
+
+  setPan: (p) => {
+    const { zoom, leftPanelWidth, rightPanelWidth } = get();
+    const width = window.innerWidth - 56 - leftPanelWidth - rightPanelWidth;
+    const height = window.innerHeight - 80;
+    const stageW = 1920 * zoom;
+    const stageH = 1080 * zoom;
+
+    const centerOffset = (width - stageW) / 2;
+    const minX = -stageW + 150 - centerOffset;
+    const maxX = width - 150 - centerOffset;
+
+    const centerOffsetY = (height - stageH) / 2;
+    const minY = -stageH + 100 - centerOffsetY;
+    const maxY = height - 100 - centerOffsetY;
+
+    set({
+      pan: {
+        x: Math.max(minX, Math.min(maxX, p.x)),
+        y: Math.max(minY, Math.min(maxY, p.y))
+      }
+    });
+  },
+
+  zoomIn: () => get().setZoom(get().zoom + 0.1),
+  zoomOut: () => get().setZoom(get().zoom - 0.1),
+  resetView: () => {
+    const { leftPanelWidth, rightPanelWidth } = get();
+    const width = window.innerWidth - 56 - leftPanelWidth - rightPanelWidth;
+    const height = window.innerHeight - 80;
+    const panX = (width - 1920 * 0.5) / 2;
+    const panY = (height - 1080 * 0.5) / 2;
+    set({ zoom: 0.5, pan: { x: panX, y: panY } });
+  },
 
   zoomToFit: () => {
-    const width = window.innerWidth - 636; // Subtract panels width
+    const { leftPanelWidth, rightPanelWidth } = get();
+    const width = window.innerWidth - 56 - leftPanelWidth - rightPanelWidth;
     const height = window.innerHeight - 80;
     const scale = Math.min(width / 1920, height / 1080) * 0.95;
-    set({ zoom: Math.max(0.1, Math.min(2, scale)), pan: { x: 0, y: 0 } });
+    const nextZoom = Math.max(0.1, Math.min(2, scale));
+    const panX = (width - 1920 * nextZoom) / 2;
+    const panY = (height - 1080 * nextZoom) / 2;
+    set({ zoom: nextZoom, pan: { x: panX, y: panY } });
   },
 
   zoomToSelection: () => {
@@ -675,17 +738,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     const boundsW = maxX - minX;
     const boundsH = maxY - minY;
-    const viewportW = window.innerWidth - 636;
+    const { leftPanelWidth, rightPanelWidth } = get();
+    const viewportW = window.innerWidth - 56 - leftPanelWidth - rightPanelWidth;
     const viewportH = window.innerHeight - 80;
 
     const scale = Math.min(viewportW / boundsW, viewportH / boundsH) * 0.8;
     const newZoom = Math.max(0.1, Math.min(4, scale));
 
-    // Center selected area
     const cx = (minX + boundsW / 2) - 960;
     const cy = (minY + boundsH / 2) - 540;
 
-    set({ zoom: newZoom, pan: { x: -cx * newZoom, y: -cy * newZoom } });
+    const centerOffset = (viewportW - 1920 * newZoom) / 2;
+    const centerOffsetY = (viewportH - 1080 * newZoom) / 2;
+
+    set({
+      zoom: newZoom,
+      pan: {
+        x: -cx * newZoom + centerOffset,
+        y: -cy * newZoom + centerOffsetY
+      }
+    });
   },
 
   toggleSnap: () => set(s => ({ snapEnabled: !s.snapEnabled })),
@@ -723,13 +795,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   // ── UI ───────────────────────────────────────────────────────────────────────
 
-  setLeftTab: (tab) => set({ leftTab: tab }),
-  setIsDragging: (v) => set({ isDragging: v }),
-  setIsResizing: (v) => set({ isResizing: v }),
+  setLeftTab: (tab: LeftTab) => set({ leftTab: tab }),
+  setIsDragging: (v: boolean) => set({ isDragging: v }),
+  setIsResizing: (v: boolean) => set({ isResizing: v }),
   togglePreviewMode: () => set(s => ({ showPreviewMode: !s.showPreviewMode, selectedIds: [] })),
-  setAppView: (view) => set({ appView: view }),
-  setPreviewPackId: (id) => set({ previewPackId: id }),
-  setEditorTheme: (theme) => set({ editorTheme: theme }),
+  setAppView: (view: AppView) => set({ appView: view }),
+  setPreviewPackId: (id: string | null) => set({ previewPackId: id }),
+  setEditorTheme: (theme: 'dark' | 'light') => set({ editorTheme: theme }),
+  setLeftPanelWidth: (w: number) => set({ leftPanelWidth: Math.max(200, Math.min(500, w)) }),
+  setRightPanelWidth: (w: number) => set({ rightPanelWidth: Math.max(240, Math.min(500, w)) }),
 
   // ── Apply Preset ─────────────────────────────────────────────────────────────
 

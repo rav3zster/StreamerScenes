@@ -47,12 +47,15 @@ const RulerHorizontal: React.FC<{ zoom: number; panX: number; onDragStart: (e: R
     const interval = zoom > 0.35 ? 100 : 500;
     const miniInterval = interval / 10;
 
-    const startX = -panX / zoom;
-    const endX = (width - panX) / zoom;
+    const stageW = 1920 * zoom;
+    const offsetX = (width - stageW) / 2 + panX;
+
+    const startX = -offsetX / zoom;
+    const endX = (width - offsetX) / zoom;
     const firstTick = Math.floor(startX / miniInterval) * miniInterval;
 
     for (let cx = firstTick; cx <= endX; cx += miniInterval) {
-      const sx = cx * zoom + panX;
+      const sx = cx * zoom + offsetX;
       if (sx < 0 || sx > width) continue;
 
       const isMajor = Math.round(cx) % interval === 0;
@@ -122,12 +125,15 @@ const RulerVertical: React.FC<{ zoom: number; panY: number; onDragStart: (e: Rea
     const interval = zoom > 0.35 ? 100 : 500;
     const miniInterval = interval / 10;
 
-    const startY = -panY / zoom;
-    const endY = (height - panY) / zoom;
+    const stageH = 1080 * zoom;
+    const offsetY = (height - stageH) / 2 + panY;
+
+    const startY = -offsetY / zoom;
+    const endY = (height - offsetY) / zoom;
     const firstTick = Math.floor(startY / miniInterval) * miniInterval;
 
     for (let cy = firstTick; cy <= endY; cy += miniInterval) {
-      const sy = cy * zoom + panY;
+      const sy = cy * zoom + offsetY;
       if (sy < 0 || sy > height) continue;
 
       const isMajor = Math.round(cy) % interval === 0;
@@ -190,6 +196,99 @@ export const EditorCanvas: React.FC = () => {
 
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ mx: 0, my: 0, px: 0, py: 0 });
+
+  // Viewport tracking for scrollbars and centering offset calculations
+  const [viewport, setViewport] = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    const el = canvasAreaRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(entries => {
+      const rect = entries[0].contentRect;
+      setViewport({
+        w: rect.width - (showRulers ? 20 : 0),
+        h: rect.height - (showRulers ? 20 : 0)
+      });
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [showRulers]);
+
+  // State for scrollbars dragging
+  const [draggingScroll, setDraggingScroll] = useState<'h' | 'v' | null>(null);
+  const scrollDragStart = useRef({ mouseStart: 0, panStart: 0 });
+
+  const stageW = CANVAS_W * zoom;
+  const stageH = CANVAS_H * zoom;
+
+  // Horizontal scrollbar calculations
+  const centerOffsetX = (viewport.w - stageW) / 2;
+  const minX = -stageW + 150 - centerOffsetX;
+  const maxX = viewport.w - 150 - centerOffsetX;
+  const rangeX = maxX - minX;
+
+  const trackW = viewport.w - 32;
+  const thumbW = rangeX > 0 ? Math.max(30, Math.min(trackW, (viewport.w / (stageW + viewport.w)) * trackW)) : trackW;
+  const pctX = rangeX > 0 ? (pan.x - minX) / rangeX : 0;
+  const thumbLeft = pctX * (trackW - thumbW);
+
+  // Vertical scrollbar calculations
+  const centerOffsetY = (viewport.h - stageH) / 2;
+  const minY = -stageH + 100 - centerOffsetY;
+  const maxY = viewport.h - 100 - centerOffsetY;
+  const rangeY = maxY - minY;
+
+  const trackH = viewport.h - 32;
+  const thumbH = rangeY > 0 ? Math.max(30, Math.min(trackH, (viewport.h / (stageH + viewport.h)) * trackH)) : trackH;
+  const pctY = rangeY > 0 ? (pan.y - minY) / rangeY : 0;
+  const thumbTop = pctY * (trackH - thumbH);
+
+  const startDragScrollH = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingScroll('h');
+    scrollDragStart.current = { mouseStart: e.clientX, panStart: pan.x };
+  };
+
+  const startDragScrollV = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingScroll('v');
+    scrollDragStart.current = { mouseStart: e.clientY, panStart: pan.y };
+  };
+
+  useEffect(() => {
+    if (!draggingScroll) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (draggingScroll === 'h') {
+        const deltaX = e.clientX - scrollDragStart.current.mouseStart;
+        const hRange = trackW - thumbW;
+        const deltaPct = hRange > 0 ? deltaX / hRange : 0;
+        const newPanX = scrollDragStart.current.panStart + deltaPct * rangeX;
+        setPan({ x: newPanX, y: pan.y });
+      } else if (draggingScroll === 'v') {
+        const deltaY = e.clientY - scrollDragStart.current.mouseStart;
+        const vRange = trackH - thumbH;
+        const deltaPct = vRange > 0 ? deltaY / vRange : 0;
+        const newPanY = scrollDragStart.current.panStart + deltaPct * rangeY;
+        setPan({ x: pan.x, y: newPanY });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setDraggingScroll(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingScroll, trackW, thumbW, rangeX, trackH, thumbH, rangeY, pan, setPan]);
   const [rubberBand, setRubberBand] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [rubberStart, setRubberStart] = useState({ x: 0, y: 0 });
   const [activeGuides, setActiveGuides] = useState<Guide[]>([]);
@@ -574,8 +673,6 @@ export const EditorCanvas: React.FC = () => {
   };
 
   const distanceLines = getDistanceLines();
-  const stageW = CANVAS_W * zoom;
-  const stageH = CANVAS_H * zoom;
 
   return (
     <div
@@ -618,223 +715,257 @@ export const EditorCanvas: React.FC = () => {
       {showRulers && (
         <div style={{ gridColumn: 1, gridRow: 2, overflow: 'hidden', zIndex: 9, borderRight: '1px solid var(--color-border)' }}>
           <RulerVertical zoom={zoom} panY={pan.y} onDragStart={handleRulerMouseDown('x')} />
-        </div>
-      )}
-
-      {/* Infinite Stage container */}
-      <div
-        style={{
-          gridColumn: showRulers ? 2 : 1,
-          gridRow: showRulers ? 2 : 1,
-          position: 'relative',
-          overflow: 'hidden',
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <div
-          className="canvas-wrapper"
-          style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}
-        >
           <div
-            ref={stageRef}
-            className={`canvas-stage ${gridMode === 'dots' ? 'grid-dots' : gridMode === 'lines' ? 'grid-lines' : 'grid-off'}`}
-            style={{ width: stageW, height: stageH }}
-            data-canvas="true"
-            onMouseDown={e => {
-              if (e.target === stageRef.current) {
-                deselectAll();
-              }
-            }}
+            className="canvas-wrapper"
+            style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
           >
-            {/* Safe Area Guides */}
-            {showGuides && (
-              <>
-                {/* 90% Action Safe */}
-                <div style={{
-                  position: 'absolute',
-                  left: 96 * zoom, top: 54 * zoom,
-                  width: (CANVAS_W - 192) * zoom, height: (CANVAS_H - 108) * zoom,
-                  border: '1.5px dashed rgba(92,255,226,0.3)',
-                  pointerEvents: 'none',
-                  zIndex: 2,
-                }} title="Action Safe Zone (90%)" />
-                {/* 93% Title Safe */}
-                <div style={{
-                  position: 'absolute',
-                  left: 134 * zoom, top: 75 * zoom,
-                  width: (CANVAS_W - 268) * zoom, height: (CANVAS_H - 150) * zoom,
-                  border: '1px dashed rgba(168,85,247,0.3)',
-                  pointerEvents: 'none',
-                  zIndex: 2,
-                }} title="Title Safe Zone (93%)" />
-              </>
-            )}
-
-            {/* Widgets list */}
-            {[...widgets].sort((a, b) => a.zIndex - b.zIndex).map(widget => (
-              <div
-                key={widget.id}
-                data-id={widget.id}
-                className={[
-                  'canvas-widget',
-                  selectedIds.includes(widget.id) ? 'selected' : '',
-                  hoveredId === widget.id && !selectedIds.includes(widget.id) ? 'hovered' : '',
-                  widget.locked ? 'locked' : '',
-                ].join(' ')}
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  width: widget.width * zoom,
-                  height: widget.height * zoom,
-                  transform: `translate(${widget.x * zoom}px, ${widget.y * zoom}px) rotate(${widget.rotation}deg)`,
-                  opacity: widget.visible ? widget.opacity / 100 : 0,
-                  zIndex: widget.zIndex,
-                  transformOrigin: 'top left',
-                  pointerEvents: widget.locked ? 'none' : 'all',
-                }}
-                onMouseEnter={() => setHovered(widget.id)}
-                onMouseLeave={() => setHovered(null)}
-                onMouseDown={e => {
-                  if (widget.locked) return;
-                  e.stopPropagation();
-                  selectWidget(widget.id, e.shiftKey || e.metaKey || e.ctrlKey);
-                }}
-                onContextMenu={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  selectWidget(widget.id);
-                  setContextMenu({ x: e.clientX, y: e.clientY, widgetId: widget.id });
-                }}
-              >
-                <div style={{
-                  width: '100%', height: '100%',
-                  overflow: 'hidden',
-                  borderRadius: widget.style?.borderRadius ? `${widget.style.borderRadius}px` : 0
-                }}>
-                  <WidgetRenderer widget={widget} zoom={zoom} animated={false} />
-                </div>
-
-                {/* Bounding dimensions badge (Figma style) */}
-                {selectedIds.includes(widget.id) && (isDragging || isResizing) && (
+            <div
+              ref={stageRef}
+              className={`canvas-stage ${gridMode === 'dots' ? 'grid-dots' : gridMode === 'lines' ? 'grid-lines' : 'grid-off'}`}
+              style={{
+                position: 'absolute',
+                left: (viewport.w - stageW) / 2 + pan.x,
+                top: (viewport.h - stageH) / 2 + pan.y,
+                width: stageW,
+                height: stageH,
+                ...(gridMode === 'lines'
+                  ? {
+                      backgroundImage: [
+                        `linear-gradient(rgba(168,85,247,0.3) 1px, transparent 1px)`,
+                        `linear-gradient(90deg, rgba(168,85,247,0.3) 1px, transparent 1px)`,
+                      ].join(','),
+                      backgroundSize: `${40 * zoom}px ${40 * zoom}px`,
+                    }
+                  : gridMode === 'dots'
+                  ? {
+                      backgroundImage: `radial-gradient(rgba(168,85,247,0.55) 1.5px, transparent 0)`,
+                      backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
+                    }
+                  : {}),
+              }}
+              data-canvas="true"
+              onMouseDown={e => {
+                if (e.target === stageRef.current) {
+                  deselectAll();
+                }
+              }}
+            >
+              {/* Safe Area Guides */}
+              {showGuides && (
+                <>
+                  {/* 90% Action Safe */}
                   <div style={{
                     position: 'absolute',
-                    bottom: -22,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'var(--color-accent)',
-                    color: 'white',
-                    fontSize: 9,
-                    fontFamily: 'var(--font-mono)',
-                    padding: '2px 6px',
-                    borderRadius: 4,
-                    whiteSpace: 'nowrap',
-                    zIndex: 1000,
+                    left: 96 * zoom, top: 54 * zoom,
+                    width: (CANVAS_W - 192) * zoom, height: (CANVAS_H - 108) * zoom,
+                    border: '1.5px dashed rgba(92,255,226,0.3)',
                     pointerEvents: 'none',
-                    boxShadow: 'var(--shadow-sm)',
+                    zIndex: 2,
+                  }} title="Action Safe Zone (90%)" />
+                  {/* 93% Title Safe */}
+                  <div style={{
+                    position: 'absolute',
+                    left: 134 * zoom, top: 75 * zoom,
+                    width: (CANVAS_W - 268) * zoom, height: (CANVAS_H - 150) * zoom,
+                    border: '1px dashed rgba(168,85,247,0.3)',
+                    pointerEvents: 'none',
+                    zIndex: 2,
+                  }} title="Title Safe Zone (93%)" />
+                </>
+              )}
+
+              {/* Widgets list */}
+              {[...widgets].sort((a, b) => a.zIndex - b.zIndex).map(widget => (
+                <div
+                  key={widget.id}
+                  data-id={widget.id}
+                  className={[
+                    'canvas-widget',
+                    selectedIds.includes(widget.id) ? 'selected' : '',
+                    hoveredId === widget.id && !selectedIds.includes(widget.id) ? 'hovered' : '',
+                    widget.locked ? 'locked' : '',
+                  ].join(' ')}
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: widget.width * zoom,
+                    height: widget.height * zoom,
+                    transform: `translate(${widget.x * zoom}px, ${widget.y * zoom}px) rotate(${widget.rotation}deg)`,
+                    opacity: widget.visible ? widget.opacity / 100 : 0,
+                    zIndex: widget.zIndex,
+                    transformOrigin: 'top left',
+                    pointerEvents: widget.locked ? 'none' : 'all',
+                  }}
+                  onMouseEnter={() => setHovered(widget.id)}
+                  onMouseLeave={() => setHovered(null)}
+                  onMouseDown={e => {
+                    if (widget.locked) return;
+                    e.stopPropagation();
+                    selectWidget(widget.id, e.shiftKey || e.metaKey || e.ctrlKey);
+                  }}
+                  onContextMenu={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectWidget(widget.id);
+                    setContextMenu({ x: e.clientX, y: e.clientY, widgetId: widget.id });
+                  }}
+                >
+                  <div style={{
+                    width: '100%', height: '100%',
+                    overflow: 'hidden',
+                    borderRadius: widget.style?.borderRadius ? `${widget.style.borderRadius}px` : 0
                   }}>
-                    {Math.round(widget.width)} × {Math.round(widget.height)}
+                    <WidgetRenderer widget={widget} zoom={zoom} animated={false} />
                   </div>
-                )}
-              </div>
-            ))}
 
-            {/* Smart snapping guides */}
-            {showGuides && activeGuides.map((g, i) => (
-              <div key={i} className={`guide-line ${g.x !== undefined ? 'vertical' : 'horizontal'}`}
-                style={g.x !== undefined ? { left: g.x * zoom } : { top: g.y! * zoom }} />
-            ))}
+                  {/* Bounding dimensions badge (Figma style) */}
+                  {selectedIds.includes(widget.id) && (isDragging || isResizing) && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: -22,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: 'var(--color-accent)',
+                      color: 'white',
+                      fontSize: 9,
+                      fontFamily: 'var(--font-mono)',
+                      padding: '2px 6px',
+                      borderRadius: 4,
+                      whiteSpace: 'nowrap',
+                      zIndex: 1000,
+                      pointerEvents: 'none',
+                      boxShadow: 'var(--shadow-sm)',
+                    }}>
+                      {Math.round(widget.width)} × {Math.round(widget.height)}
+                    </div>
+                  )}
+                </div>
+              ))}
 
-            {/* User guidelines */}
-            {showGuides && userGuides.map(ug => (
+              {/* Smart snapping guides */}
+              {showGuides && activeGuides.map((g, i) => (
+                <div key={i} className={`guide-line ${g.x !== undefined ? 'vertical' : 'horizontal'}`}
+                  style={g.x !== undefined ? { left: g.x * zoom } : { top: g.y! * zoom }} />
+              ))}
+
+              {/* User guidelines */}
+              {showGuides && userGuides.map(ug => (
+                <div
+                  key={ug.id}
+                  className={`guide-line user-guide ${ug.type === 'x' ? 'vertical' : 'horizontal'}`}
+                  style={{
+                    left: ug.type === 'x' ? ug.val * zoom : undefined,
+                    top: ug.type === 'y' ? ug.val * zoom : undefined,
+                    borderColor: '#ff4dff',
+                    boxShadow: '0 0 4px #ff4dff',
+                    cursor: ug.type === 'x' ? 'col-resize' : 'row-resize',
+                    pointerEvents: 'all',
+                  }}
+                  onDoubleClick={() => removeUserGuide(ug.id)}
+                  title="Double click to remove guide"
+                >
+                  <span style={{
+                    position: 'absolute',
+                    top: ug.type === 'x' ? 8 : -14,
+                    left: ug.type === 'x' ? 4 : 8,
+                    fontSize: 8,
+                    fontFamily: 'var(--font-mono)',
+                    color: '#ff4dff',
+                    background: '#0c0a1a',
+                    padding: '1px 3px',
+                    borderRadius: 2,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {ug.type === 'x' ? `X:${Math.round(ug.val)}` : `Y:${Math.round(ug.val)}`}
+                  </span>
+                </div>
+              ))}
+
+              {/* Distance spacing line metric tags (Figma Style) */}
+              {showGuides && (isDragging || isResizing) && distanceLines.map((line, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'absolute',
+                    left: Math.min(line.x1, line.x2) * zoom,
+                    top: Math.min(line.y1, line.y2) * zoom,
+                    width: Math.max(1, Math.abs(line.x1 - line.x2) * zoom),
+                    height: Math.max(1, Math.abs(line.y1 - line.y2) * zoom),
+                    borderLeft: line.x1 === line.x2 ? '1px dashed #ef4444' : 'none',
+                    borderTop: line.y1 === line.y2 ? '1px dashed #ef4444' : 'none',
+                    pointerEvents: 'none',
+                    zIndex: 900,
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: '#ef4444',
+                    color: 'white',
+                    fontSize: 8,
+                    fontFamily: 'var(--font-mono)',
+                    padding: '1px 4px',
+                    borderRadius: 3,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {line.label}
+                  </span>
+                </div>
+              ))}
+
+              {/* Preview Guide dragging from ruler */}
+              {draggingGuide && (
+                <div
+                  className={`guide-line preview-guide ${draggingGuide.type === 'x' ? 'vertical' : 'horizontal'}`}
+                  style={{
+                    left: draggingGuide.type === 'x' ? draggingGuide.val * zoom : undefined,
+                    top: draggingGuide.type === 'y' ? draggingGuide.val * zoom : undefined,
+                    borderColor: '#ff4dff',
+                    borderStyle: 'dashed',
+                    boxShadow: '0 0 6px rgba(255,77,255,0.7)',
+                  }}
+                />
+              )}
+
+              {/* Rubber Band */}
+              {rubberBand && rubberBand.w > 2 && rubberBand.h > 2 && (
+                <div className="rubber-band" style={{ left: rubberBand.x, top: rubberBand.y, width: rubberBand.w, height: rubberBand.h }} />
+              )}
+            </div>
+          </div>
+
+          {/* Scrollbars overlay */}
+          {rangeX > 0 && (
+            <div className="scrollbar-h" style={{ left: 8, right: 24, width: 'calc(100% - 32px)' }}>
               <div
-                key={ug.id}
-                className={`guide-line user-guide ${ug.type === 'x' ? 'vertical' : 'horizontal'}`}
+                className={`scrollbar-thumb${draggingScroll === 'h' ? ' dragging' : ''}`}
+                onMouseDown={startDragScrollH}
                 style={{
-                  left: ug.type === 'x' ? ug.val * zoom : undefined,
-                  top: ug.type === 'y' ? ug.val * zoom : undefined,
-                  borderColor: '#ff4dff',
-                  boxShadow: '0 0 4px #ff4dff',
-                  cursor: ug.type === 'x' ? 'col-resize' : 'row-resize',
-                  pointerEvents: 'all',
-                }}
-                onDoubleClick={() => removeUserGuide(ug.id)}
-                title="Double click to remove guide"
-              >
-                <span style={{
-                  position: 'absolute',
-                  top: ug.type === 'x' ? 8 : -14,
-                  left: ug.type === 'x' ? 4 : 8,
-                  fontSize: 8,
-                  fontFamily: 'var(--font-mono)',
-                  color: '#ff4dff',
-                  background: '#0c0a1a',
-                  padding: '1px 3px',
-                  borderRadius: 2,
-                  whiteSpace: 'nowrap',
-                }}>
-                  {ug.type === 'x' ? `X:${Math.round(ug.val)}` : `Y:${Math.round(ug.val)}`}
-                </span>
-              </div>
-            ))}
-
-            {/* Distance spacing line metric tags (Figma Style) */}
-            {showGuides && (isDragging || isResizing) && distanceLines.map((line, idx) => (
-              <div
-                key={idx}
-                style={{
-                  position: 'absolute',
-                  left: Math.min(line.x1, line.x2) * zoom,
-                  top: Math.min(line.y1, line.y2) * zoom,
-                  width: Math.max(1, Math.abs(line.x1 - line.x2) * zoom),
-                  height: Math.max(1, Math.abs(line.y1 - line.y2) * zoom),
-                  borderLeft: line.x1 === line.x2 ? '1px dashed #ef4444' : 'none',
-                  borderTop: line.y1 === line.y2 ? '1px dashed #ef4444' : 'none',
-                  pointerEvents: 'none',
-                  zIndex: 900,
-                }}
-              >
-                <span style={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  background: '#ef4444',
-                  color: 'white',
-                  fontSize: 8,
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  padding: '1px 3px',
-                  borderRadius: 2,
-                  whiteSpace: 'nowrap',
-                }}>
-                  {line.label}
-                </span>
-              </div>
-            ))}
-
-            {/* Preview Guide dragging from ruler */}
-            {draggingGuide && (
-              <div
-                className={`guide-line preview-guide ${draggingGuide.type === 'x' ? 'vertical' : 'horizontal'}`}
-                style={{
-                  left: draggingGuide.type === 'x' ? draggingGuide.val * zoom : undefined,
-                  top: draggingGuide.type === 'y' ? draggingGuide.val * zoom : undefined,
-                  borderColor: '#ff4dff',
-                  borderStyle: 'dashed',
-                  boxShadow: '0 0 6px rgba(255,77,255,0.7)',
+                  left: thumbLeft,
+                  width: thumbW,
+                  height: '100%',
                 }}
               />
-            )}
-
-            {/* Rubber Band */}
-            {rubberBand && rubberBand.w > 2 && rubberBand.h > 2 && (
-              <div className="rubber-band" style={{ left: rubberBand.x, top: rubberBand.y, width: rubberBand.w, height: rubberBand.h }} />
-            )}
-          </div>
+            </div>
+          )}
+          {rangeY > 0 && (
+            <div className="scrollbar-v" style={{ top: 8, bottom: 24, height: 'calc(100% - 32px)' }}>
+              <div
+                className={`scrollbar-thumb${draggingScroll === 'v' ? ' dragging' : ''}`}
+                onMouseDown={startDragScrollV}
+                style={{
+                  top: thumbTop,
+                  height: thumbH,
+                  width: '100%',
+                }}
+              />
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Moveable Bounding Box resize handlers */}
       {selectedWidgets.length > 0 && !selectedWidgets.some(w => w.locked) && (

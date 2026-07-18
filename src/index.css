@@ -255,20 +255,11 @@ html, body, #root {
   overflow: hidden;
 }
 
-.canvas-stage.grid-lines {
-  background-image:
-    linear-gradient(rgba(168, 85, 247, 0.24) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(168, 85, 247, 0.24) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-.canvas-stage.grid-dots {
-  background-image: radial-gradient(rgba(168, 85, 247, 0.45) 1.5px, transparent 0);
-  background-size: 24px 24px;
-}
-
+/* Grid patterns are rendered via inline style to scale with zoom.
+   These classes are kept for the .active indicator only – the actual
+   background-image is applied in EditorCanvas.tsx via the style prop. */
 .canvas-stage.grid-off {
-  background: #000;
+  /* no extra background override – base #000 from above applies */
 }
 
 .guide-line {
@@ -805,6 +796,12 @@ html, body, #root {
   --color-text-muted:#9ca3af !important;
 }
 
+/* Canvas workspace backdrop turns light gray in light mode */
+.app-shell.theme-editor-light .canvas-area {
+  background: #e5e7eb !important;
+  background-image: none !important;
+}
+
 /* Override glassmorphism elements in light mode so contrast is clear */
 .app-shell.theme-editor-light.theme-glassmorphism .left-panel,
 .app-shell.theme-editor-light.theme-glassmorphism .right-panel,
@@ -822,3 +819,83 @@ html, body, #root {
   color: var(--color-accent) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   VERTICAL RESIZER & CANVAS SCROLLBARS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.resizer-v {
+  width: 5px;
+  cursor: col-resize;
+  z-index: 50;
+  position: relative;
+  transition: background 0.15s ease;
+  background: transparent;
+  flex-shrink: 0;
+  height: 100%;
+}
+.resizer-v::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-border);
+  transition: background 0.15s ease;
+}
+.resizer-v:hover::after, .resizer-v.active::after {
+  background: var(--color-accent);
+  width: 2px;
+  left: 2px;
+  box-shadow: 0 0 8px var(--color-accent);
+}
+
+.scrollbar-h {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  height: 8px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px;
+  z-index: 100;
+  transition: background 0.2s, height 0.2s;
+}
+.scrollbar-h:hover {
+  background: rgba(255,255,255,0.08);
+  height: 10px;
+}
+.scrollbar-v {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px;
+  z-index: 100;
+  transition: background 0.2s, width 0.2s;
+}
+.scrollbar-v:hover {
+  background: rgba(255,255,255,0.08);
+  width: 10px;
+}
+.scrollbar-thumb {
+  position: absolute;
+  border-radius: 4px;
+  background: rgba(168,85,247,0.22);
+  border: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.scrollbar-thumb:hover, .scrollbar-thumb.dragging {
+  background: rgba(168,85,247,0.55);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.app-shell.theme-editor-light .scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.03);
+}
+.app-shell.theme-editor-light .scrollbar-thumb:hover,
+.app-shell.theme-editor-light .scrollbar-thumb.dragging {
+  background: rgba(0,0,0,0.35);
+}

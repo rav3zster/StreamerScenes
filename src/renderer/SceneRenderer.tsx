@@ -57,7 +57,7 @@ export interface SceneRendererProps {
   onWidgetContextMenu?: (id: string, e: React.MouseEvent) => void;
 }
 
-export const SceneRenderer: React.FC<SceneRendererProps> = ({
+export const SceneRenderer = React.memo<SceneRendererProps>(({
   widgets,
   zoom,
   animated = false,
@@ -182,6 +182,18 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
       })}
     </>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.zoom === nextProps.zoom &&
+    prevProps.animated === nextProps.animated &&
+    prevProps.timerSource === nextProps.timerSource &&
+    prevProps.interactive === nextProps.interactive &&
+    prevProps.hoveredId === nextProps.hoveredId &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.isResizing === nextProps.isResizing &&
+    JSON.stringify(prevProps.selectedIds) === JSON.stringify(nextProps.selectedIds) &&
+    JSON.stringify(prevProps.widgets) === JSON.stringify(nextProps.widgets)
+  );
+});
 
 SceneRenderer.displayName = 'SceneRenderer';

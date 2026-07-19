@@ -37,17 +37,20 @@ export class PersistenceService {
     return ProjectSerializer.deserialize(raw);
   }
 
-  /**
-   * Debounced auto-save. Call this on state modifications.
-   */
-  triggerAutoSave(data: () => ProjectData): void {
+  triggerAutoSave(
+    data: () => ProjectData,
+    onSaveSchedule?: () => void,
+    onSaveComplete?: (timestamp: number) => void
+  ): void {
     if (this.autoSaveTimer) {
       clearTimeout(this.autoSaveTimer);
     }
+    onSaveSchedule?.();
     this.autoSaveTimer = setTimeout(async () => {
       try {
         const payload = data();
         await this.saveProject(payload);
+        onSaveComplete?.(Date.now());
       } catch (err) {
         console.error('Auto-save failed:', err);
       }

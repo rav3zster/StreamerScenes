@@ -143,3 +143,21 @@ This manual QA checklist defines the verification criteria for every widget in V
 ### Theme & Typography Swap
 - [ ] **Theme Variable Injections**: Confirm that when importing the `Luxury Noir` pack, Playfair Display serif fonts render cleanly. Confirm that when importing `Cyber Neon` or `Streamer Bedroom`, neon glow styles apply.
 - [ ] **Reload / Refresh Retention**: Refresh the editor page, verify that the active visual pack theme variables (`theme-...` class list on `.app-shell`) remain active.
+
+---
+
+## 5. Maintainability & UX Refinements
+
+### Pack Modularization (Part 1)
+- [ ] **Pack Registry Import**: Verify that all 8 broadcast packs load in the Pack Browser.
+- [ ] **Clean Compilation**: Confirm the bundle compiles without errors, showing all packs are registered.
+- [ ] **Functional Identity**: Import a pack (e.g. Esports), verify all scenes and coordinates load identically to the pre-refactor version.
+
+### UX Polish (Part 2)
+- [ ] **Moveable Resizer Handles Style**: Select any widget, confirm the bounding box borders match the accent color, and resize handles are round circles with hover animations.
+- [ ] **Moveable Rotation Handle Style**: Confirm the rotation handle is hot pink to differentiate it from size controls.
+- [ ] **Auto-save Indicators**: Make a change (e.g. drag a widget), check that the Bottom Status Bar immediately displays a yellow dot and "Saving...".
+- [ ] **Auto-save Finished Status**: Wait 2 seconds, verify the indicator changes to a green dot and lists the correct saved timestamp (e.g. "Saved 05:24:12 PM").
+
+### Performance (Part 3)
+- [ ] **Scene Rendering Optimization**: Verify that zooming/panning/dragging remains smooth. Confirm that resizing widgets renders without lags or visual stuttering.

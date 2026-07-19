@@ -8,7 +8,8 @@ export const BottomStatusBar: React.FC = () => {
     zoom, snapEnabled, gridMode, showGuides, showRulers,
     setZoom, zoomIn, zoomOut, zoomToFit,
     selectedIds, getDraftWidgets, setGridMode,
-    toggleSnap, toggleGuides, toggleRulers
+    toggleSnap, toggleGuides, toggleRulers,
+    isSaving, lastSavedAt
   } = useEditorStore();
 
   const [mouseCanvas, setMouseCanvas] = useState({ x: 0, y: 0 });
@@ -176,6 +177,26 @@ export const BottomStatusBar: React.FC = () => {
       ) : (
         <span style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{widgets.length} element{widgets.length !== 1 ? 's' : ''}</span>
       )}
+
+      <div className="status-bar-divider" />
+
+      {/* Auto-save status feedback */}
+      <div className="status-bar-item" style={{ gap: 5, fontSize: 9 }}>
+        <span
+          style={{
+            width: 5,
+            height: 5,
+            borderRadius: '50%',
+            background: isSaving ? '#eab308' : '#10b981',
+            display: 'inline-block',
+            boxShadow: isSaving ? '0 0 5px #eab308' : '0 0 5px #10b981',
+            transition: 'background 0.2s, box-shadow 0.2s',
+          }}
+        />
+        <span style={{ color: 'var(--color-text-muted)' }}>
+          {isSaving ? 'Saving...' : lastSavedAt ? `Saved ${new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : 'Saved'}
+        </span>
+      </div>
 
       <div className="status-bar-divider" />
 

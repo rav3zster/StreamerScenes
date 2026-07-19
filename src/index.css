@@ -904,3 +904,29 @@ html, body, #root {
 .app-shell.theme-editor-light .scrollbar-thumb.dragging {
   background: rgba(0,0,0,0.35);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOVEABLE PREMIUM SELECTION HANDLES
+   ───────────────────────────────────────────────────────────────────────────── */
+.moveable-control {
+  background: var(--color-accent, #a855f7) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 50% !important;
+  width: 10px !important;
+  height: 10px !important;
+  margin-top: -5px !important;
+  margin-left: -5px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 0.15s ease-in-out;
+}
+.moveable-control:hover {
+  transform: scale(1.3);
+}
+.moveable-line {
+  background: var(--color-accent, #a855f7) !important;
+}
+.moveable-rotation {
+  background: #ec4899 !important; /* Rich pink for rotation handle */
+  border: 2px solid #ffffff !important;
+}
+

@@ -160,6 +160,10 @@ interface EditorState {
   leftPanelWidth: number;
   rightPanelWidth: number;
 
+  // Auto-save feedback state
+  isSaving: boolean;
+  lastSavedAt: number | null;
+
   // Favorites and Recents
   favoriteWidgets: string[];
   recentWidgets: string[];
@@ -270,6 +274,8 @@ interface EditorState {
     liveTransitionDuration?: number;
     selectedPackId?: string | null;
   }) => void;
+
+  setSavingStatus: (isSaving: boolean, lastSavedAt?: number | null) => void;
 }
 
 export type LeftTab = 'scenes' | 'layers' | 'assets' | 'widgets';
@@ -415,6 +421,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   editorTheme: 'dark',
   leftPanelWidth: 280,
   rightPanelWidth: 300,
+
+  isSaving: false,
+  lastSavedAt: null,
 
   favoriteWidgets: [],
   recentWidgets: [],
@@ -1153,6 +1162,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       appView: 'editor',
     }));
   },
+
+  setSavingStatus: (isSaving, lastSavedAt = null) => {
+    set({
+      isSaving,
+      ...(lastSavedAt !== null ? { lastSavedAt } : {}),
+    });
+  },
 }));
 
 const syncChannel = typeof window !== 'undefined' ? new BroadcastChannel('vibeoverlay-state-sync') : null;
@@ -1164,8 +1180,10 @@ let lastLiveTimerStr = '';
 let lastLiveTransitionType = '';
 let lastLiveTransitionDuration = 0;
 
+let lastSavedStateStr = '';
+
 useEditorStore.subscribe((state) => {
-  persistenceService.triggerAutoSave(() => ({
+  const currentProjectRepresent = JSON.stringify({
     projectName: state.projectName,
     scenes: state.scenes,
     liveScenes: state.liveScenes,
@@ -1175,8 +1193,27 @@ useEditorStore.subscribe((state) => {
     liveTransitionType: state.liveTransitionType,
     liveTransitionDuration: state.liveTransitionDuration,
     selectedPackId: state.selectedPackId,
-    updatedAt: Date.now(),
-  }));
+  });
+
+  if (currentProjectRepresent !== lastSavedStateStr) {
+    lastSavedStateStr = currentProjectRepresent;
+    persistenceService.triggerAutoSave(
+      () => ({
+        projectName: state.projectName,
+        scenes: state.scenes,
+        liveScenes: state.liveScenes,
+        liveSceneId: state.liveSceneId,
+        editingSceneId: state.editingSceneId,
+        liveTimer: state.liveTimer,
+        liveTransitionType: state.liveTransitionType,
+        liveTransitionDuration: state.liveTransitionDuration,
+        selectedPackId: state.selectedPackId,
+        updatedAt: Date.now(),
+      }),
+      () => useEditorStore.getState().setSavingStatus(true),
+      (timestamp) => useEditorStore.getState().setSavingStatus(false, timestamp)
+    );
+  }
 
   // Detect change in live-only broadcast state
   const liveScenesStr = JSON.stringify(state.liveScenes);

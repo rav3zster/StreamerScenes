@@ -268,6 +268,7 @@ interface EditorState {
     liveTimer?: TimerRuntime;
     liveTransitionType?: 'none' | 'fade' | 'slide';
     liveTransitionDuration?: number;
+    selectedPackId?: string | null;
   }) => void;
 }
 
@@ -1127,17 +1128,31 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
   },
 
-  loadProjectData: (data) => set(s => ({
-    projectName: data.projectName,
-    scenes: data.scenes,
-    liveScenes: data.liveScenes || data.scenes,
-    liveSceneId: data.liveSceneId,
-    editingSceneId: data.editingSceneId,
-    liveTimer: data.liveTimer || s.liveTimer,
-    liveTransitionType: data.liveTransitionType || s.liveTransitionType,
-    liveTransitionDuration: data.liveTransitionDuration || s.liveTransitionDuration,
-    appView: 'editor',
-  })),
+  loadProjectData: (data) => {
+    // Find the pack theme class to apply if selectedPackId is present
+    const pack = STREAM_PACKS.find(p => p.id === data.selectedPackId);
+    if (pack) {
+      setTimeout(() => {
+        const shell = document.querySelector('.app-shell');
+        if (shell) {
+          STREAM_PACKS.forEach(p => shell.classList.remove(p.themeClass));
+          shell.classList.add(pack.themeClass);
+        }
+      }, 100);
+    }
+    set(s => ({
+      projectName: data.projectName,
+      scenes: data.scenes,
+      liveScenes: data.liveScenes || data.scenes,
+      liveSceneId: data.liveSceneId,
+      editingSceneId: data.editingSceneId,
+      liveTimer: data.liveTimer || s.liveTimer,
+      liveTransitionType: data.liveTransitionType || s.liveTransitionType,
+      liveTransitionDuration: data.liveTransitionDuration || s.liveTransitionDuration,
+      selectedPackId: data.selectedPackId || null,
+      appView: 'editor',
+    }));
+  },
 }));
 
 const syncChannel = typeof window !== 'undefined' ? new BroadcastChannel('vibeoverlay-state-sync') : null;
@@ -1159,6 +1174,7 @@ useEditorStore.subscribe((state) => {
     liveTimer: state.liveTimer,
     liveTransitionType: state.liveTransitionType,
     liveTransitionDuration: state.liveTransitionDuration,
+    selectedPackId: state.selectedPackId,
     updatedAt: Date.now(),
   }));
 

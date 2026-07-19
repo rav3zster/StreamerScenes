@@ -9,6 +9,7 @@ export interface ProjectData {
   liveTimer?: TimerRuntime;
   liveTransitionType?: 'none' | 'fade' | 'slide';
   liveTransitionDuration?: number;
+  selectedPackId?: string | null;
   updatedAt: number;
 }
 

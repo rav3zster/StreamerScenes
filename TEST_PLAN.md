@@ -120,3 +120,26 @@ This manual QA checklist defines the verification criteria for every widget in V
 - [ ] **Create**: Add shapes, lines, glows, or corner marks.
 - [ ] **Properties**: Verify custom color gradient, blur depth, border size.
 - [ ] **Theme & Publish**: Verify identical visual output in live screen.
+
+---
+
+## 4. Milestone 3 — Broadcast Packs & Template System
+
+### Onboarding & Browser Flow
+- [ ] **Onboarding Screen UI**: Run the app without existing project data, confirm the Welcome Wizard appears with pack list, details, and layout previews.
+- [ ] **Category Filtering**: Click categories (All, Cyberpunk, Gaming, Luxury, Minimal, Lo-Fi, Anime, Cozy) in the Pack Browser, verify the grid filters instantly.
+- [ ] **Pack Search**: Type query strings in the search bar, verify filter updates and case-insensitivity.
+
+### Preview System
+- [ ] **Preview Scene Selection**: Select different scenes (Starting Soon, Just Chatting, Gameplay, Ending) in the Pack Details / Welcome Wizard tabs, check if the preview mini-canvas updates layouts instantly.
+- [ ] **Non-Modifying Previews**: Verify that switching packs or scenes inside the preview canvas does NOT modify any active project state in the store.
+
+### Import / Export System
+- [ ] **Pack Loader**: Select a pack, input a custom project name, and click **Use This Pack** / **Create Project & Import Pack**. Confirm the app navigates to the Editor Workspace with all scenes, widgets, and layouts fully built.
+- [ ] **Custom Settings Customization**: Modify widget settings in the imported project, confirm changes save to persistence.
+- [ ] **JSON Project Export**: Click **Export Project (.json)** in the File menu, verify JSON file downloads.
+- [ ] **JSON Project Import**: Import a previously exported JSON project file, verify all scenes, styles, and custom widgets load correctly.
+
+### Theme & Typography Swap
+- [ ] **Theme Variable Injections**: Confirm that when importing the `Luxury Noir` pack, Playfair Display serif fonts render cleanly. Confirm that when importing `Cyber Neon` or `Streamer Bedroom`, neon glow styles apply.
+- [ ] **Reload / Refresh Retention**: Refresh the editor page, verify that the active visual pack theme variables (`theme-...` class list on `.app-shell`) remain active.

@@ -2,6 +2,9 @@ import React from 'react';
 import type { WidgetProps } from '../types';
 import { buildBaseStyle } from '../../renderer/styleHelpers';
 
+// Cache playheads at the module level so they persist between mounts/unmounts
+const playbackPositions = new Map<string, number>();
+
 /**
  * VideoWidget — handles: video, game-capture.
  * Renders a <video> element if a src is provided, otherwise a placeholder.
@@ -9,6 +12,41 @@ import { buildBaseStyle } from '../../renderer/styleHelpers';
 export const VideoWidget: React.FC<WidgetProps> = ({ widget, zoom, animated }) => {
   const { style: s, content, type } = widget;
   const src: string | undefined = content.settings?.src || content.settings?.url;
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const loop = content.settings?.loop !== false;
+  const muted = content.settings?.muted !== false;
+  const playPolicy = content.settings?.playPolicy ?? 'restart';
+
+  React.useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !animated) return;
+
+    if (playPolicy === 'resume' || playPolicy === 'pause') {
+      const savedTime = playbackPositions.get(widget.id);
+      if (savedTime !== undefined) {
+        video.currentTime = savedTime;
+      }
+    } else {
+      playbackPositions.delete(widget.id);
+    }
+
+    return () => {
+      if (video) {
+        if (playPolicy === 'resume' || playPolicy === 'pause') {
+          playbackPositions.set(widget.id, video.currentTime);
+        }
+      }
+    };
+  }, [widget.id, playPolicy, animated]);
+
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    if (!animated) return;
+    const video = e.currentTarget;
+    if (playPolicy === 'resume' || playPolicy === 'pause') {
+      playbackPositions.set(widget.id, video.currentTime);
+    }
+  };
 
   if (!src) {
     if (animated) return <div style={{ ...buildBaseStyle(s), background: '#000' }} />;
@@ -42,11 +80,13 @@ export const VideoWidget: React.FC<WidgetProps> = ({ widget, zoom, animated }) =
   return (
     <div style={{ ...buildBaseStyle(s), padding: 0 }}>
       <video
+        ref={videoRef}
         src={src}
         autoPlay
-        loop={content.settings?.loop ?? true}
-        muted={content.settings?.muted ?? true}
+        loop={loop}
+        muted={muted}
         playsInline
+        onTimeUpdate={handleTimeUpdate}
         style={{
           width: '100%',
           height: '100%',

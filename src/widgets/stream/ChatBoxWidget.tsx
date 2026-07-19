@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { WidgetProps } from '../types';
 import { buildBaseStyle, buildTextStyle } from '../../renderer/styleHelpers';
 
@@ -17,14 +17,43 @@ const MOCK_MESSAGES: MockMessage[] = [
   { user: 'catviewer',    text: ':) nice stream',                color: '#10b981' },
 ];
 
+const MESSAGES_BANK: MockMessage[] = [
+  ...MOCK_MESSAGES,
+  { user: 'SpeedRunner',  text: 'Sub 4 minute run incoming?',    color: '#3b82f6' },
+  { user: 'ModSquad',     text: 'Be nice in chat guys',         color: '#ef4444' },
+  { user: 'lurker_101',   text: 'Just lurking, gl gl',          color: '#7c6fa0' },
+  { user: 'hype_train',   text: 'HYPE HYPE HYPE HYPE',          color: '#10b981' },
+  { user: 'pixel_art',    text: 'love the screen overlay!',     color: '#f59e0b' },
+  { user: 'soundwave',    text: 'music is fire',                color: '#8b5cf6' },
+];
+
 /**
  * ChatBoxWidget — renders a simulated chat feed.
- * In output mode this will be replaced by a real chat integration.
  */
-export const ChatBoxWidget: React.FC<WidgetProps> = ({ widget, zoom }) => {
+export const ChatBoxWidget: React.FC<WidgetProps> = ({ widget, zoom, animated }) => {
   const { style: s, content } = widget;
   const max = content.settings?.maxMessages ?? 8;
-  const messages = MOCK_MESSAGES.slice(0, max);
+  const [messages, setMessages] = useState<MockMessage[]>(() => MOCK_MESSAGES.slice(0, max));
+
+  useEffect(() => {
+    if (!animated) {
+      setMessages(MOCK_MESSAGES.slice(0, max));
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const randomMsg = MESSAGES_BANK[Math.floor(Math.random() * MESSAGES_BANK.length)];
+      setMessages(prev => {
+        const next = [...prev, randomMsg];
+        if (next.length > max) {
+          next.shift();
+        }
+        return next;
+      });
+    }, 2800);
+
+    return () => clearInterval(interval);
+  }, [animated, max]);
 
   return (
     <div

@@ -66,7 +66,7 @@ export const SceneTransitioner: React.FC<SceneTransitionerProps> = ({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [activeSceneId, transitionType, transitionDuration]);
+  }, [activeSceneId, transitionType, transitionDuration, renderState.currentId]);
 
   const currentScene = scenes.find(s => s.id === renderState.currentId);
   const prevScene = scenes.find(s => s.id === renderState.prevId);

@@ -897,7 +897,7 @@ const WidgetSettingsSection: React.FC<{ widget: SceneWidget }> = ({ widget }) =>
     case 'image':
     case 'gif':
       return (
-        <InspectorSection title="Image Source" icon={<Settings2 size={12} />} defaultOpen>
+        <InspectorSection title="Image/GIF Source" icon={<Settings2 size={12} />} defaultOpen>
           <div className="input-group">
             <div className="input-group-label">Image URL / Source</div>
             <input
@@ -909,6 +909,20 @@ const WidgetSettingsSection: React.FC<{ widget: SceneWidget }> = ({ widget }) =>
               placeholder="https://example.com/image.png"
             />
           </div>
+          {widget.type === 'gif' && (
+            <div className="input-group" style={{ marginTop: 8 }}>
+              <div className="input-group-label">Scene Switch Behavior</div>
+              <select
+                className="select"
+                value={settings.playPolicy ?? 'restart'}
+                onChange={e => uc({ playPolicy: e.target.value })}
+                style={{ width: '100%', fontSize: 11, padding: '4px 6px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 4, color: 'var(--color-text)' }}
+              >
+                <option value="restart">Restart Animation</option>
+                <option value="continue">Continue Loop</option>
+              </select>
+            </div>
+          )}
         </InspectorSection>
       );
 
@@ -925,6 +939,164 @@ const WidgetSettingsSection: React.FC<{ widget: SceneWidget }> = ({ widget }) =>
               style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
               placeholder="https://example.com/video.mp4"
             />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600 }}>Looping</span>
+            <ToggleRow value={settings.loop !== false} onChange={v => uc({ loop: v })} label={settings.loop !== false ? 'Loop' : 'Once'} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+            <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600 }}>Muted</span>
+            <ToggleRow value={settings.muted !== false} onChange={v => uc({ muted: v })} label={settings.muted !== false ? 'Muted' : 'Audio On'} />
+          </div>
+          <div className="input-group" style={{ marginTop: 8 }}>
+            <div className="input-group-label">Scene Switch Behavior</div>
+            <select
+              className="select"
+              value={settings.playPolicy ?? 'restart'}
+              onChange={e => uc({ playPolicy: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 4, color: 'var(--color-text)' }}
+            >
+              <option value="restart">Restart Video</option>
+              <option value="resume">Resume Playback</option>
+              <option value="pause">Pause Video</option>
+            </select>
+          </div>
+        </InspectorSection>
+      );
+
+    case 'clock':
+      return (
+        <InspectorSection title="Clock Settings" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Time Format</div>
+            <select
+              className="select"
+              value={settings.format ?? '12h'}
+              onChange={e => uc({ format: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 4, color: 'var(--color-text)' }}
+            >
+              <option value="12h">12-Hour (AM/PM)</option>
+              <option value="24h">24-Hour</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600 }}>Show Seconds</span>
+            <ToggleRow value={settings.showSeconds !== false} onChange={v => uc({ showSeconds: v })} label={settings.showSeconds !== false ? 'Show' : 'Hide'} />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'header':
+    case 'footer':
+      return (
+        <InspectorSection title="Layout Text" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Display Text</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.titleText ?? ''}
+              onChange={e => uc({ titleText: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder={widget.type === 'header' ? 'Stream Title' : 'Footer Text'}
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'glass-panel':
+    case 'container':
+      return (
+        <InspectorSection title="Panel Label" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Display Label (Optional)</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.text ?? ''}
+              onChange={e => uc({ text: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="Label..."
+            />
+          </div>
+        </InspectorSection>
+      );
+
+    case 'svg':
+      return (
+        <InspectorSection title="SVG Settings" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Source Type</div>
+            <select
+              className="select"
+              value={settings.sourceType ?? 'url'}
+              onChange={e => uc({ sourceType: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 4, color: 'var(--color-text)' }}
+            >
+              <option value="url">Remote URL</option>
+              <option value="raw">Raw XML Code</option>
+            </select>
+          </div>
+          {settings.sourceType === 'raw' ? (
+            <div className="input-group" style={{ marginTop: 8 }}>
+              <div className="input-group-label">SVG Raw XML Code</div>
+              <textarea
+                className="input input-mono"
+                value={settings.rawSvg ?? ''}
+                onChange={e => uc({ rawSvg: e.target.value })}
+                style={{ width: '100%', minHeight: 120, padding: 8, fontSize: 10, fontFamily: 'inherit', resize: 'vertical' }}
+                placeholder="<svg ...> ... </svg>"
+              />
+            </div>
+          ) : (
+            <div className="input-group" style={{ marginTop: 8 }}>
+              <div className="input-group-label">SVG File URL</div>
+              <input
+                type="text"
+                className="input"
+                value={settings.src ?? settings.url ?? ''}
+                onChange={e => uc({ src: e.target.value })}
+                style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+                placeholder="https://example.com/vector.svg"
+              />
+            </div>
+          )}
+        </InspectorSection>
+      );
+
+    case 'lottie':
+      return (
+        <InspectorSection title="Lottie Animation" icon={<Settings2 size={12} />} defaultOpen>
+          <div className="input-group">
+            <div className="input-group-label">Lottie JSON URL</div>
+            <input
+              type="text"
+              className="input"
+              value={settings.src ?? settings.url ?? ''}
+              onChange={e => uc({ src: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
+              placeholder="https://assets.lottiefiles.com/...json"
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600 }}>Looping</span>
+            <ToggleRow value={settings.loop !== false} onChange={v => uc({ loop: v })} label={settings.loop !== false ? 'Loop' : 'Once'} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+            <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600 }}>Autoplay</span>
+            <ToggleRow value={settings.autoplay !== false} onChange={v => uc({ autoplay: v })} label={settings.autoplay !== false ? 'Autoplay' : 'Manual'} />
+          </div>
+          <div className="input-group" style={{ marginTop: 8 }}>
+            <div className="input-group-label">Scene Switch Behavior</div>
+            <select
+              className="select"
+              value={settings.playPolicy ?? 'restart'}
+              onChange={e => uc({ playPolicy: e.target.value })}
+              style={{ width: '100%', fontSize: 11, padding: '4px 6px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 4, color: 'var(--color-text)' }}
+            >
+              <option value="restart">Restart Animation</option>
+              <option value="continue">Continue Loop</option>
+            </select>
           </div>
         </InspectorSection>
       );

@@ -41,6 +41,8 @@ import { VideoWidget }           from './media/VideoWidget';
 import { CameraWidget }          from './media/CameraWidget';
 import { AvatarWidget }          from './media/AvatarWidget';
 import { LogoWidget }            from './media/LogoWidget';
+import { SvgWidget }             from './media/SvgWidget';
+import { LottieWidget }          from './media/LottieWidget';
 import { PlaceholderMediaWidget } from './media/PlaceholderMediaWidget';
 
 // ── Stream ──────────────────────────────────────────────────────────────────
@@ -95,8 +97,8 @@ export const WIDGET_REGISTRY: Partial<Record<WidgetType, React.FC<WidgetProps>>>
   'camera-frame':  CameraWidget,
   'avatar-frame':  AvatarWidget,
   logo:            LogoWidget,
-  lottie:          PlaceholderMediaWidget,
-  svg:             PlaceholderMediaWidget,
+  lottie:          LottieWidget,
+  svg:             SvgWidget,
   vtuber:          PlaceholderMediaWidget,
 
   // Stream

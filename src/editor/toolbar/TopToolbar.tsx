@@ -53,7 +53,7 @@ export const TopToolbar: React.FC = () => {
     if (editingSceneId) setLiveScene(editingSceneId);
   };
 
-  const handleTogglePreview = () => {
+  const handleTogglePreview = React.useCallback(() => {
     const nextPreviewMode = !showPreviewMode;
     togglePreviewMode();
 
@@ -79,7 +79,7 @@ export const TopToolbar: React.FC = () => {
       // Pause/reset the preview timer when exiting preview mode
       resetPreviewTimer();
     }
-  };
+  }, [showPreviewMode, togglePreviewMode, scenes, editingSceneId, startPreviewTimer, resetPreviewTimer]);
 
   const handleNewProject = () => {
     setFileMenuOpen(false);
@@ -234,10 +234,10 @@ export const TopToolbar: React.FC = () => {
 
       {/* ── History ────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-        <button className="btn-icon" onClick={undo} disabled={!canUndo()} data-tooltip="Undo (⌘Z)" title="Undo">
+        <button className="btn-icon" onClick={undo} disabled={!canUndo()} data-tooltip="Undo (⌘Z)" data-tooltip-position="bottom" title="Undo">
           <Undo2 size={14} />
         </button>
-        <button className="btn-icon" onClick={redo} disabled={!canRedo()} data-tooltip="Redo (⌘Y)" title="Redo">
+        <button className="btn-icon" onClick={redo} disabled={!canRedo()} data-tooltip="Redo (⌘Y)" data-tooltip-position="bottom" title="Redo">
           <Redo2 size={14} />
         </button>
       </div>
@@ -275,13 +275,13 @@ export const TopToolbar: React.FC = () => {
 
       {/* ── Canvas toggles ─────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 2 }}>
-        <button className={`btn-icon${showGrid ? ' active' : ''}`} onClick={toggleGrid} data-tooltip="Grid" title="Toggle Grid">
+        <button className={`btn-icon${showGrid ? ' active' : ''}`} onClick={toggleGrid} data-tooltip="Grid" data-tooltip-position="bottom" title="Toggle Grid">
           <Grid3x3 size={14} />
         </button>
-        <button className={`btn-icon${snapEnabled ? ' active' : ''}`} onClick={toggleSnap} data-tooltip="Snap" title="Toggle Snap">
+        <button className={`btn-icon${snapEnabled ? ' active' : ''}`} onClick={toggleSnap} data-tooltip="Snap" data-tooltip-position="bottom" title="Toggle Snap">
           <Magnet size={14} />
         </button>
-        <button className={`btn-icon${showGuides ? ' active' : ''}`} onClick={toggleGuides} data-tooltip="Guides" title="Toggle Guides">
+        <button className={`btn-icon${showGuides ? ' active' : ''}`} onClick={toggleGuides} data-tooltip="Guides" data-tooltip-position="bottom" title="Toggle Guides">
           <Ruler size={14} />
         </button>
       </div>

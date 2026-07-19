@@ -9,7 +9,12 @@ import { buildBaseStyle } from '../../renderer/styleHelpers';
  */
 export const ImageWidget: React.FC<WidgetProps> = ({ widget, zoom, animated }) => {
   const { style: s, content, type } = widget;
-  const src: string | undefined = content.settings?.src || content.settings?.url;
+  const rawSrc: string | undefined = content.settings?.src || content.settings?.url;
+  const [mountTime] = React.useState(() => Date.now());
+
+  const src = rawSrc && type === 'gif' && content.settings?.playPolicy !== 'continue'
+    ? `${rawSrc}${rawSrc.includes('?') ? '&' : '?'}t=${mountTime}`
+    : rawSrc;
 
   if (!src) {
     // Editor placeholder

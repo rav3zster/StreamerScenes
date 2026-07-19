@@ -161,3 +161,55 @@ This manual QA checklist defines the verification criteria for every widget in V
 
 ### Performance (Part 3)
 - [ ] **Scene Rendering Optimization**: Verify that zooming/panning/dragging remains smooth. Confirm that resizing widgets renders without lags or visual stuttering.
+
+---
+
+## 6. Milestone 4 — Streamer Experience
+
+### Part 1 — New Stream Wizard
+- [ ] **Wizard appears on first load**: Open app without saved project data, confirm Welcome Wizard appears with "Create New Stream" and "Open Existing Project" buttons.
+- [ ] **Wizard progress indicator**: Navigate through all steps, verify the step indicator bar highlights the current step correctly.
+- [ ] **Pack Selection**: Browse packs in Step 1, confirm pack cards show preview image, name, description, and theme colors. Select a pack, verify it advances to Step 2.
+- [ ] **Step navigation**: Use Back/Next buttons to navigate between steps, confirm form state is preserved on each step.
+- [ ] **Wizard exit**: Close the wizard mid-flow, confirm editorStore is not modified (no partial project state leaked).
+
+### Part 2 — Asset Personalization
+- [ ] **Streamer profile form**: In Step 2, enter streamer name, channel name, logo URL, social handles, countdown duration, and camera frame style. Verify all fields accept input.
+- [ ] **Placeholder replacement**: After completing the wizard, open the editor and verify `{STREAMER_NAME}` and `{CHANNEL_NAME}` placeholders are replaced in text widgets.
+- [ ] **Logo/avatar replacement**: Verify logo and avatar frame widgets have the correct URL applied.
+- [ ] **Social links replacement**: Verify social links widget has the entered handles.
+- [ ] **Countdown duration**: Verify countdown timer widget has the user's preferred duration.
+
+### Part 3 — Theme Manager
+- [ ] **Themes tab**: Open the editor, locate the Themes tab in the Left Panel. Click it to open the Theme Manager panel.
+- [ ] **Accent color**: Change the accent color, verify the editor's accent elements (buttons, highlights) update immediately.
+- [ ] **Background/text color**: Change background and text colors, verify the canvas and UI update in real time.
+- [ ] **Border radius**: Adjust the border radius slider, verify widget corners change on the canvas.
+- [ ] **Glass intensity**: Adjust glass intensity, verify glass-panel widgets show more/less blur.
+- [ ] **Animation toggle**: Toggle animations off, verify animated widgets stop moving.
+- [ ] **Transition style**: Switch between fade, slide, and none, verify scene transitions change.
+- [ ] **Reset theme**: Click "Reset Theme", verify all overrides clear back to pack defaults.
+- [ ] **Persistence**: Refresh the page, verify theme overrides are restored.
+
+### Part 4 — OBS Setup Guide
+- [ ] **Menu entry**: From the editor File menu, click "OBS Setup Guide", verify the guide page opens.
+- [ ] **URL display**: Verify the output URL is displayed with a "Copy URL" button.
+- [ ] **Copy URL**: Click "Copy URL", verify the URL is copied to clipboard.
+- [ ] **Recommended settings**: Verify recommended settings (1920×1080, 60 FPS, etc.) are displayed.
+- [ ] **Step-by-step instructions**: Verify OBS setup steps are readable and correct.
+- [ ] **Open Output page**: Click "Open Output Page", verify it opens the overlay in a new tab.
+- [ ] **Back to Editor**: Navigate back to the editor, verify no state was lost.
+
+### Part 5 — Stream Readiness Checklist
+- [ ] **Status bar indicator**: Open the editor, verify the bottom status bar shows a readiness counter (e.g., "0/9").
+- [ ] **Popover opens**: Click the counter, verify the checklist popover opens with all 9 items listed.
+- [ ] **Automatic checks**: Complete wizard steps to mark items (Pack Selected, Logo Added, etc.), verify they auto-check in the list.
+- [ ] **Manual checks**: Click "Mark as Connected" and "Mark as Verified", verify those items check off.
+- [ ] **Progress count**: Verify the counter updates correctly as items are completed.
+- [ ] **Ready to Go Live banner**: Complete all 9 items, verify the red "Ready to Go Live" banner appears.
+- [ ] **Outside click closes**: Open the popover, click outside it, verify it closes.
+
+### End-to-End Walkthrough
+- [ ] **Full flow**: Open the app fresh → complete wizard → verify personalization applied → adjust theme → verify OBS guide → verify readiness checklist shows all items complete.
+- [ ] **No regressions**: After completing the wizard, verify existing editor features still work (widget editing, drag/resize, layers, undo/redo, auto-save).
+- [ ] **Build & lint**: Run `npm run build` and `npm run lint`, both must pass with zero errors.

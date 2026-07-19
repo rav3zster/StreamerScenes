@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import {
-  Film, Layers, Image, Layout,
+  Film, Layers, Image, Layout, Palette,
   Plus, Trash2, Eye, EyeOff, Lock, Unlock, GripVertical,
   Search, ChevronDown, ChevronUp, Copy, Heart, Clock,
 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { WIDGET_CATEGORIES } from '../../data/widgetCatalog';
 import { WIDGET_TEMPLATES } from '../../data/widgetTemplates';
 import { MOCK_ASSETS, type VisualAsset } from '../../data/assets';
 import { LiveControlPanel } from './LiveControlPanel';
+import { ThemeManagerPanel } from './ThemeManagerPanel';
 
 // ─── Sidebar Rail ─────────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ const TABS: { id: LeftTab; icon: React.ReactNode; label: string }[] = [
   { id: 'layers', icon: <Layers size={16} />, label: 'Layers' },
   { id: 'assets', icon: <Image size={16} />, label: 'Assets' },
   { id: 'widgets', icon: <Layout size={16} />, label: 'Widgets' },
+  { id: 'themes', icon: <Palette size={16} />, label: 'Themes' },
 ];
 
 export const SidebarRail: React.FC = () => {
@@ -53,6 +55,7 @@ export const LeftPanel: React.FC = () => {
     'layers': <LayersTab />,
     'assets': <AssetsTab />,
     'widgets': <WidgetsTab />,
+    'themes': <ThemeManagerPanel />,
   };
 
   const labels: Record<LeftTab, string> = {
@@ -60,6 +63,7 @@ export const LeftPanel: React.FC = () => {
     layers: 'Layers Outline',
     assets: 'Assets Browser',
     widgets: 'Widget Library',
+    themes: 'Theme Manager',
   };
 
   return (

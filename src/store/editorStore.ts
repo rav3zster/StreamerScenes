@@ -160,6 +160,12 @@ interface EditorState {
   leftPanelWidth: number;
   rightPanelWidth: number;
 
+  // Theme Overrides
+  themeOverrides: ThemeOverrides;
+
+  // Readiness
+  readinessManualChecks: ReadinessChecks;
+
   // Auto-save feedback state
   isSaving: boolean;
   lastSavedAt: number | null;
@@ -170,6 +176,7 @@ interface EditorState {
 
   // Actions — Scenes
   setScenes: (scenes: Scene[]) => void;
+  setLiveScenes: (liveScenes: Scene[]) => void;
   setEditingScene: (id: string) => void;
   addScene: (name: string, label: string) => void;
   deleteScene: (id: string) => void;
@@ -275,11 +282,33 @@ interface EditorState {
     selectedPackId?: string | null;
   }) => void;
 
+  // Theme Override Actions
+  setThemeOverrides: (overrides: Partial<ThemeOverrides>) => void;
+  resetThemeOverrides: () => void;
+
+  // Readiness Actions
+  setReadinessCheck: (key: keyof ReadinessChecks, value: boolean) => void;
+
   setSavingStatus: (isSaving: boolean, lastSavedAt?: number | null) => void;
 }
 
-export type LeftTab = 'scenes' | 'layers' | 'assets' | 'widgets';
-export type AppView = 'welcome' | 'pack-browser' | 'pack-detail' | 'editor';
+export interface ThemeOverrides {
+  accentColor: string | null;
+  backgroundColor: string | null;
+  textColor: string | null;
+  borderRadius: number | null;
+  glassIntensity: number | null;
+  animationsEnabled: boolean;
+  transitionStyle: 'none' | 'fade' | 'slide';
+}
+
+export interface ReadinessChecks {
+  obsConnected: boolean;
+  browserSourceVerified: boolean;
+}
+
+export type LeftTab = 'scenes' | 'layers' | 'assets' | 'widgets' | 'themes';
+export type AppView = 'welcome' | 'pack-browser' | 'pack-detail' | 'editor' | 'obs-setup';
 
 export const getTimerRemaining = (timer: TimerRuntime): number => {
   if (!timer.isRunning) {
@@ -422,6 +451,23 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   leftPanelWidth: 280,
   rightPanelWidth: 300,
 
+  // Theme overrides
+  themeOverrides: {
+    accentColor: null,
+    backgroundColor: null,
+    textColor: null,
+    borderRadius: null,
+    glassIntensity: null,
+    animationsEnabled: true,
+    transitionStyle: 'fade',
+  },
+
+  // Readiness
+  readinessManualChecks: {
+    obsConnected: false,
+    browserSourceVerified: false,
+  },
+
   isSaving: false,
   lastSavedAt: null,
 
@@ -431,6 +477,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   // ── Scenes ──────────────────────────────────────────────────────────────────
 
   setScenes: (scenes) => set({ scenes }),
+  setLiveScenes: (liveScenes) => set({ liveScenes }),
 
   setEditingScene: (id) => set({ editingSceneId: id, selectedIds: [] }),
 
@@ -904,6 +951,29 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setEditorTheme: (theme: 'dark' | 'light') => set({ editorTheme: theme }),
   setLeftPanelWidth: (w: number) => set({ leftPanelWidth: Math.max(200, Math.min(500, w)) }),
   setRightPanelWidth: (w: number) => set({ rightPanelWidth: Math.max(240, Math.min(500, w)) }),
+
+  // ── Theme Overrides ─────────────────────────────────────────────────────────
+
+  setThemeOverrides: (overrides) => set(s => ({
+    themeOverrides: { ...s.themeOverrides, ...overrides }
+  })),
+  resetThemeOverrides: () => set(s => ({
+    themeOverrides: {
+      accentColor: null,
+      backgroundColor: null,
+      textColor: null,
+      borderRadius: null,
+      glassIntensity: null,
+      animationsEnabled: true,
+      transitionStyle: 'fade',
+    }
+  })),
+
+  // ── Readiness ───────────────────────────────────────────────────────────────
+
+  setReadinessCheck: (key, value) => set(s => ({
+    readinessManualChecks: { ...s.readinessManualChecks, [key]: value }
+  })),
 
   // ── Apply Preset ─────────────────────────────────────────────────────────────
 

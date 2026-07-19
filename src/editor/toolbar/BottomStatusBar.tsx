@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ZoomIn, ZoomOut, Grid3x3, Magnet, Monitor, Eye } from 'lucide-react';
 import { useEditorStore, type GridMode } from '../../store/editorStore';
 import { CANVAS_W, CANVAS_H } from '../canvas/EditorCanvas';
+import { ReadinessPanel, useReadinessItems } from '../../components/ReadinessPanel';
 
 export const BottomStatusBar: React.FC = () => {
   const {
@@ -209,6 +210,60 @@ export const BottomStatusBar: React.FC = () => {
         <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-cyan)', display: 'inline-block', boxShadow: '0 0 4px var(--color-cyan)' }} />
         OBS Output
       </button>
+
+      <div className="status-bar-divider" />
+
+      {/* Readiness */}
+      <div style={{ position: 'relative' }}>
+        <ReadinessStatus />
+      </div>
+    </div>
+  );
+};
+
+const ReadinessStatus: React.FC = () => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const items = useReadinessItems();
+  const completed = items.filter(i => i.check()).length;
+  const total = items.length;
+  const isReady = completed === total;
+  useEditorStore(); // subscribe
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  return (
+    <div ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          ...statusBtn,
+          color: isReady ? '#ef4444' : 'var(--color-text-muted)',
+          display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'none',
+          position: 'relative',
+        }}
+        title="Stream Readiness"
+      >
+        <span style={{
+          width: 5, height: 5, borderRadius: '50%',
+          background: isReady ? '#ef4444' : 'var(--color-text-muted)',
+          display: 'inline-block',
+          boxShadow: isReady ? '0 0 4px #ef4444' : 'none',
+          animation: isReady ? 'live-pulse 2s ease-in-out infinite' : 'none',
+        }} />
+        {completed}/{total}
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, zIndex: 1000 }}>
+          <ReadinessPanel />
+        </div>
+      )}
     </div>
   );
 };

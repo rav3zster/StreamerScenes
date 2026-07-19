@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { EditorPage } from './pages/EditorPage';
 import { OutputPage } from './pages/OutputPage';
-import { WelcomePage } from './pages/WelcomePage';
+import { WelcomeWizard } from './components/wizard/WelcomeWizard';
+import { OBSSetupGuide } from './components/OBSSetupGuide';
 import { PackBrowserPage } from './pages/PackBrowserPage';
 import { PackDetailPage } from './pages/PackDetailPage';
 import { useEditorStore } from './store/editorStore';
@@ -35,21 +36,54 @@ const StudioRouter: React.FC = () => {
 
   return (
     <>
-      {appView === 'welcome' && <WelcomePage />}
+      {appView === 'welcome' && <WelcomeWizard />}
       {appView === 'pack-browser' && <PackBrowserPage />}
       {appView === 'pack-detail' && <PackDetailPage />}
       {appView === 'editor' && <EditorPage />}
+      {appView === 'obs-setup' && <OBSSetupGuide />}
     </>
   );
+};
+
+const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const themeOverrides = useEditorStore(s => s.themeOverrides);
+
+  useEffect(() => {
+    const shell = document.querySelector('.app-shell') as HTMLElement | null;
+    if (!shell) return;
+
+    if (themeOverrides.accentColor) shell.style.setProperty('--color-accent', themeOverrides.accentColor);
+    else shell.style.removeProperty('--color-accent');
+
+    if (themeOverrides.backgroundColor) shell.style.setProperty('--color-bg', themeOverrides.backgroundColor);
+    else shell.style.removeProperty('--color-bg');
+
+    if (themeOverrides.textColor) shell.style.setProperty('--color-text', themeOverrides.textColor);
+    else shell.style.removeProperty('--color-text');
+
+    if (themeOverrides.borderRadius !== null) {
+      shell.style.setProperty('--radius-md', `${themeOverrides.borderRadius}px`);
+      shell.style.setProperty('--radius-lg', `${Math.min(themeOverrides.borderRadius + 4, 48)}px`);
+    } else {
+      shell.style.removeProperty('--radius-md');
+      shell.style.removeProperty('--radius-lg');
+    }
+
+    shell.style.setProperty('--animations-enabled', themeOverrides.animationsEnabled ? '1' : '0');
+  }, [themeOverrides]);
+
+  return <>{children}</>;
 };
 
 const App: React.FC = () => (
   <BrowserRouter>
     <div className="app-shell">
-      <Routes>
-        <Route path="/output" element={<OutputPage />} />
-        <Route path="/*" element={<StudioRouter />} />
-      </Routes>
+      <AppShell>
+        <Routes>
+          <Route path="/output" element={<OutputPage />} />
+          <Route path="/*" element={<StudioRouter />} />
+        </Routes>
+      </AppShell>
     </div>
   </BrowserRouter>
 );

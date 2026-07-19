@@ -185,6 +185,7 @@ export const TopToolbar: React.FC = () => {
             <FileMenuItem icon={<Save size={13} />} label="Save" shortcut="⌘S" onClick={() => { handleSave(); setFileMenuOpen(false); }} />
             <FileMenuItem icon={<Download size={13} />} label="Export Project (.json)" onClick={handleExport} />
             <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
+            <FileMenuItem icon={<MonitorIcon size={13} />} label="OBS Setup Guide" onClick={() => { setFileMenuOpen(false); useEditorStore.getState().setAppView('obs-setup'); }} />
             <FileMenuItem icon={<Copy size={13} />} label="Copy OBS Endpoint URL" onClick={handleCopyOBS} />
             <FileMenuItem icon={<MonitorIcon size={13} />} label="Open OBS Output" onClick={() => { setFileMenuOpen(false); window.open('/output', '_blank'); }} />
           </div>

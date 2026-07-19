@@ -6,7 +6,7 @@ import { CANVAS_W, CANVAS_H } from '../canvas/EditorCanvas';
 export const BottomStatusBar: React.FC = () => {
   const {
     zoom, snapEnabled, gridMode, showGuides, showRulers,
-    setZoom, zoomIn, zoomOut, zoomToFit, zoomToSelection,
+    setZoom, zoomIn, zoomOut, zoomToFit,
     selectedIds, getDraftWidgets, setGridMode,
     toggleSnap, toggleGuides, toggleRulers
   } = useEditorStore();
@@ -93,9 +93,6 @@ export const BottomStatusBar: React.FC = () => {
       {/* Quick zoom presets */}
       <div style={{ display: 'flex', gap: 2 }}>
         <button onClick={zoomToFit} style={{ ...statusBtn, border: '1px solid transparent' }} title="Fit to screen">Fit</button>
-        {selectedWidgets.length > 0 && (
-          <button onClick={zoomToSelection} style={{ ...statusBtn, border: '1px solid transparent' }} title="Zoom to selection">Selection</button>
-        )}
       </div>
 
       <div className="status-bar-divider" />

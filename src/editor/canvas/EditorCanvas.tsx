@@ -186,7 +186,7 @@ export const EditorCanvas: React.FC = () => {
     getDraftWidgets, selectedIds, hoveredId, isDragging, isResizing,
     selectWidget, selectWidgets, deselectAll, setHovered,
     updateWidget, pushHistory, removeSelectedWidgets,
-    addWidget, zoomToFit, zoomToSelection, setGridMode,
+    addWidget, zoomToFit, setGridMode,
     addUserGuide, removeUserGuide,
   } = useEditorStore();
 
@@ -348,10 +348,6 @@ export const EditorCanvas: React.FC = () => {
         e.preventDefault();
         setZoom(1);
       }
-      if (cmdCtrl && e.key === '2') {
-        e.preventDefault();
-        zoomToSelection();
-      }
       if (cmdCtrl && (e.key === '=' || e.key === '+')) {
         e.preventDefault();
         useEditorStore.getState().zoomIn();
@@ -379,7 +375,7 @@ export const EditorCanvas: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedIds, removeSelectedWidgets, deselectAll, zoomToFit, zoomToSelection, setZoom]);
+  }, [selectedIds, removeSelectedWidgets, deselectAll, zoomToFit, setZoom]);
 
   // Wheel Zoom / Pan
   const handleWheel = useCallback((e: React.WheelEvent) => {

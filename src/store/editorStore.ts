@@ -125,6 +125,8 @@ interface EditorState {
   liveScenes: Scene[];
   liveTimer: TimerRuntime;
   previewTimer: TimerRuntime;
+  liveTransitionType: 'none' | 'fade' | 'slide';
+  liveTransitionDuration: number;
 
   // App navigation
   appView: AppView;
@@ -253,9 +255,20 @@ interface EditorState {
   finishPreviewTimer: () => void;
 
   switchDraftToLive: () => void;
+  setLiveTransitionType: (t: 'none' | 'fade' | 'slide') => void;
+  setLiveTransitionDuration: (d: number) => void;
 
   // Load project data
-  loadProjectData: (data: { projectName: string; scenes: Scene[]; liveScenes?: Scene[]; liveSceneId: string | null; editingSceneId: string | null; }) => void;
+  loadProjectData: (data: {
+    projectName: string;
+    scenes: Scene[];
+    liveScenes?: Scene[];
+    liveSceneId: string | null;
+    editingSceneId: string | null;
+    liveTimer?: TimerRuntime;
+    liveTransitionType?: 'none' | 'fade' | 'slide';
+    liveTransitionDuration?: number;
+  }) => void;
 }
 
 export type LeftTab = 'scenes' | 'layers' | 'assets' | 'widgets';
@@ -372,6 +385,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     isFinished: false,
     finishBehavior: 'freeze',
   },
+  liveTransitionType: 'fade',
+  liveTransitionDuration: 500,
 
   // App navigation
   appView: 'welcome',
@@ -426,6 +441,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setLiveScene: (id) => set({ liveSceneId: id }),
+  setLiveTransitionType: (t) => set({ liveTransitionType: t }),
+  setLiveTransitionDuration: (d) => set({ liveTransitionDuration: d }),
 
   createProjectFromPack: (projectName, packId) => {
     const pack = STREAM_PACKS.find(p => p.id === packId);
@@ -1102,6 +1119,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     set(s => ({
       liveScenes: clonedScenes,
+      liveSceneId: s.liveSceneId || activeLiveId,
       liveTimer: {
         ...s.liveTimer,
         ...timerSettings,
@@ -1109,14 +1127,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
   },
 
-  loadProjectData: (data) => set({
+  loadProjectData: (data) => set(s => ({
     projectName: data.projectName,
     scenes: data.scenes,
     liveScenes: data.liveScenes || data.scenes,
     liveSceneId: data.liveSceneId,
     editingSceneId: data.editingSceneId,
+    liveTimer: data.liveTimer || s.liveTimer,
+    liveTransitionType: data.liveTransitionType || s.liveTransitionType,
+    liveTransitionDuration: data.liveTransitionDuration || s.liveTransitionDuration,
     appView: 'editor',
-  }),
+  })),
 }));
 
 const syncChannel = typeof window !== 'undefined' ? new BroadcastChannel('vibeoverlay-state-sync') : null;
@@ -1125,6 +1146,8 @@ const syncChannel = typeof window !== 'undefined' ? new BroadcastChannel('vibeov
 let lastLiveScenesStr = '';
 let lastLiveSceneId = '';
 let lastLiveTimerStr = '';
+let lastLiveTransitionType = '';
+let lastLiveTransitionDuration = 0;
 
 useEditorStore.subscribe((state) => {
   persistenceService.triggerAutoSave(() => ({
@@ -1133,6 +1156,9 @@ useEditorStore.subscribe((state) => {
     liveScenes: state.liveScenes,
     liveSceneId: state.liveSceneId,
     editingSceneId: state.editingSceneId,
+    liveTimer: state.liveTimer,
+    liveTransitionType: state.liveTransitionType,
+    liveTransitionDuration: state.liveTransitionDuration,
     updatedAt: Date.now(),
   }));
 
@@ -1140,15 +1166,21 @@ useEditorStore.subscribe((state) => {
   const liveScenesStr = JSON.stringify(state.liveScenes);
   const liveTimerStr = JSON.stringify(state.liveTimer);
   const liveSceneId = state.liveSceneId;
+  const liveTransType = state.liveTransitionType;
+  const liveTransDur = state.liveTransitionDuration;
 
   if (
     liveScenesStr !== lastLiveScenesStr ||
     liveSceneId !== lastLiveSceneId ||
-    liveTimerStr !== lastLiveTimerStr
+    liveTimerStr !== lastLiveTimerStr ||
+    liveTransType !== lastLiveTransitionType ||
+    liveTransDur !== lastLiveTransitionDuration
   ) {
     lastLiveScenesStr = liveScenesStr;
     lastLiveSceneId = liveSceneId || '';
     lastLiveTimerStr = liveTimerStr;
+    lastLiveTransitionType = liveTransType;
+    lastLiveTransitionDuration = liveTransDur;
 
     // Send only live-specific parameters to OBS Output page
     syncChannel?.postMessage({
@@ -1157,6 +1189,8 @@ useEditorStore.subscribe((state) => {
         liveScenes: state.liveScenes,
         liveSceneId: state.liveSceneId,
         liveTimer: state.liveTimer,
+        liveTransitionType: state.liveTransitionType,
+        liveTransitionDuration: state.liveTransitionDuration,
       }
     });
   }
@@ -1172,7 +1206,9 @@ if (syncChannel) {
       if (
         current.liveSceneId !== next.liveSceneId ||
         JSON.stringify(current.liveScenes) !== JSON.stringify(next.liveScenes) ||
-        JSON.stringify(current.liveTimer) !== JSON.stringify(next.liveTimer)
+        JSON.stringify(current.liveTimer) !== JSON.stringify(next.liveTimer) ||
+        current.liveTransitionType !== next.liveTransitionType ||
+        current.liveTransitionDuration !== next.liveTransitionDuration
       ) {
         useEditorStore.setState(next);
       }

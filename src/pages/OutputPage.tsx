@@ -2,18 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useEditorStore } from '../store/editorStore';
-import { SceneRenderer } from '../renderer/SceneRenderer';
+import { SceneTransitioner } from '../renderer/SceneTransitioner';
 import { CANVAS_W, CANVAS_H } from '../editor/canvas/EditorCanvas';
 import { persistenceService } from '../persistence/persistenceService';
 
 export const OutputPage: React.FC = () => {
   const liveScenes = useEditorStore(state => state.liveScenes);
   const liveSceneId = useEditorStore(state => state.liveSceneId);
+  const liveTransitionType = useEditorStore(state => state.liveTransitionType);
+  const liveTransitionDuration = useEditorStore(state => state.liveTransitionDuration);
   const loadProjectData = useEditorStore(state => state.loadProjectData);
   const [scale, setScale] = useState(1);
-
-  // Find the live scene, or fall back to the first available scene
-  const liveScene = liveScenes.find(s => s.id === liveSceneId) ?? liveScenes[0];
 
   useEffect(() => {
     persistenceService.loadProject().then(data => {
@@ -35,7 +34,7 @@ export const OutputPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (!liveScene) {
+  if (liveScenes.length === 0) {
     return (
       <div
         style={{
@@ -114,11 +113,14 @@ export const OutputPage: React.FC = () => {
           overflow: 'hidden',
         }}
       >
-        <SceneRenderer
-          widgets={liveScene.widgets}
+        <SceneTransitioner
+          activeSceneId={liveSceneId || (liveScenes[0]?.id ?? null)}
+          scenes={liveScenes}
           zoom={scale}
-          animated={true} // Animations ENABLED for live output
+          animated={true}
           timerSource="live"
+          transitionType={liveTransitionType}
+          transitionDuration={liveTransitionDuration}
         />
       </div>
     </div>

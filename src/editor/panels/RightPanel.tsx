@@ -903,8 +903,8 @@ const WidgetSettingsSection: React.FC<{ widget: SceneWidget }> = ({ widget }) =>
             <input
               type="text"
               className="input"
-              value={settings.url ?? ''}
-              onChange={e => uc({ url: e.target.value })}
+              value={settings.src ?? settings.url ?? ''}
+              onChange={e => uc({ src: e.target.value })}
               style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
               placeholder="https://example.com/image.png"
             />
@@ -920,8 +920,8 @@ const WidgetSettingsSection: React.FC<{ widget: SceneWidget }> = ({ widget }) =>
             <input
               type="text"
               className="input"
-              value={settings.url ?? ''}
-              onChange={e => uc({ url: e.target.value })}
+              value={settings.src ?? settings.url ?? ''}
+              onChange={e => uc({ src: e.target.value })}
               style={{ width: '100%', fontSize: 11, padding: '4px 6px' }}
               placeholder="https://example.com/video.mp4"
             />

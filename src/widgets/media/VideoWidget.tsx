@@ -8,7 +8,7 @@ import { buildBaseStyle } from '../../renderer/styleHelpers';
  */
 export const VideoWidget: React.FC<WidgetProps> = ({ widget, zoom, animated }) => {
   const { style: s, content, type } = widget;
-  const src: string | undefined = content.settings?.src;
+  const src: string | undefined = content.settings?.src || content.settings?.url;
 
   if (!src) {
     if (animated) return <div style={{ ...buildBaseStyle(s), background: '#000' }} />;

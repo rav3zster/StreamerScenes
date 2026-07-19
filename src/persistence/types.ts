@@ -1,4 +1,4 @@
-import type { Scene } from '../store/editorStore';
+import type { Scene, TimerRuntime } from '../store/editorStore';
 
 export interface ProjectData {
   projectName: string;
@@ -6,6 +6,9 @@ export interface ProjectData {
   liveScenes?: Scene[];
   liveSceneId: string | null;
   editingSceneId: string | null;
+  liveTimer?: TimerRuntime;
+  liveTransitionType?: 'none' | 'fade' | 'slide';
+  liveTransitionDuration?: number;
   updatedAt: number;
 }
 

@@ -9,7 +9,7 @@ import { buildBaseStyle } from '../../renderer/styleHelpers';
  */
 export const ImageWidget: React.FC<WidgetProps> = ({ widget, zoom, animated }) => {
   const { style: s, content, type } = widget;
-  const src: string | undefined = content.settings?.src;
+  const src: string | undefined = content.settings?.src || content.settings?.url;
 
   if (!src) {
     // Editor placeholder

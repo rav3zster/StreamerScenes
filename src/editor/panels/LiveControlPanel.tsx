@@ -43,8 +43,12 @@ export const LiveControlPanel: React.FC = () => {
     adjustLiveTimer,
     resetLiveTimer,
     switchDraftToLive,
-    scenes,
-    liveSceneId
+    liveScenes,
+    liveSceneId,
+    liveTransitionType,
+    liveTransitionDuration,
+    setLiveTransitionType,
+    setLiveTransitionDuration
   } = useEditorStore();
 
   const [remaining, setRemaining] = useState(() => getTimerRemaining(liveTimer));
@@ -88,7 +92,7 @@ export const LiveControlPanel: React.FC = () => {
     statusColor = '#3b82f6';
   }
 
-  const liveSceneLabel = scenes.find(s => s.id === liveSceneId)?.label || 'No Live Scene';
+  const liveSceneLabel = liveScenes.find(s => s.id === liveSceneId)?.label || 'No Live Scene';
 
   const handleStartPause = () => {
     if (liveTimer.isRunning) {
@@ -97,8 +101,8 @@ export const LiveControlPanel: React.FC = () => {
       resumeLiveTimer();
     } else {
       // Find duration in active scene to start with
-      const activeLiveId = liveSceneId || (scenes[0]?.id ?? null);
-      const liveScene = scenes.find(s => s.id === activeLiveId);
+      const activeLiveId = liveSceneId || (liveScenes[0]?.id ?? null);
+      const liveScene = liveScenes.find(s => s.id === activeLiveId);
       const widget = liveScene?.widgets.find(w => w.type === 'countdown-timer');
       const startDur = widget?.content.settings?.duration ?? liveTimer.duration ?? 600;
       const startBehavior = widget?.content.settings?.finishBehavior ?? 'freeze';
@@ -112,8 +116,8 @@ export const LiveControlPanel: React.FC = () => {
   };
 
   const handleReset = () => {
-    const activeLiveId = liveSceneId || (scenes[0]?.id ?? null);
-    const liveScene = scenes.find(s => s.id === activeLiveId);
+    const activeLiveId = liveSceneId || (liveScenes[0]?.id ?? null);
+    const liveScene = liveScenes.find(s => s.id === activeLiveId);
     const widget = liveScene?.widgets.find(w => w.type === 'countdown-timer');
     const startDur = widget?.content.settings?.duration ?? 600;
     resetLiveTimer(startDur);
@@ -243,6 +247,51 @@ export const LiveControlPanel: React.FC = () => {
           <TimeAdjustButton label="+10m" onClick={() => adjustLiveTimer(600)} />
           <TimeAdjustButton label="-30s" onClick={() => adjustLiveTimer(-30)} />
           <TimeAdjustButton label="-1m" onClick={() => adjustLiveTimer(-60)} />
+        </div>
+      </div>
+
+      {/* Transitions Config */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--color-text-muted)' }}>Transition:</div>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <select
+            value={liveTransitionType}
+            onChange={e => setLiveTransitionType(e.target.value as any)}
+            style={{
+              flex: 1,
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '4px',
+              color: 'var(--color-text)',
+              fontSize: '10px',
+              padding: '4px 6px',
+              outline: 'none',
+            }}
+          >
+            <option value="none">None</option>
+            <option value="fade">Fade</option>
+            <option value="slide">Slide</option>
+          </select>
+          
+          <input
+            type="number"
+            value={liveTransitionDuration}
+            onChange={e => setLiveTransitionDuration(Math.max(0, parseInt(e.target.value) || 0))}
+            style={{
+              width: '60px',
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '4px',
+              color: 'var(--color-text)',
+              fontSize: '10px',
+              padding: '4px 6px',
+              textAlign: 'center',
+              outline: 'none',
+            }}
+            placeholder="ms"
+            title="Transition duration (ms)"
+          />
+          <span style={{ fontSize: '9px', color: 'var(--color-text-muted)' }}>ms</span>
         </div>
       </div>
 

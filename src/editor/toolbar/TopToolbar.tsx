@@ -6,6 +6,7 @@ import {
   Download, Copy,
 } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
+import { SceneTransitioner } from '../../renderer/SceneTransitioner';
 
 import { persistenceService } from '../../persistence/persistenceService';
 
@@ -16,6 +17,7 @@ export const TopToolbar: React.FC = () => {
     canUndo, canRedo, undo, redo,
     scenes, liveScenes, editingSceneId, liveSceneId, setLiveScene, switchDraftToLive,
     projectName, showPreviewMode, togglePreviewMode,
+    startPreviewTimer, resetPreviewTimer,
     setAppView,
     editorTheme, setEditorTheme,
   } = useEditorStore();
@@ -49,6 +51,34 @@ export const TopToolbar: React.FC = () => {
 
   const handleGoLive = () => {
     if (editingSceneId) setLiveScene(editingSceneId);
+  };
+
+  const handleTogglePreview = () => {
+    const nextPreviewMode = !showPreviewMode;
+    togglePreviewMode();
+
+    if (nextPreviewMode) {
+      // Find the countdown timer widget in the current editing scene
+      const currentEditingScene = scenes.find(s => s.id === editingSceneId);
+      const widget = currentEditingScene?.widgets.find(w => w.type === 'countdown-timer');
+
+      if (widget) {
+        const startDur = widget.content.settings?.duration ?? 600;
+        const startBehavior = widget.content.settings?.finishBehavior ?? 'freeze';
+
+        startPreviewTimer(startDur, startBehavior, {
+          replaceText: widget.content.settings?.replaceText ?? '',
+          replaceTransition: widget.content.settings?.replaceTransition ?? 'none',
+          switchTargetSceneId: widget.content.settings?.switchTargetSceneId ?? null,
+        });
+      } else {
+        // Reset preview timer to default
+        resetPreviewTimer(600);
+      }
+    } else {
+      // Pause/reset the preview timer when exiting preview mode
+      resetPreviewTimer();
+    }
   };
 
   const handleNewProject = () => {
@@ -109,12 +139,12 @@ export const TopToolbar: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && showPreviewMode) {
-        togglePreviewMode();
+        handleTogglePreview();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showPreviewMode, togglePreviewMode]);
+  }, [showPreviewMode, handleTogglePreview]);
 
   return (
     <div className="top-toolbar">
@@ -283,7 +313,7 @@ export const TopToolbar: React.FC = () => {
         <button
           className={`btn btn-secondary${showPreviewMode ? ' active' : ''}`}
           style={{ gap: 6, fontSize: 11 }}
-          onClick={togglePreviewMode}
+          onClick={handleTogglePreview}
           title="Preview Mode"
         >
           <Eye size={13} />
@@ -396,11 +426,9 @@ const FileMenuItem: React.FC<{ icon: React.ReactNode; label: string; shortcut?: 
 
 // ── Preview Canvas ────────────────────────────────────────────────────────────
 import { CANVAS_W, CANVAS_H } from '../canvas/EditorCanvas';
-import { SceneRenderer } from '../../renderer/SceneRenderer';
 
 const PreviewCanvas: React.FC = () => {
-  const { getDraftWidgets } = useEditorStore();
-  const widgets = getDraftWidgets();
+  const { scenes, editingSceneId, liveTransitionType, liveTransitionDuration } = useEditorStore();
   const scale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);
 
   return (
@@ -409,10 +437,14 @@ const PreviewCanvas: React.FC = () => {
       position: 'relative', overflow: 'hidden',
       boxShadow: '0 0 0 1px rgba(255,255,255,0.1), 0 40px 100px rgba(0,0,0,0.8)',
     }}>
-      <SceneRenderer
-        widgets={widgets}
+      <SceneTransitioner
+        activeSceneId={editingSceneId}
+        scenes={scenes}
         zoom={scale}
         animated={true}
+        timerSource="preview"
+        transitionType={liveTransitionType}
+        transitionDuration={liveTransitionDuration}
       />
     </div>
   );

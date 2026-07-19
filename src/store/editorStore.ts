@@ -957,7 +957,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setThemeOverrides: (overrides) => set(s => ({
     themeOverrides: { ...s.themeOverrides, ...overrides }
   })),
-  resetThemeOverrides: () => set(s => ({
+  resetThemeOverrides: () => set({
     themeOverrides: {
       accentColor: null,
       backgroundColor: null,
@@ -967,7 +967,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       animationsEnabled: true,
       transitionStyle: 'fade',
     }
-  })),
+  }),
 
   // ── Readiness ───────────────────────────────────────────────────────────────
 

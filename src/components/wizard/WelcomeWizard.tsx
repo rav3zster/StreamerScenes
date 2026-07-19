@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWizardStore } from '../../store/wizardStore';
+import { type WizardStepState, useWizardStore } from '../../store/wizardStore';
 import { WizardProgress } from './WizardProgress';
 import { StepWelcome } from './StepWelcome';
 import { StepPackSelection } from './StepPackSelection';
@@ -8,28 +8,83 @@ import { StepThemeReview } from './StepThemeReview';
 import { StepFinish } from './StepFinish';
 import { ChevronLeft, X } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
+import { STREAM_PACKS } from '../../data/streamPacks';
+import { applyStreamerProfile } from '../../personalization/placeholderReplacer';
+import { persistenceService } from '../../persistence/persistenceService';
 
-const STEPS = [
-  { label: 'Welcome' },
-  { label: 'Choose Style' },
-  { label: 'Personalize' },
-  { label: 'Review Theme' },
-  { label: 'Finish' },
+const STEPS: { label: string; state: WizardStepState }[] = [
+  { label: 'Welcome', state: 'WELCOME' },
+  { label: 'Choose Style', state: 'PACK_SELECTION' },
+  { label: 'Personalize', state: 'PERSONALIZATION' },
+  { label: 'Review Theme', state: 'THEME_REVIEW' },
+  { label: 'Finish', state: 'COMPLETE' },
 ];
 
 export const WelcomeWizard: React.FC = () => {
-  const { currentStep, setStep, resetWizard, selectedPackId } = useWizardStore();
-  const { setAppView } = useEditorStore();
+  const { wizardState, setWizardState, resetWizard, selectedPackId, streamerProfile, wizardTheme } = useWizardStore();
+  const { setAppView, createProjectFromPack } = useEditorStore();
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setStep(currentStep - 1);
-    }
+    if (wizardState === 'PACK_SELECTION') setWizardState('WELCOME');
+    else if (wizardState === 'PERSONALIZATION') setWizardState('PACK_SELECTION');
+    else if (wizardState === 'THEME_REVIEW') setWizardState('PERSONALIZATION');
+  };
+
+  const buildProject = () => {
+    setWizardState('BUILDING_PROJECT');
+
+    // Perform project creation immediately in a single execution block
+    // We wrap in a visual-only loading delay of 1.2 seconds for layout animation before success screen
+    setTimeout(() => {
+      const pack = STREAM_PACKS.find(p => p.id === selectedPackId);
+      if (pack) {
+        // 1. Create project structure from pack
+        createProjectFromPack(streamerProfile.streamerName.trim() || pack.name, pack.id);
+
+        // 2. Map streamer personalization to instantiated widgets
+        const state = useEditorStore.getState();
+        const personalizedScenes = applyStreamerProfile(state.scenes, streamerProfile);
+        state.setScenes(personalizedScenes);
+        state.setLiveScenes(JSON.parse(JSON.stringify(personalizedScenes)));
+
+        // 3. Store theme overrides in global editor state (AppShell will render CSS vars)
+        state.setThemeOverrides({
+          accentColor: wizardTheme.accentColor,
+          backgroundColor: wizardTheme.backgroundColor,
+          textColor: wizardTheme.textColor,
+          borderRadius: wizardTheme.borderRadius,
+          glassIntensity: wizardTheme.glassIntensity,
+          animationsEnabled: wizardTheme.animationsEnabled,
+          transitionStyle: wizardTheme.transitionStyle,
+        });
+
+        // 4. Save project to database
+        const editorState = useEditorStore.getState();
+        persistenceService.saveProject({
+          projectName: editorState.projectName,
+          scenes: editorState.scenes,
+          liveScenes: editorState.liveScenes,
+          liveSceneId: editorState.liveSceneId,
+          editingSceneId: editorState.editingSceneId,
+          liveTimer: editorState.liveTimer,
+          liveTransitionType: editorState.liveTransitionType,
+          liveTransitionDuration: editorState.liveTransitionDuration,
+          selectedPackId: editorState.selectedPackId,
+          updatedAt: Date.now(),
+        }).catch(err => console.error('Failed to auto-save project from wizard:', err));
+      }
+
+      // Transition wizard state to COMPLETE to render success details
+      setWizardState('COMPLETE');
+    }, 1200);
   };
 
   const handleNext = () => {
-    if (currentStep < STEPS.length - 1) {
-      setStep(currentStep + 1);
+    if (wizardState === 'WELCOME') setWizardState('PACK_SELECTION');
+    else if (wizardState === 'PACK_SELECTION') setWizardState('PERSONALIZATION');
+    else if (wizardState === 'PERSONALIZATION') setWizardState('THEME_REVIEW');
+    else if (wizardState === 'THEME_REVIEW') {
+      buildProject();
     }
   };
 
@@ -38,9 +93,9 @@ export const WelcomeWizard: React.FC = () => {
     setAppView('editor');
   };
 
-  const canGoBack = currentStep > 0;
-  const canGoNext = currentStep === 1 ? !!selectedPackId : currentStep !== 4;
-  const showNav = currentStep > 0;
+  const canGoBack = wizardState !== 'WELCOME' && wizardState !== 'BUILDING_PROJECT' && wizardState !== 'COMPLETE';
+  const canGoNext = wizardState === 'PACK_SELECTION' ? !!selectedPackId : (wizardState !== 'BUILDING_PROJECT' && wizardState !== 'COMPLETE');
+  const showNav = wizardState !== 'WELCOME' && wizardState !== 'BUILDING_PROJECT' && wizardState !== 'COMPLETE';
 
   return (
     <div
@@ -76,7 +131,7 @@ export const WelcomeWizard: React.FC = () => {
           <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>VibeOverlay <span style={{ color: '#a855f7' }}>Studio</span></span>
         </div>
 
-        {currentStep > 0 && (
+        {wizardState !== 'WELCOME' && (
           <button
             onClick={handleCancel}
             style={{
@@ -95,16 +150,16 @@ export const WelcomeWizard: React.FC = () => {
       </div>
 
       {/* Progress indicator */}
-      {currentStep > 0 && (
-        <WizardProgress steps={STEPS} currentStep={currentStep} />
+      {wizardState !== 'WELCOME' && (
+        <WizardProgress steps={STEPS} wizardState={wizardState} />
       )}
 
       {/* Step content */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative', zIndex: 1 }}>
-        <StepRenderer currentStep={currentStep} />
+        <StepRenderer wizardState={wizardState} />
 
         {/* Bottom navigation */}
-        {showNav && currentStep < 4 && (
+        {showNav && (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '14px 28px', borderTop: '1px solid rgba(255,255,255,0.06)',
@@ -156,17 +211,18 @@ export const WelcomeWizard: React.FC = () => {
 
 // ─── Step Router ──────────────────────────────────────────────────────────────
 
-const StepRenderer: React.FC<{ currentStep: number }> = ({ currentStep }) => {
-  switch (currentStep) {
-    case 0:
+const StepRenderer: React.FC<{ wizardState: WizardStepState }> = ({ wizardState }) => {
+  switch (wizardState) {
+    case 'WELCOME':
       return <StepWelcome />;
-    case 1:
+    case 'PACK_SELECTION':
       return <StepPackSelection />;
-    case 2:
+    case 'PERSONALIZATION':
       return <StepPersonalize />;
-    case 3:
+    case 'THEME_REVIEW':
       return <StepThemeReview />;
-    case 4:
+    case 'BUILDING_PROJECT':
+    case 'COMPLETE':
       return <StepFinish />;
     default:
       return <StepWelcome />;

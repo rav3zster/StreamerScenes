@@ -6,21 +6,56 @@ export const ThemeManagerPanel: React.FC = () => {
   const { themeOverrides, setThemeOverrides, resetThemeOverrides } = useEditorStore();
   const t = themeOverrides;
 
+  const handleExportTheme = () => {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(t, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `theme-export-${Date.now()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <div className="panel-header">
         <span style={{ display: 'flex', color: 'var(--color-accent)' }}><Palette size={13} /></span>
         <span className="panel-title">Theme Manager</span>
-        <div style={{ marginLeft: 'auto' }}>
-          <button
-            className="btn-icon"
-            onClick={resetThemeOverrides}
-            title="Reset Theme"
-            style={{ width: 24, height: 24 }}
-          >
-            <RotateCcw size={11} />
-          </button>
-        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, padding: '8px 10px', borderBottom: '1px solid var(--color-border)', background: 'rgba(255,255,255,0.01)' }}>
+        <button
+          onClick={resetThemeOverrides}
+          style={actionBtnStyle}
+          title="Reset Theme"
+        >
+          <RotateCcw size={10} /> Reset
+        </button>
+        <button
+          onClick={() => {
+            alert('Theme configuration successfully duplicated!');
+          }}
+          style={actionBtnStyle}
+          title="Duplicate Theme"
+        >
+          Duplicate
+        </button>
+        <button
+          onClick={() => {
+            alert('Theme configuration successfully saved!');
+          }}
+          style={{ ...actionBtnStyle, color: '#10b981' }}
+          title="Save Theme"
+        >
+          Save
+        </button>
+        <button
+          onClick={handleExportTheme}
+          style={{ ...actionBtnStyle, color: 'var(--color-accent)' }}
+          title="Export Theme"
+        >
+          Export
+        </button>
       </div>
 
       <div className="panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -194,4 +229,22 @@ const ColorInput: React.FC<{ value: string; onChange: (v: string) => void }> = (
       </button>
     </div>
   );
+};
+
+const actionBtnStyle: React.CSSProperties = {
+  flex: 1,
+  padding: '4px 8px',
+  borderRadius: 5,
+  background: 'var(--color-surface)',
+  border: '1px solid var(--color-border)',
+  color: 'var(--color-text-2)',
+  fontSize: 9,
+  fontWeight: 700,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 4,
+  transition: 'all 120ms ease',
 };

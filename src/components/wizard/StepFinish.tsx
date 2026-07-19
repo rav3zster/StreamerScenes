@@ -1,50 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Sparkles, Check, Zap, Layers, Image } from 'lucide-react';
 import { useWizardStore } from '../../store/wizardStore';
 import { useEditorStore } from '../../store/editorStore';
 import { STREAM_PACKS } from '../../data/streamPacks';
-import { applyStreamerProfile } from '../../personalization/placeholderReplacer';
 
 export const StepFinish: React.FC = () => {
-  const { selectedPackId, streamerProfile, wizardTheme } = useWizardStore();
-  const { createProjectFromPack } = useEditorStore();
-  const [phase, setPhase] = useState<'building' | 'done'>('building');
+  const { wizardState, selectedPackId, streamerProfile, resetWizard } = useWizardStore();
+  const { setAppView } = useEditorStore();
 
   const pack = STREAM_PACKS.find(p => p.id === selectedPackId);
 
-  useEffect(() => {
-    if (!pack) return;
-
-    // Step 1: Create project from pack
-    const timer1 = setTimeout(() => {
-      // Create a modified version of createProjectFromPack that applies personalization
-      createProjectFromPack(streamerProfile.streamerName.trim() || pack.name, pack.id);
-
-      // Apply streamer profile replacements to the created scenes
-      const state = useEditorStore.getState();
-      const personalizedScenes = applyStreamerProfile(state.scenes, streamerProfile);
-      state.setScenes(personalizedScenes);
-      state.setLiveScenes(JSON.parse(JSON.stringify(personalizedScenes)));
-
-      // Apply wizard theme overrides via CSS variables
-      setTimeout(() => {
-        const shell = document.querySelector('.app-shell');
-        if (shell) {
-          if (wizardTheme.accentColor) (shell as HTMLElement).style.setProperty('--color-accent', wizardTheme.accentColor);
-          if (wizardTheme.backgroundColor) (shell as HTMLElement).style.setProperty('--color-bg', wizardTheme.backgroundColor);
-          if (wizardTheme.textColor) (shell as HTMLElement).style.setProperty('--color-text', wizardTheme.textColor);
-          if (wizardTheme.borderRadius !== null) {
-            (shell as HTMLElement).style.setProperty('--radius-md', `${wizardTheme.borderRadius}px`);
-            (shell as HTMLElement).style.setProperty('--radius-lg', `${Math.min(wizardTheme.borderRadius + 4, 48)}px`);
-          }
-        }
-        setPhase('done');
-      }, 400);
-    }, 800);
-
-    return () => clearTimeout(timer1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pack, pack?.id, pack?.name]);
+  const handleLaunch = () => {
+    resetWizard();
+    setAppView('editor');
+  };
 
   const stats = pack ? {
     Scenes: pack.scenes.length,
@@ -52,15 +21,38 @@ export const StepFinish: React.FC = () => {
     Name: streamerProfile.streamerName || pack.name,
   } : null;
 
-  if (phase === 'done') {
+  if (wizardState === 'COMPLETE') {
     return (
-      <BuildPhase
-        icon={<Check size={28} />}
-        title="Your Stream is Ready!"
-        subtitle="Opening the editor..."
-        accent={pack?.accentColor || '#a855f7'}
-        details={stats}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <BuildPhase
+          icon={<Check size={28} />}
+          title="Your Stream is Ready!"
+          subtitle="All custom widgets, overlays, and themes have been successfully mapped."
+          accent={pack?.accentColor || '#a855f7'}
+          details={stats}
+        />
+        <div style={{
+          display: 'flex', justifyContent: 'center', padding: '24px',
+          borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)'
+        }}>
+          <button
+            onClick={handleLaunch}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '12px 32px', borderRadius: 10, border: 'none',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: '#fff', fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+              transition: 'all 200ms ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.filter = ''; e.currentTarget.style.transform = ''; }}
+          >
+            Launch Stream Editor
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -100,7 +92,7 @@ const BuildPhase: React.FC<{
       boxShadow: isBuilding
         ? `0 0 40px ${accent}40`
         : '0 0 40px rgba(16,185,129,0.3)',
-      animation: isBuilding ? 'spin 2s linear infinite' : 'zoom-in 300ms ease',
+      animation: isBuilding ? 'spin-rotate 2s linear infinite' : 'zoom-in 300ms ease',
     }}>
       {icon}
     </div>
@@ -143,6 +135,10 @@ const BuildPhase: React.FC<{
         0% { transform: translateX(-100%); width: 40%; }
         50% { width: 80%; }
         100% { transform: translateX(400%); width: 40%; }
+      }
+      @keyframes spin-rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     `}</style>
   </div>

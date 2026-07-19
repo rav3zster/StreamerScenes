@@ -21,14 +21,16 @@ export interface WizardTheme {
   transitionStyle: 'none' | 'fade' | 'slide';
 }
 
+export type WizardStepState = 'WELCOME' | 'PACK_SELECTION' | 'PERSONALIZATION' | 'THEME_REVIEW' | 'BUILDING_PROJECT' | 'COMPLETE';
+
 interface WizardState {
-  currentStep: number;
+  wizardState: WizardStepState;
   selectedPackId: string | null;
   streamerProfile: StreamerProfile;
   wizardTheme: WizardTheme;
   existingProject: boolean;
 
-  setStep: (step: number) => void;
+  setWizardState: (state: WizardStepState) => void;
   selectPack: (packId: string) => void;
   setStreamerProfile: (profile: Partial<StreamerProfile>) => void;
   setWizardTheme: (theme: Partial<WizardTheme>) => void;
@@ -63,13 +65,13 @@ const DEFAULT_THEME: WizardTheme = {
 };
 
 export const useWizardStore = create<WizardState>((set) => ({
-  currentStep: 0,
+  wizardState: 'WELCOME',
   selectedPackId: null,
   streamerProfile: { ...DEFAULT_PROFILE },
   wizardTheme: { ...DEFAULT_THEME },
   existingProject: false,
 
-  setStep: (step) => set({ currentStep: step }),
+  setWizardState: (state) => set({ wizardState: state }),
   selectPack: (packId) => set({ selectedPackId: packId }),
   setStreamerProfile: (profile) =>
     set((s) => ({
@@ -82,7 +84,7 @@ export const useWizardStore = create<WizardState>((set) => ({
   setExistingProject: (val) => set({ existingProject: val }),
   resetWizard: () =>
     set({
-      currentStep: 0,
+      wizardState: 'WELCOME',
       selectedPackId: null,
       streamerProfile: { ...DEFAULT_PROFILE },
       wizardTheme: { ...DEFAULT_THEME },

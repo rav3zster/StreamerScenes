@@ -174,21 +174,27 @@ This manual QA checklist defines the verification criteria for every widget in V
 - [ ] **Wizard exit**: Close the wizard mid-flow, confirm editorStore is not modified (no partial project state leaked).
 
 ### Part 2 — Asset Personalization
-- [ ] **Streamer profile form**: In Step 2, enter streamer name, channel name, logo URL, social handles, countdown duration, and camera frame style. Verify all fields accept input.
+- [ ] **Streamer profile form**: In the Personalize step, enter streamer name, channel name, social handles, countdown duration. Verify all fields accept input.
+- [ ] **Logo/Avatar File Uploads**: Click "Choose File" for Logo and Avatar, select local images, confirm base64 thumbnails render immediately, and check that absolute URLs can still be input via the collapsible "Advanced" section.
+- [ ] **Camera Frame Visual Selection**: Click different camera frame cards (Default, Rounded, Neon, Glass, Minimal) in the camera styles grid. Verify hover outlines, active highlight borders, and vector shape boxes render cleanly.
 - [ ] **Placeholder replacement**: After completing the wizard, open the editor and verify `{STREAMER_NAME}` and `{CHANNEL_NAME}` placeholders are replaced in text widgets.
-- [ ] **Logo/avatar replacement**: Verify logo and avatar frame widgets have the correct URL applied.
+- [ ] **Logo/avatar replacement**: Verify logo and avatar frame widgets have the correct uploaded image source applied.
 - [ ] **Social links replacement**: Verify social links widget has the entered handles.
 - [ ] **Countdown duration**: Verify countdown timer widget has the user's preferred duration.
 
 ### Part 3 — Theme Manager
 - [ ] **Themes tab**: Open the editor, locate the Themes tab in the Left Panel. Click it to open the Theme Manager panel.
+- [ ] **Theme Actions Row**: Verify the Reset, Duplicate, Save, and Export buttons render under the panel header.
+- [ ] **Reset Theme**: Click Reset, verify overrides clear back to template default variables.
+- [ ] **Duplicate Theme**: Click Duplicate, verify the alert confirmations display correctly.
+- [ ] **Save Theme**: Click Save, verify the success notification popups trigger.
+- [ ] **Export Theme**: Click Export, verify a local JSON file download triggers containing the `ThemeOverrides` values.
 - [ ] **Accent color**: Change the accent color, verify the editor's accent elements (buttons, highlights) update immediately.
 - [ ] **Background/text color**: Change background and text colors, verify the canvas and UI update in real time.
 - [ ] **Border radius**: Adjust the border radius slider, verify widget corners change on the canvas.
 - [ ] **Glass intensity**: Adjust glass intensity, verify glass-panel widgets show more/less blur.
 - [ ] **Animation toggle**: Toggle animations off, verify animated widgets stop moving.
 - [ ] **Transition style**: Switch between fade, slide, and none, verify scene transitions change.
-- [ ] **Reset theme**: Click "Reset Theme", verify all overrides clear back to pack defaults.
 - [ ] **Persistence**: Refresh the page, verify theme overrides are restored.
 
 ### Part 4 — OBS Setup Guide

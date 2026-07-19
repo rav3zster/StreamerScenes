@@ -13,18 +13,72 @@ const PLATFORMS = [
 ];
 
 const CAMERA_STYLES = [
-  { id: 'default', label: 'Default Frame' },
-  { id: 'rounded', label: 'Rounded Corners' },
-  { id: 'neon', label: 'Neon Glow' },
-  { id: 'minimal', label: 'Minimal Line' },
-  { id: 'glass', label: 'Glass Border' },
+  { id: 'default', label: 'Default' },
+  { id: 'rounded', label: 'Rounded' },
+  { id: 'neon', label: 'Neon' },
+  { id: 'minimal', label: 'Minimal' },
+  { id: 'glass', label: 'Glass' },
 ];
+
+const AdvancedUrlInput: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', marginTop: 4 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)',
+          fontSize: 9, fontWeight: 600, cursor: 'pointer', padding: 0, textAlign: 'left',
+          display: 'flex', alignItems: 'center', gap: 4, width: 'fit-content'
+        }}
+      >
+        <span>{open ? '▼' : '▶'}</span> Advanced: Paste Image URL
+      </button>
+      {open && (
+        <input
+          value={value.startsWith('data:') ? '' : value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="https://example.com/image.png"
+          style={{
+            width: '100%', padding: '5px 8px', borderRadius: 6,
+            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(0,0,0,0.3)', color: '#fff',
+            fontSize: 10, fontFamily: 'var(--font-mono)', outline: 'none',
+            marginTop: 6, boxSizing: 'border-box'
+          }}
+        />
+      )}
+    </div>
+  );
+};
 
 export const StepPersonalize: React.FC = () => {
   const { streamerProfile, setStreamerProfile, selectedPackId } = useWizardStore();
 
   const pack = STREAM_PACKS.find(p => p.id === selectedPackId);
   const accentColor = pack?.accentColor || '#a855f7';
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setStreamerProfile({ logoUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setStreamerProfile({ avatarUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const setHandle = (platform: string, handle: string) => {
     const updated = streamerProfile.socialHandles.map(h =>
@@ -41,7 +95,7 @@ export const StepPersonalize: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', padding: '0 28px' }}>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 22, fontWeight: 800, color: '#fff', margin: 0, marginBottom: 4 }}>
           Personalize Your Stream
         </h2>
@@ -72,22 +126,58 @@ export const StepPersonalize: React.FC = () => {
             />
           </FieldCard>
 
-          <FieldCard icon={<Image size={14} />} label="Logo URL" accent={accentColor}>
-            <input
-              value={streamerProfile.logoUrl}
-              onChange={e => setStreamerProfile({ logoUrl: e.target.value })}
-              placeholder="https://example.com/logo.png"
-              style={{ ...inputStyle, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 }}
-            />
+          <FieldCard icon={<Image size={14} />} label="Upload Logo" accent={accentColor}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {streamerProfile.logoUrl ? (
+                  <img src={streamerProfile.logoUrl} alt="Logo Preview" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'contain', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                ) : (
+                  <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>None</div>
+                )}
+                <label style={{
+                  padding: '6px 12px', borderRadius: 6, background: `${accentColor}20`, border: `1px solid ${accentColor}40`,
+                  color: accentColor, fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 150ms ease'
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${accentColor}30`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${accentColor}20`; }}
+                >
+                  Choose File
+                  <input type="file" accept="image/*" onChange={handleLogoChange} style={{ display: 'none' }} />
+                </label>
+                {streamerProfile.logoUrl && (
+                  <button onClick={() => setStreamerProfile({ logoUrl: '' })} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 10, cursor: 'pointer' }}>Remove</button>
+                )}
+              </div>
+              <AdvancedUrlInput value={streamerProfile.logoUrl} onChange={val => setStreamerProfile({ logoUrl: val })} />
+            </div>
           </FieldCard>
 
-          <FieldCard icon={<Image size={14} />} label="Avatar URL (Optional)" accent={accentColor}>
-            <input
-              value={streamerProfile.avatarUrl}
-              onChange={e => setStreamerProfile({ avatarUrl: e.target.value })}
-              placeholder="https://example.com/avatar.png"
-              style={{ ...inputStyle, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 }}
-            />
+          <FieldCard icon={<Image size={14} />} label="Upload Avatar (Optional)" accent={accentColor}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {streamerProfile.avatarUrl ? (
+                  <img src={streamerProfile.avatarUrl} alt="Avatar Preview" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'contain', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                ) : (
+                  <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>None</div>
+                )}
+                <label style={{
+                  padding: '6px 12px', borderRadius: 6, background: `${accentColor}20`, border: `1px solid ${accentColor}40`,
+                  color: accentColor, fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 150ms ease'
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${accentColor}30`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${accentColor}20`; }}
+                >
+                  Choose File
+                  <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
+                </label>
+                {streamerProfile.avatarUrl && (
+                  <button onClick={() => setStreamerProfile({ avatarUrl: '' })} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 10, cursor: 'pointer' }}>Remove</button>
+                )}
+              </div>
+              <AdvancedUrlInput value={streamerProfile.avatarUrl} onChange={val => setStreamerProfile({ avatarUrl: val })} />
+            </div>
           </FieldCard>
 
           <FieldCard icon={<Palette size={14} />} label="Accent Color" accent={accentColor}>
@@ -131,26 +221,55 @@ export const StepPersonalize: React.FC = () => {
           </FieldCard>
 
           <FieldCard icon={<Camera size={14} />} label="Camera Frame Style" accent={accentColor}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-              {CAMERA_STYLES.map(cs => (
-                <button
-                  key={cs.id}
-                  onClick={() => setStreamerProfile({ cameraFrameStyle: cs.id })}
-                  style={{
-                    padding: '6px 4px', borderRadius: 7, fontSize: 9, fontWeight: 600,
-                    border: streamerProfile.cameraFrameStyle === cs.id
-                      ? `1.5px solid ${accentColor}`
-                      : '1px solid rgba(255,255,255,0.08)',
-                    background: streamerProfile.cameraFrameStyle === cs.id
-                      ? `${accentColor}15`
-                      : 'rgba(255,255,255,0.03)',
-                    color: streamerProfile.cameraFrameStyle === cs.id ? accentColor : 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms ease',
-                  }}
-                >
-                  {cs.label}
-                </button>
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+              {CAMERA_STYLES.map(cs => {
+                const isSelected = streamerProfile.cameraFrameStyle === cs.id;
+                return (
+                  <button
+                    key={cs.id}
+                    onClick={() => setStreamerProfile({ cameraFrameStyle: cs.id })}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                      padding: '8px 4px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                      background: isSelected ? 'rgba(255,255,255,0.02)' : 'transparent',
+                      border: isSelected ? `2px solid ${accentColor}` : '2px solid rgba(255,255,255,0.06)',
+                      transition: 'all 150ms ease',
+                      outline: 'none',
+                    }}
+                    onMouseEnter={e => {
+                      if (!isSelected) {
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.01)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isSelected) {
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
+                  >
+                    {/* Visual miniature element */}
+                    <div style={{
+                      width: '100%', height: 32, borderRadius: cs.id === 'rounded' ? 6 : cs.id === 'glass' ? 4 : 2,
+                      border: cs.id === 'minimal' ? '0.5px solid rgba(255,255,255,0.3)' : `1.5px solid ${isSelected ? accentColor : 'rgba(255,255,255,0.4)'}`,
+                      background: cs.id === 'glass' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.2)',
+                      boxShadow: cs.id === 'neon' ? `0 0 8px ${accentColor}` : 'none',
+                      backdropFilter: cs.id === 'glass' ? 'blur(2px)' : 'none',
+                      position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxSizing: 'border-box',
+                    }}>
+                      {cs.id === 'minimal' && (
+                        <div style={{ position: 'absolute', inset: 2, border: `1px solid ${isSelected ? accentColor : 'rgba(255,255,255,0.5)'}`, opacity: 0.8 }} />
+                      )}
+                      <div style={{ fontSize: 6, color: isSelected ? accentColor : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>CAM</div>
+                    </div>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isSelected ? '#fff' : 'rgba(255,255,255,0.45)' }}>
+                      {cs.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </FieldCard>
 

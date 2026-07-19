@@ -11,7 +11,7 @@ interface SavedProject {
 }
 
 export const StepWelcome: React.FC = () => {
-  const { setStep, selectPack } = useWizardStore();
+  const { setWizardState, selectPack } = useWizardStore();
   const { loadProjectData } = useEditorStore();
   const [savedProject, setSavedProject] = useState<SavedProject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +38,7 @@ export const StepWelcome: React.FC = () => {
 
   const handleNew = () => {
     selectPack('');
-    setStep(1);
+    setWizardState('PACK_SELECTION');
   };
 
   const formatDate = (ts: number) => {

@@ -5,7 +5,7 @@ import { STREAM_PACKS } from '../../data/streamPacks';
 import type { StreamPack } from '../../packs/types';
 
 export const StepPackSelection: React.FC = () => {
-  const { selectedPackId, selectPack, setStep } = useWizardStore();
+  const { selectedPackId, selectPack, setWizardState } = useWizardStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [detailsPack, setDetailsPack] = useState<StreamPack | null>(null);
 
@@ -19,7 +19,7 @@ export const StepPackSelection: React.FC = () => {
 
   const handleSelect = (pack: StreamPack) => {
     selectPack(pack.id);
-    setStep(2);
+    setWizardState('PERSONALIZATION');
   };
 
   return (

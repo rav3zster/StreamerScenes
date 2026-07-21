@@ -22,20 +22,22 @@ export const RightPanel: React.FC = () => {
 
   if (selectedIds.length === 0) {
     return (
-      <div className="right-panel" style={{ width: rightPanelWidth, display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div className="inspector-empty" style={{ flex: 1 }}>
-          <div className="inspector-empty-icon">
-            <MousePointer2 size={24} style={{ opacity: 0.5 }} />
+      <div className="right-panel" style={{ width: rightPanelWidth, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="inspector-empty" style={{ flexShrink: 0, padding: '24px 16px' }}>
+            <div className="inspector-empty-icon">
+              <MousePointer2 size={24} style={{ opacity: 0.5 }} />
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', marginBottom: 4 }}>
+              Nothing Selected
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.5, textAlign: 'center' }}>
+              Click an element on the canvas to inspect its layout, styles, and animation properties
+            </div>
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', marginBottom: 4 }}>
-            Nothing Selected
+          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
+            <LiveControlPanel />
           </div>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.5, textAlign: 'center' }}>
-            Click an element on the canvas to inspect its layout, styles, and animation properties
-          </div>
-        </div>
-        <div style={{ padding: '12px', borderTop: '1px solid var(--color-border)' }}>
-          <LiveControlPanel />
         </div>
       </div>
     );

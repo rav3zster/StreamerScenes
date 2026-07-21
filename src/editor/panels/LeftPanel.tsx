@@ -96,7 +96,7 @@ const ScenesTab: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <div className="panel-body" style={{ flex: 1, overflowY: 'auto' }}>
+      <div className="panel-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div className="scene-list">
           {scenes.map(scene => {
             const isEditing = scene.id === editingSceneId;
@@ -124,7 +124,7 @@ const ScenesTab: React.FC = () => {
         </div>
 
         {adding ? (
-          <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 4 }}>
             <input
               autoFocus
               className="input"
@@ -139,14 +139,15 @@ const ScenesTab: React.FC = () => {
         ) : (
           <button
             className="btn btn-secondary"
-            style={{ width: '100%', marginTop: 8, fontSize: 11, justifyContent: 'center', gap: 6 }}
+            style={{ width: '100%', fontSize: 11, justifyContent: 'center', gap: 6 }}
             onClick={() => setAdding(true)}
           >
             <Plus size={13} /> Add Scene
           </button>
         )}
-      </div>
-      <div style={{ padding: '12px', borderTop: '1px solid var(--color-border)' }}>
+
+        <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0', flexShrink: 0 }} />
+
         <LiveControlPanel />
       </div>
     </div>

@@ -711,10 +711,16 @@ export const EditorCanvas: React.FC = () => {
       {showRulers && (
         <div style={{ gridColumn: 1, gridRow: 2, overflow: 'hidden', zIndex: 9, borderRight: '1px solid var(--color-border)' }}>
           <RulerVertical zoom={zoom} panY={pan.y} onDragStart={handleRulerMouseDown('x')} />
-          <div
-            className="canvas-wrapper"
-            style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
-          >
+        </div>
+      )}
+
+      {/* Canvas stage + scrollbars — always renders.
+          Occupies grid cell (2,2) when rulers visible, otherwise (1,1). */}
+      <div style={{ gridColumn: showRulers ? 2 : 1, gridRow: showRulers ? 2 : 1, position: 'relative', overflow: 'hidden' }}>
+        <div
+          className="canvas-wrapper"
+          style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
+        >
             <div
               ref={stageRef}
               className={`canvas-stage ${gridMode === 'dots' ? 'grid-dots' : gridMode === 'lines' ? 'grid-lines' : 'grid-off'}`}
@@ -914,7 +920,7 @@ export const EditorCanvas: React.FC = () => {
             </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Moveable Bounding Box resize handlers */}
       {selectedWidgets.length > 0 && !selectedWidgets.some(w => w.locked) && (

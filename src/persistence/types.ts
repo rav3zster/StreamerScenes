@@ -1,4 +1,5 @@
 import type { Scene, TimerRuntime } from '../store/editorStore';
+import type { TransitionScene, SceneTransitionAssignment } from '../transitions/types';
 
 export interface ProjectData {
   projectName: string;
@@ -11,6 +12,10 @@ export interface ProjectData {
   liveTransitionDuration?: number;
   selectedPackId?: string | null;
   updatedAt: number;
+  // ── V0.7: Transition Studio ───────────────────────────────────────────────────
+  transitions?: TransitionScene[];
+  defaultTransitionId?: string | null;
+  sceneTransitionAssignments?: SceneTransitionAssignment[];
 }
 
 export interface StorageBackend {

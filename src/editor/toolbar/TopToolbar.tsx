@@ -3,9 +3,10 @@ import {
   Undo2, Redo2, ZoomIn, ZoomOut, Grid3x3, Magnet, Ruler,
   Eye, Save, Radio, ChevronRight, Layers, Maximize2,
   ChevronDown, FolderOpen, FilePlus, Sun, Moon, Monitor as MonitorIcon,
-  Download, Copy,
+  Download, Copy, Zap,
 } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
+import { useTransitionStore } from '../../store/transitionStore';
 import { SceneTransitioner } from '../../renderer/SceneTransitioner';
 
 import { persistenceService } from '../../persistence/persistenceService';
@@ -40,11 +41,15 @@ export const TopToolbar: React.FC = () => {
   const handleSave = () => {
     setSaveFlash(true);
     setTimeout(() => setSaveFlash(false), 1200);
+    const ts = useTransitionStore.getState();
     persistenceService.saveProject({
       projectName: useEditorStore.getState().projectName,
       scenes: useEditorStore.getState().scenes,
       liveSceneId: useEditorStore.getState().liveSceneId,
       editingSceneId: useEditorStore.getState().editingSceneId,
+      transitions: ts.transitions,
+      defaultTransitionId: ts.defaultTransitionId,
+      sceneTransitionAssignments: ts.sceneAssignments,
       updatedAt: Date.now(),
     });
   };
@@ -292,6 +297,17 @@ export const TopToolbar: React.FC = () => {
       {/* ── Layers toggle ──────────────────────────────────────── */}
       <button className="btn-icon" title="Layers" onClick={() => useEditorStore.getState().setLeftTab('layers')}>
         <Layers size={14} />
+      </button>
+
+      {/* ── Transitions Studio button ────────────────────────────── */}
+      <button
+        className="btn-icon"
+        title="Transition Studio"
+        onClick={() => useEditorStore.getState().setAppView('transition-studio')}
+        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', fontSize: 11, fontWeight: 600 }}
+      >
+        <Zap size={13} color="#a855f7" />
+        Transitions
       </button>
 
       <div className="toolbar-spacer" />

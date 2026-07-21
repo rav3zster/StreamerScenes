@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useEditorStore } from '../store/editorStore';
 import { SceneTransitioner } from '../renderer/SceneTransitioner';
+import { TransitionOverlay } from '../transitions/components/TransitionOverlay';
 import { CANVAS_W, CANVAS_H } from '../editor/canvas/EditorCanvas';
 import { persistenceService } from '../persistence/persistenceService';
 
@@ -122,6 +123,8 @@ export const OutputPage: React.FC = () => {
           transitionType={liveTransitionType}
           transitionDuration={liveTransitionDuration}
         />
+        {/* Transition Studio overlay — renders above scenes during V0.7 transitions */}
+        <TransitionOverlay zoom={scale} />
       </div>
     </div>
   );

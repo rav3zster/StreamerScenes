@@ -2,6 +2,7 @@ import React, { useRef, useCallback, useState, useEffect } from 'react';
 import Moveable from 'react-moveable';
 import { useEditorStore, type SceneWidget, type UserGuide } from '../../store/editorStore';
 import { SceneRenderer } from '../../renderer/SceneRenderer';
+import { TransitionOverlay } from '../../transitions/components/TransitionOverlay';
 
 export const CANVAS_W = 1920;
 export const CANVAS_H = 1080;
@@ -798,6 +799,9 @@ export const EditorCanvas: React.FC = () => {
                 timerSource="preview"
               />
 
+              {/* Transition Studio live overlay preview */}
+              <TransitionOverlay zoom={zoom} />
+
               {/* Smart snapping guides */}
               {showGuides && activeGuides.map((g, i) => (
                 <div key={i} className={`guide-line ${g.x !== undefined ? 'vertical' : 'horizontal'}`}
@@ -890,7 +894,6 @@ export const EditorCanvas: React.FC = () => {
                 <div className="rubber-band" style={{ left: rubberBand.x, top: rubberBand.y, width: rubberBand.w, height: rubberBand.h }} />
               )}
             </div>
-          </div>
 
           {/* Scrollbars overlay */}
           {rangeX > 0 && (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Radio } from 'lucide-react';
 import { useEditorStore, getTimerRemaining } from '../../store/editorStore';
+import { SceneAssignmentPanel } from '../../transitions/components/SceneAssignmentPanel';
 
 const timeBtnStyle: React.CSSProperties = {
   flex: '1 0 28%',
@@ -250,50 +251,8 @@ export const LiveControlPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Transitions Config */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--color-text-muted)' }}>Transition:</div>
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <select
-            value={liveTransitionType}
-            onChange={e => setLiveTransitionType(e.target.value as any)}
-            style={{
-              flex: 1,
-              background: 'var(--color-surface-2)',
-              border: '1px solid var(--color-border)',
-              borderRadius: '4px',
-              color: 'var(--color-text)',
-              fontSize: '10px',
-              padding: '4px 6px',
-              outline: 'none',
-            }}
-          >
-            <option value="none">None</option>
-            <option value="fade">Fade</option>
-            <option value="slide">Slide</option>
-          </select>
-          
-          <input
-            type="number"
-            value={liveTransitionDuration}
-            onChange={e => setLiveTransitionDuration(Math.max(0, parseInt(e.target.value) || 0))}
-            style={{
-              width: '60px',
-              background: 'var(--color-surface-2)',
-              border: '1px solid var(--color-border)',
-              borderRadius: '4px',
-              color: 'var(--color-text)',
-              fontSize: '10px',
-              padding: '4px 6px',
-              textAlign: 'center',
-              outline: 'none',
-            }}
-            placeholder="ms"
-            title="Transition duration (ms)"
-          />
-          <span style={{ fontSize: '9px', color: 'var(--color-text-muted)' }}>ms</span>
-        </div>
-      </div>
+      {/* V0.7 Scene Transitions Panel */}
+      <SceneAssignmentPanel />
 
       <div style={{ height: '1px', background: 'var(--color-border)', margin: '4px 0' }} />
 

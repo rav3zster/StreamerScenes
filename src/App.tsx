@@ -6,6 +6,7 @@ import { WelcomeWizard } from './components/wizard/WelcomeWizard';
 import { OBSSetupGuide } from './components/OBSSetupGuide';
 import { PackBrowserPage } from './pages/PackBrowserPage';
 import { PackDetailPage } from './pages/PackDetailPage';
+import { TransitionStudioPage } from './pages/TransitionStudioPage';
 import { useEditorStore } from './store/editorStore';
 
 const StudioRouter: React.FC = () => {
@@ -41,6 +42,7 @@ const StudioRouter: React.FC = () => {
       {appView === 'pack-detail' && <PackDetailPage />}
       {appView === 'editor' && <EditorPage />}
       {appView === 'obs-setup' && <OBSSetupGuide />}
+      {appView === 'transition-studio' && <TransitionStudioPage />}
     </>
   );
 };

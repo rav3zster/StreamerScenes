@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { STREAM_PACKS } from '../data/streamPacks';
 import { persistenceService } from '../persistence/persistenceService';
+import { useTransitionStore } from './transitionStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -266,6 +267,7 @@ interface EditorState {
   finishPreviewTimer: () => void;
 
   switchDraftToLive: () => void;
+  triggerLiveTransition: (toSceneId: string) => void;
   setLiveTransitionType: (t: 'none' | 'fade' | 'slide') => void;
   setLiveTransitionDuration: (d: number) => void;
 
@@ -308,7 +310,7 @@ export interface ReadinessChecks {
 }
 
 export type LeftTab = 'scenes' | 'layers' | 'assets' | 'widgets' | 'themes';
-export type AppView = 'welcome' | 'pack-browser' | 'pack-detail' | 'editor' | 'obs-setup';
+export type AppView = 'welcome' | 'pack-browser' | 'pack-detail' | 'editor' | 'obs-setup' | 'transition-studio';
 
 export const getTimerRemaining = (timer: TimerRuntime): number => {
   if (!timer.isRunning) {
@@ -498,6 +500,22 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setLiveScene: (id) => set({ liveSceneId: id }),
+  triggerLiveTransition: (toSceneId) => {
+    const { liveSceneId } = get();
+    if (!liveSceneId || liveSceneId === toSceneId) {
+      set({ liveSceneId: toSceneId });
+      return;
+    }
+    const transitionStore = useTransitionStore.getState();
+    const transition = transitionStore.resolveTransitionForSwitch(liveSceneId, toSceneId);
+    if (transition) {
+      transitionStore.startTransition(transition.id, liveSceneId, toSceneId, () => {
+        set({ liveSceneId: toSceneId });
+      });
+    } else {
+      set({ liveSceneId: toSceneId });
+    }
+  },
   setLiveTransitionType: (t) => set({ liveTransitionType: t }),
   setLiveTransitionDuration: (d) => set({ liveTransitionDuration: d }),
 
@@ -1231,6 +1249,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       selectedPackId: data.selectedPackId || null,
       appView: 'editor',
     }));
+
+    if ((data as any).transitions || (data as any).defaultTransitionId || (data as any).sceneTransitionAssignments) {
+      useTransitionStore.setState({
+        transitions: (data as any).transitions || [],
+        defaultTransitionId: (data as any).defaultTransitionId || null,
+        sceneAssignments: (data as any).sceneTransitionAssignments || [],
+      });
+    }
   },
 
   setSavingStatus: (isSaving, lastSavedAt = null) => {

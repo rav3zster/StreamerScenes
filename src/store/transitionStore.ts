@@ -1,4 +1,4 @@
-﻿/**
+/**
  * transitionStore.ts
  * Zustand store for the Transition Studio system.
  *
@@ -102,7 +102,7 @@ interface TransitionStoreState {
 export const useTransitionStore = create<TransitionStoreState>()((set, get) => ({
   // Initial state
   transitions: [],
-  defaultTransitionId: null,
+  defaultTransitionId: TRANSITION_LIBRARY[0]?.id ?? null,
   sceneAssignments: [],
   editingTransitionId: null,
   selectedWidgetIds: [],

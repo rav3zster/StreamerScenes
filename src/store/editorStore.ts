@@ -481,7 +481,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setScenes: (scenes) => set({ scenes }),
   setLiveScenes: (liveScenes) => set({ liveScenes }),
 
-  setEditingScene: (id) => set({ editingSceneId: id, selectedIds: [] }),
+  setEditingScene: (id) => {
+    const { editingSceneId, liveSceneId } = get();
+    set({ selectedIds: [] });
+    if (editingSceneId === id) return;
+    const fromId = editingSceneId || liveSceneId;
+    if (!fromId) {
+      set({ editingSceneId: id });
+      return;
+    }
+    const transitionStore = useTransitionStore.getState();
+    const transition = transitionStore.resolveTransitionForSwitch(fromId, id);
+    if (transition) {
+      transitionStore.startTransition(transition.id, fromId, id, () => {
+        set({ editingSceneId: id });
+      });
+    } else {
+      set({ editingSceneId: id });
+    }
+  },
 
   addScene: (name, label) => {
     const id = `scene-${Date.now()}`;
@@ -499,21 +517,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  setLiveScene: (id) => set({ liveSceneId: id }),
+  setLiveScene: (id) => {
+    get().triggerLiveTransition(id);
+  },
+
   triggerLiveTransition: (toSceneId) => {
-    const { liveSceneId } = get();
-    if (!liveSceneId || liveSceneId === toSceneId) {
-      set({ liveSceneId: toSceneId });
+    const { liveSceneId, editingSceneId } = get();
+    const fromId = liveSceneId || editingSceneId;
+    if (!fromId || fromId === toSceneId) {
+      set({ liveSceneId: toSceneId, editingSceneId: toSceneId });
       return;
     }
     const transitionStore = useTransitionStore.getState();
-    const transition = transitionStore.resolveTransitionForSwitch(liveSceneId, toSceneId);
+    const transition = transitionStore.resolveTransitionForSwitch(fromId, toSceneId);
     if (transition) {
-      transitionStore.startTransition(transition.id, liveSceneId, toSceneId, () => {
-        set({ liveSceneId: toSceneId });
+      transitionStore.startTransition(transition.id, fromId, toSceneId, () => {
+        set({ liveSceneId: toSceneId, editingSceneId: toSceneId });
       });
     } else {
-      set({ liveSceneId: toSceneId });
+      set({ liveSceneId: toSceneId, editingSceneId: toSceneId });
     }
   },
   setLiveTransitionType: (t) => set({ liveTransitionType: t }),

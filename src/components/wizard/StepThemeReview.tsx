@@ -141,11 +141,11 @@ export const StepThemeReview: React.FC = () => {
             </div>
           </ControlSection>
 
-          <ControlSection icon={<Radius size={13} />} label="Border Radius — {borderRadius}px">
+          <ControlSection icon={<Radius size={13} />} label={`Border Radius — ${borderRadius}px`}>
             <input type="range" min={0} max={32} value={borderRadius} onChange={e => setWizardTheme({ borderRadius: parseInt(e.target.value) })} style={{ width: '100%', accentColor: accent }} />
           </ControlSection>
 
-          <ControlSection icon={<GlassWater size={13} />} label="Glass Intensity — {glassIntensity}%">
+          <ControlSection icon={<GlassWater size={13} />} label={`Glass Intensity — ${glassIntensity}%`}>
             <input type="range" min={0} max={100} value={glassIntensity} onChange={e => setWizardTheme({ glassIntensity: parseInt(e.target.value) })} style={{ width: '100%', accentColor: accent }} />
           </ControlSection>
 

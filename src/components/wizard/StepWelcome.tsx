@@ -11,8 +11,8 @@ interface SavedProject {
 }
 
 export const StepWelcome: React.FC = () => {
-  const { setWizardState, selectPack } = useWizardStore();
-  const { loadProjectData } = useEditorStore();
+  const { setWizardState, selectPack, resetWizard } = useWizardStore();
+  const { loadProjectData, setAppView } = useEditorStore();
   const [savedProject, setSavedProject] = useState<SavedProject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,6 +34,8 @@ export const StepWelcome: React.FC = () => {
     if (data) {
       loadProjectData(data);
     }
+    resetWizard();
+    setAppView('editor');
   };
 
   const handleNew = () => {

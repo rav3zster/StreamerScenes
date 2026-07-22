@@ -602,7 +602,7 @@ const ColorPickerPanel: React.FC<ColorPickerPanelProps> = ({ label, value, onCha
   const isRgba = value.startsWith('rgba');
 
   return (
-    <div className="input-group" style={{ border: '1px solid var(--color-border)', borderRadius: 8, padding: 8, background: 'var(--color-surface-2)' }}>
+    <div className="input-group" style={{ borderRadius: 8, padding: 8, background: 'var(--color-surface-2)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <span className="input-group-label">{label}</span>
         <div style={{ display: 'flex', gap: 2 }}>

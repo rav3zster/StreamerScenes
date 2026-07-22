@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   Film, Layers, Image, Layout, Palette,
   Plus, Trash2, Eye, EyeOff, Lock, Unlock, GripVertical,
-  Search, ChevronDown, ChevronUp, Copy, Heart, Clock,
+  Search, ChevronDown, ChevronUp, Copy, Heart, Clock, Radio as RadioIcon,
 } from 'lucide-react';
 import { useEditorStore, type LeftTab, type SceneWidget } from '../../store/editorStore';
 import { WIDGET_CATEGORIES } from '../../data/widgetCatalog';
@@ -111,7 +111,7 @@ const ScenesTab: React.FC = () => {
                 <div style={{ display: 'flex', gap: 2 }} className="scene-item-actions">
                   <button className="btn-icon" style={{ width: 22, height: 22 }} title="Set Live Scene"
                     onClick={e => { e.stopPropagation(); setLiveScene(scene.id); }}>
-                    <Radio size={11} />
+                    <RadioIcon size={11} />
                   </button>
                   <button className="btn-icon" style={{ width: 22, height: 22 }} title="Delete"
                     onClick={e => { e.stopPropagation(); if (scenes.length > 1) deleteScene(scene.id); }}>
@@ -146,7 +146,7 @@ const ScenesTab: React.FC = () => {
           </button>
         )}
 
-        <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0', flexShrink: 0 }} />
+        <div style={{ margin: '8px 0', flexShrink: 0 }} />
 
         <LiveControlPanel />
       </div>

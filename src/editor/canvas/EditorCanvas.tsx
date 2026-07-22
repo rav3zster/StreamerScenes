@@ -735,14 +735,14 @@ export const EditorCanvas: React.FC = () => {
                 ...(gridMode === 'lines'
                   ? {
                       backgroundImage: [
-                        `linear-gradient(rgba(168,85,247,0.3) 1px, transparent 1px)`,
-                        `linear-gradient(90deg, rgba(168,85,247,0.3) 1px, transparent 1px)`,
+                        `linear-gradient(var(--color-accent-alpha-30) 1px, transparent 1px)`,
+                        `linear-gradient(90deg, var(--color-accent-alpha-30) 1px, transparent 1px)`,
                       ].join(','),
                       backgroundSize: `${40 * zoom}px ${40 * zoom}px`,
                     }
                   : gridMode === 'dots'
                   ? {
-                      backgroundImage: `radial-gradient(rgba(168,85,247,0.55) 1.5px, transparent 0)`,
+                      backgroundImage: `radial-gradient(var(--color-accent-alpha-55) 1.5px, transparent 0)`,
                       backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
                     }
                   : {}),

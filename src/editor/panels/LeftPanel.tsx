@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Film, Layers, Image, Layout, Palette,
   Plus, Trash2, Eye, EyeOff, Lock, Unlock, GripVertical,
   Search, ChevronDown, ChevronUp, Copy, Heart, Clock, Radio as RadioIcon, Star,
 } from 'lucide-react';
-import { useEditorStore, type LeftTab, type SceneWidget } from '../../store/editorStore';
+import { useEditorStore, getTimerRemaining, type LeftTab, type SceneWidget } from '../../store/editorStore';
 import { WIDGET_CATEGORIES } from '../../data/widgetCatalog';
 import { WIDGET_TEMPLATES } from '../../data/widgetTemplates';
 import { MOCK_ASSETS, type VisualAsset } from '../../data/assets';
@@ -25,9 +25,28 @@ export const SidebarRail: React.FC = () => {
   const { leftTab, setLeftTab } = useEditorStore();
   return (
     <div className="sidebar">
-      <div className="sidebar-logo" title="VibeOverlay Studio">
-        ⚡
+      {/* Nothing brand dot-matrix logo */}
+      <div style={{
+        width: 34, height: 34, borderRadius: 10,
+        background: '#0F0F0F',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 16, cursor: 'pointer',
+        position: 'relative', overflow: 'hidden',
+      }} title="StreamScenes">
+        {/* 3x3 dot matrix */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 4px)', gap: 2.5,
+        }}>
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} style={{
+              width: 4, height: 4, borderRadius: '50%',
+              background: i === 4 ? '#FF3A30' : 'rgba(255,255,255,0.25)',
+            }} />
+          ))}
+        </div>
       </div>
+
       <nav className="sidebar-nav">
         {TABS.map(t => (
           <button
@@ -37,7 +56,6 @@ export const SidebarRail: React.FC = () => {
             title={t.label}
           >
             {t.icon}
-            <span>{t.label}</span>
           </button>
         ))}
       </nav>
@@ -58,273 +76,311 @@ export const LeftPanel: React.FC = () => {
     'themes': <ThemeManagerPanel />,
   };
 
-  const labels: Record<LeftTab, string> = {
-    scenes: 'Scene Manager',
-    layers: 'Layers Outline',
-    assets: 'Assets Browser',
-    widgets: 'Widget Library',
-    themes: 'Theme Manager',
-  };
-
   return (
-    <div className="left-panel" style={{ width: leftPanelWidth }}>
-      <div className="panel-header">
-        <span className="panel-title">{labels[leftTab]}</span>
-      </div>
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div className="left-panel vibe-red-accent-left" style={{ width: leftPanelWidth }}>
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         {content[leftTab]}
       </div>
     </div>
   );
 };
 
-// ─── (ProjectsTab removed — project management moved to File menu) ────────────
-
-// ─── Scenes Tab ───────────────────────────────────────────────────────────────
+// ─── Scenes Tab (Matching Reference Image) ───────────────────────────────────
 
 const ScenesTab: React.FC = () => {
   const {
-    scenes, editingSceneId, liveSceneId, favoriteSceneIds,
-    setEditingScene, setLiveScene, addScene, deleteScene,
-    toggleFavoriteScene,
+    scenes, editingSceneId, setEditingScene,
+    liveSceneId, liveScenes, setLiveScene,
+    liveTimer, startLiveTimer, pauseLiveTimer, resumeLiveTimer, resetLiveTimer, adjustLiveTimer,
   } = useEditorStore();
 
-  const [filter, setFilter] = useState<'all' | 'favorites' | 'live'>('all');
   const [search, setSearch] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [newName, setNewName] = useState('');
+  const [selectedTransition, setSelectedTransition] = useState('Project Default Transition');
+  // Live-ticking remaining seconds
+  const [remaining, setRemaining] = useState(() => getTimerRemaining(liveTimer));
 
-  const handleAdd = () => {
-    if (!newName.trim()) return;
-    addScene(newName.toLowerCase().replace(/\s+/g, '-'), newName);
-    setNewName('');
-    setAdding(false);
+  // Sync remaining whenever timer object changes (pause, reset, adjust, etc.)
+  useEffect(() => {
+    setRemaining(getTimerRemaining(liveTimer));
+  }, [liveTimer]);
+
+  // Poll every 100ms while timer is running
+  useEffect(() => {
+    if (!liveTimer.isRunning || liveTimer.isFinished) return;
+    const interval = setInterval(() => {
+      setRemaining(getTimerRemaining(liveTimer));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [liveTimer]);
+
+  // Format seconds -> HH:MM:SS
+  const formatTime = (secs: number) => {
+    const s = Math.max(0, Math.round(secs));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   };
 
-  const filteredScenes = scenes.filter(s => {
-    const matchSearch = s.label.toLowerCase().includes(search.toLowerCase());
-    if (!matchSearch) return false;
-    if (filter === 'favorites') return favoriteSceneIds.includes(s.id);
-    if (filter === 'live') return s.id === liveSceneId;
-    return true;
-  });
+  // Timer status
+  let timerStatus = 'STANDBY';
+  let statusColor = 'rgba(255,255,255,0.3)';
+  if (liveTimer.isFinished) { timerStatus = 'FINISHED'; statusColor = '#FF3A30'; }
+  else if (liveTimer.isRunning) { timerStatus = 'RUNNING'; statusColor = '#22c55e'; }
+  else if (liveTimer.startedAt !== null) { timerStatus = 'PAUSED'; statusColor = '#3b82f6'; }
+
+  // Get duration from countdown widget in live scene (fallback to stored duration)
+  const getWidgetDuration = () => {
+    const activeLiveId = liveSceneId || (liveScenes[0]?.id ?? null);
+    const liveScene = liveScenes.find(s => s.id === activeLiveId);
+    const widget = liveScene?.widgets.find(w => w.type === 'countdown-timer');
+    return {
+      duration: widget?.content.settings?.duration ?? liveTimer.duration ?? 600,
+      finishBehavior: widget?.content.settings?.finishBehavior ?? 'freeze',
+      replaceText: widget?.content.settings?.replaceText ?? '',
+      replaceTransition: widget?.content.settings?.replaceTransition ?? 'none',
+      switchTargetSceneId: widget?.content.settings?.switchTargetSceneId ?? null,
+    };
+  };
+
+  const handleStartPause = () => {
+    if (liveTimer.isRunning) {
+      pauseLiveTimer();
+    } else if (liveTimer.startedAt !== null && !liveTimer.isFinished) {
+      resumeLiveTimer();
+    } else {
+      const { duration, finishBehavior, ...rest } = getWidgetDuration();
+      startLiveTimer(duration, finishBehavior, rest);
+    }
+  };
+
+  const handleReset = () => {
+    const { duration } = getWidgetDuration();
+    resetLiveTimer(duration);
+  };
+
+  // Icon from scene name slug (not label which has emojis)
+  const sceneIcon = (name: string) => {
+    if (name.includes('chat')) return '💬';
+    if (name.includes('game') || name.includes('play')) return '🎮';
+    if (name.includes('brb') || name.includes('break')) return '☕';
+    if (name.includes('end')) return '🎬';
+    if (name.includes('soon') || name.includes('start')) return '⏳';
+    return '▫';
+  };
+
+  const filteredScenes = search.trim()
+    ? scenes.filter(s => s.label.toLowerCase().includes(search.toLowerCase()))
+    : scenes;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      {/* Search & Filter Header */}
-      <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6, borderBottom: '1px solid var(--color-border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface-3)', borderRadius: 6, padding: '4px 8px' }}>
-          <Search size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+
+      {/* ── Section 1: SCENE MANAGER */}
+      <div style={{ padding: '16px 16px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span className="nothing-section-label">SCENE MANAGER</span>
+          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
+        </div>
+
+        {/* Search pill */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'rgba(255,255,255,0.04)', borderRadius: 999,
+          padding: '7px 12px', border: '1px solid rgba(255,255,255,0.07)',
+        }}>
+          <Search size={12} style={{ color: '#444', flexShrink: 0 }} />
           <input
-            className="input"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search scenes..."
-            style={{ border: 'none', background: 'transparent', padding: 0, fontSize: 11, width: '100%' }}
+            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 11, color: '#aaa', width: '100%' }}
           />
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {(['all', 'favorites', 'live'] as const).map(tab => {
-            const active = filter === tab;
+      </div>
+
+      {/* Divider */}
+      <div className="vibe-red-divider" style={{ margin: '0 16px 14px' }} />
+
+      {/* ── Section 2: LIVE BROADCAST STATE */}
+      <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span className="nothing-section-label">LIVE BROADCAST STATE</span>
+          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
+        </div>
+
+        {/* Nothing-style LED timer */}
+        <div style={{
+          background: liveTimer.isRunning ? 'rgba(34, 197, 94, 0.06)' : 'rgba(255, 58, 48, 0.06)',
+          borderRadius: 14,
+          padding: '14px 16px',
+          border: `1px solid ${liveTimer.isRunning ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 58, 48, 0.15)'}`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 6,
+          transition: 'all 300ms ease',
+        }}>
+          <div
+            className="vibe-font-led"
+            style={{
+              fontSize: 36, fontWeight: 700, lineHeight: 1, letterSpacing: '0.06em',
+              color: liveTimer.isRunning ? '#22c55e' : liveTimer.isFinished ? '#FF3A30' : '#FF3A30',
+              textShadow: liveTimer.isRunning ? '0 0 12px rgba(34,197,94,0.4)' : 'none',
+            }}
+          >
+            {formatTime(remaining)}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: statusColor,
+              boxShadow: liveTimer.isRunning ? `0 0 6px ${statusColor}` : 'none',
+              animation: liveTimer.isRunning ? 'live-pulse 1.5s ease-in-out infinite' : 'none',
+            }} />
+            <span style={{ fontSize: 9, fontWeight: 700, color: statusColor, letterSpacing: '0.15em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+              {timerStatus}
+            </span>
+          </div>
+        </div>
+
+        {/* Timer Control Pills */}
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            className="vibe-pill-btn"
+            style={{ flex: 1, justifyContent: 'center' }}
+            onClick={handleStartPause}
+          >
+            <Clock size={11} />
+            <span>
+              {liveTimer.isRunning ? 'Pause' : liveTimer.startedAt !== null && !liveTimer.isFinished ? 'Resume' : 'Start'}
+            </span>
+          </button>
+          <button
+            className="vibe-pill-btn"
+            style={{ flex: 1, justifyContent: 'center' }}
+            onClick={handleReset}
+          >
+            <RadioIcon size={11} />
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="vibe-pill-btn" style={{ flex: 1, justifyContent: 'center', fontSize: 10 }} onClick={() => adjustLiveTimer(60)}>+1m</button>
+          <button className="vibe-pill-btn" style={{ flex: 1, justifyContent: 'center', fontSize: 10 }} onClick={() => adjustLiveTimer(-60)}>-1m</button>
+          <button className="vibe-pill-btn" style={{ flex: 1, justifyContent: 'center', fontSize: 10 }} onClick={() => adjustLiveTimer(-180)}>-3m</button>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="vibe-red-divider" style={{ margin: '0 16px 14px' }} />
+
+      {/* ── Section 3: SCENE TRANSITIONS */}
+      <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span className="nothing-section-label">SCENE TRANSITIONS</span>
+          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
+        </div>
+
+        {/* Transition select pill */}
+        <div style={{ position: 'relative' }}>
+          <select
+            value={selectedTransition}
+            onChange={e => setSelectedTransition(e.target.value)}
+            style={{
+              width: '100%',
+              appearance: 'none',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 999,
+              padding: '7px 36px 7px 14px',
+              fontSize: 11,
+              fontWeight: 500,
+              color: '#aaa',
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          >
+            <option value="Project Default Transition">Project Default Transition</option>
+            <option value="Fade Transition">Fade Transition</option>
+            <option value="Slide Transition">Slide Transition</option>
+          </select>
+          <ChevronDown size={12} style={{ position: 'absolute', right: 12, top: 9, color: '#555', pointerEvents: 'none' }} />
+        </div>
+
+        {/* Scene list pills */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {filteredScenes.map(s => {
+            const isEditing = s.id === editingSceneId;
+            const isLive = s.id === liveSceneId;
             return (
-              <button
-                key={tab}
-                className="focus-ring"
-                onClick={() => setFilter(tab)}
-                style={{
-                  flex: 1,
-                  fontSize: 10,
-                  fontWeight: active ? 700 : 500,
-                  textTransform: 'capitalize',
-                  padding: '3px 0',
-                  borderRadius: 4,
-                  border: 'none',
-                  background: active ? 'var(--color-accent-alpha-15)' : 'transparent',
-                  color: active ? 'var(--color-accent)' : 'var(--color-text-muted)',
-                  cursor: 'pointer',
-                }}
+              <div
+                key={s.id}
+                onClick={() => setEditingScene(s.id)}
+                className={`scene-item${isEditing ? ' active' : ''}`}
+                style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px 6px 12px' }}
               >
-                {tab}
-              </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 12, opacity: isEditing ? 1 : 0.5, flexShrink: 0 }}>
+                    {sceneIcon(s.name)}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: isEditing ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {s.label}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  {/* Quick Switch Live Icon Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLiveScene(s.id);
+                    }}
+                    title={isLive ? "Currently Broadcasting Live" : `Switch live broadcast to ${s.label}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      background: isLive ? 'rgba(255, 58, 48, 0.16)' : 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${isLive ? 'rgba(255, 58, 48, 0.45)' : 'rgba(255, 255, 255, 0.09)'}`,
+                      borderRadius: 999,
+                      padding: '3px 8px',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      color: isLive ? '#FF3A30' : '#888',
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease',
+                    }}
+                    onMouseEnter={e => {
+                      if (!isLive) {
+                        e.currentTarget.style.background = 'rgba(255, 58, 48, 0.12)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 58, 48, 0.35)';
+                        e.currentTarget.style.color = '#FF3A30';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isLive) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+                        e.currentTarget.style.color = '#888';
+                      }
+                    }}
+                  >
+                    <RadioIcon size={10} style={{ color: isLive ? '#FF3A30' : 'inherit' }} />
+                    <span>{isLive ? 'LIVE' : 'GO LIVE'}</span>
+                  </button>
+
+                  {isEditing && !isLive && (
+                    <span title="Currently Editing" style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* Broadcast Scene Cards */}
-      <div className="panel-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px' }}>
-        {filteredScenes.map(scene => {
-          const isEditing = scene.id === editingSceneId;
-          const isLive = scene.id === liveSceneId;
-          const isFav = favoriteSceneIds.includes(scene.id);
-
-          return (
-            <div
-              key={scene.id}
-              onClick={() => setEditingScene(scene.id)}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: 'var(--radius-lg, 8px)',
-                background: isEditing ? 'var(--surface-3, #1e1b2e)' : 'var(--surface-2, #141222)',
-                border: isLive
-                  ? '1px solid #ef4444'
-                  : isEditing
-                  ? '1px solid var(--color-accent)'
-                  : '1px solid var(--color-border)',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                transition: 'all 120ms ease-out',
-                position: 'relative',
-              }}
-            >
-              {/* 16:9 Mini Canvas Thumbnail */}
-              <div
-                style={{
-                  height: 72,
-                  width: '100%',
-                  background: 'linear-gradient(135deg, #090713 0%, #151128 100%)',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {/* Simulated widget representation in thumbnail */}
-                <div style={{ opacity: 0.5, fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
-                  16:9 • {scene.widgets.length} elements
-                </div>
-
-                {/* Status Badges Overlay */}
-                <div style={{ position: 'absolute', top: 6, left: 6, display: 'flex', gap: 4 }}>
-                  {isLive && (
-                    <span
-                      style={{
-                        fontSize: 8,
-                        fontWeight: 800,
-                        color: '#ffffff',
-                        background: '#ef4444',
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        letterSpacing: '0.05em',
-                        boxShadow: '0 2px 8px rgba(239,68,68,0.5)',
-                      }}
-                    >
-                      LIVE
-                    </span>
-                  )}
-                  {isEditing && !isLive && (
-                    <span
-                      style={{
-                        fontSize: 8,
-                        fontWeight: 800,
-                        color: '#ffffff',
-                        background: 'var(--color-accent)',
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      EDITING
-                    </span>
-                  )}
-                </div>
-
-                {/* Quick actions top right */}
-                <button
-                  className="btn-icon focus-ring"
-                  style={{
-                    position: 'absolute',
-                    top: 6,
-                    right: 6,
-                    width: 22,
-                    height: 22,
-                    background: 'rgba(0,0,0,0.4)',
-                    backdropFilter: 'blur(4px)',
-                  }}
-                  onClick={e => {
-                    e.stopPropagation();
-                    toggleFavoriteScene(scene.id);
-                  }}
-                  title="Favorite Scene"
-                >
-                  <Star size={11} color={isFav ? '#f59e0b' : 'gray'} fill={isFav ? '#f59e0b' : 'none'} />
-                </button>
-              </div>
-
-              {/* Scene Card Metadata Footer */}
-              <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: isEditing ? 700 : 500, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {scene.label}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                    {scene.widgets.length} widget{scene.widgets.length !== 1 ? 's' : ''} • 1920×1080
-                  </div>
-                </div>
-
-                {/* Card Quick Actions */}
-                <div style={{ display: 'flex', gap: 3 }}>
-                  <button
-                    className="btn-icon focus-ring"
-                    style={{ width: 24, height: 24 }}
-                    title="Set Live Scene"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setLiveScene(scene.id);
-                    }}
-                  >
-                    <RadioIcon size={12} color={isLive ? '#ef4444' : undefined} />
-                  </button>
-                  <button
-                    className="btn-icon focus-ring"
-                    style={{ width: 24, height: 24 }}
-                    title="Delete Scene"
-                    onClick={e => {
-                      e.stopPropagation();
-                      if (scenes.length > 1) deleteScene(scene.id);
-                    }}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {adding ? (
-          <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
-            <input
-              autoFocus
-              className="input"
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') handleAdd();
-                if (e.key === 'Escape') setAdding(false);
-              }}
-              placeholder="Scene Name (e.g. Starting Soon)"
-              style={{ flex: 1, fontSize: 11 }}
-            />
-            <button className="btn btn-primary" style={{ fontSize: 11, padding: '4px 10px' }} onClick={handleAdd}>
-              Add
-            </button>
-          </div>
-        ) : (
-          <button
-            className="btn btn-secondary focus-ring"
-            style={{ width: '100%', fontSize: 11, justifyContent: 'center', gap: 6, marginTop: 4 }}
-            onClick={() => setAdding(true)}
-          >
-            <Plus size={13} /> Add Scene
-          </button>
-        )}
-
-        <div style={{ margin: '8px 0', flexShrink: 0 }} />
-
-        <LiveControlPanel />
-      </div>
     </div>
   );
 };

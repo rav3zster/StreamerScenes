@@ -18,17 +18,20 @@ const RECENT_COLORS_KEY = 'vibe-recent-colors';
 
 // ─── Canvas Properties Inspector (Empty Selection State) ──────────────────────
 
+// ─── Canvas Properties Inspector (Matching Reference Image) ──────────────────────
+
 const CanvasPropertiesInspector: React.FC = () => {
   const {
     scenes, editingSceneId,
-    gridMode, setGridMode, snapEnabled, toggleSnap,
+    snapEnabled, toggleSnap,
     showGuides, toggleGuides, showRulers, toggleRulers,
     setAppView,
   } = useEditorStore();
 
   const editingScene = scenes.find(s => s.id === editingSceneId);
-  const widgets = editingScene?.widgets ?? [];
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [fillMode, setFillMode] = useState<'solid' | 'gradient' | 'glace'>('solid');
+  const [hexColor, setHexColor] = useState('#91970b');
 
   const handleCopyUrl = () => {
     const url = `${window.location.origin}/output`;
@@ -37,101 +40,137 @@ const CanvasPropertiesInspector: React.FC = () => {
     setTimeout(() => setCopiedUrl(false), 2000);
   };
 
-  const bgWidget = widgets.find(w => w.type === 'background');
-  const updateWidget = useEditorStore(s => s.updateWidget);
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <div className="panel-header" style={{ padding: '12px 14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Monitor size={15} style={{ color: 'var(--color-accent)' }} />
-          <div>
-            <div className="panel-title" style={{ fontSize: 12, fontWeight: 700 }}>Canvas & Scene</div>
-            <div style={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>1920 × 1080 (16:9)</div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 0 }}>
+
+      {/* ── Section 1: CANVAS & SCENE */}
+      <div style={{ padding: '16px 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span className="nothing-section-label">CANVAS &amp; SCENE</span>
+          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
+        </div>
+
+        {/* Scene title + ID chip */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="nothing-live-dot" style={{ width: 6, height: 6 }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#d0d0d0' }}>
+              {editingScene?.label ?? 'Just Chatting'}
+            </span>
           </div>
+          <span style={{
+            background: 'rgba(255,255,255,0.05)', color: '#555',
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+            padding: '2px 8px', borderRadius: 999, fontFamily: 'var(--font-mono)'
+          }}>
+            #N56675
+          </span>
+        </div>
+
+        <div className="nothing-section-label" style={{ marginTop: 4 }}>BACKGROUND FILL</div>
+
+        {/* Segmented control */}
+        <div className="vibe-segmented">
+          {(['solid', 'gradient', 'glace'] as const).map(mode => (
+            <button
+              key={mode}
+              className={`vibe-segmented-btn${fillMode === mode ? ' active' : ''}`}
+              onClick={() => setFillMode(mode)}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
+
+        {/* Color swatch + hex input */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: '#000000', border: '1px solid rgba(255,255,255,0.1)',
+            flexShrink: 0, cursor: 'pointer'
+          }} />
+          <input
+            value={hexColor}
+            onChange={e => setHexColor(e.target.value)}
+            className="input"
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em' }}
+          />
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* Active Scene summary card */}
-        {editingScene && (
-          <InspectorSection title="Active Scene" icon={<Sparkles size={13} />} defaultOpen>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)' }}>{editingScene.label}</span>
-              <span className="type-chip">{widgets.length} widget{widgets.length !== 1 ? 's' : ''}</span>
-            </div>
+      <div className="vibe-red-divider" style={{ margin: '0 16px 14px' }} />
 
-            {/* Scene Background fill */}
-            {bgWidget && (
-              <div style={{ marginTop: 8 }}>
-                <ColorPickerPanel
-                  label="Background Fill"
-                  value={bgWidget.style.background || 'transparent'}
-                  onChange={v => updateWidget(bgWidget.id, { style: { ...bgWidget.style, background: v } })}
-                />
-              </div>
-            )}
-          </InspectorSection>
-        )}
+      {/* ── Section 2: DISPLAY & GRID */}
+      <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span className="nothing-section-label">DISPLAY &amp; GRID</span>
+          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
+        </div>
 
-        {/* View & Alignment settings */}
-        <InspectorSection title="Display & Grid" icon={<Grid3x3 size={13} />} defaultOpen>
-          <div className="input-group" style={{ marginBottom: 8 }}>
-            <div className="input-group-label">Grid Style</div>
-            <select
-              className="select"
-              value={gridMode}
-              onChange={e => setGridMode(e.target.value as any)}
-              style={{ width: '100%', fontSize: 11, padding: '5px 8px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 6, color: 'var(--color-text)' }}
-            >
-              <option value="dots">Dots Grid</option>
-              <option value="lines">Lines Grid</option>
-              <option value="off">Disabled</option>
-            </select>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 2 }}>
+          {/* Toggle: Snap to Grid */}
+          {[
+            { label: 'Snap to Grid / Guides', value: snapEnabled, toggle: toggleSnap },
+            { label: 'Safe Area Guides', value: showGuides, toggle: toggleGuides },
+            { label: 'Canvas Rulers', value: showRulers, toggle: toggleRulers },
+          ].map(({ label, value, toggle }) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, fontWeight: 400, color: '#777' }}>{label}</span>
+              <button
+                onClick={toggle}
+                style={{
+                  width: 32, height: 18, borderRadius: 999,
+                  background: value ? 'rgba(255, 58, 48, 0.2)' : 'rgba(255,255,255,0.06)',
+                  border: value ? '1px solid rgba(255, 58, 48, 0.4)' : '1px solid rgba(255,255,255,0.08)',
+                  padding: 2, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center',
+                  justifyContent: value ? 'flex-end' : 'flex-start',
+                  transition: 'all 150ms ease',
+                }}
+              >
+                <div style={{
+                  width: 12, height: 12, borderRadius: '50%',
+                  background: value ? '#FF3A30' : '#333',
+                  boxShadow: value ? '0 0 6px rgba(255, 58, 48, 0.6)' : 'none',
+                  transition: 'all 150ms ease',
+                }} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11, color: 'var(--color-text-2)', fontWeight: 500 }}>Snap to Grid / Guides</span>
-              <ToggleRow value={snapEnabled} onChange={toggleSnap} label={snapEnabled ? 'On' : 'Off'} />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11, color: 'var(--color-text-2)', fontWeight: 500 }}>Safe Area Guides</span>
-              <ToggleRow value={showGuides} onChange={toggleGuides} label={showGuides ? 'Show' : 'Hide'} />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11, color: 'var(--color-text-2)', fontWeight: 500 }}>Canvas Rulers</span>
-              <ToggleRow value={showRulers} onChange={toggleRulers} label={showRulers ? 'Show' : 'Hide'} />
-            </div>
-          </div>
-        </InspectorSection>
+      <div className="vibe-red-divider" style={{ margin: '0 16px 14px' }} />
 
-        {/* Broadcast Output Quick Access */}
-        <InspectorSection title="OBS Broadcast Source" icon={<Globe size={13} />} defaultOpen>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.5, marginBottom: 8 }}>
-            Add this Browser Source URL to OBS Studio or Streamlabs to display your live scene.
-          </div>
-          <button
-            className="btn btn-secondary focus-ring"
-            style={{ width: '100%', fontSize: 11, gap: 6, padding: '7px 0', justifyContent: 'center' }}
-            onClick={handleCopyUrl}
-          >
-            <Copy size={13} /> {copiedUrl ? 'Copied to Clipboard!' : 'Copy OBS Source URL'}
-          </button>
-          <button
-            className="btn btn-secondary focus-ring"
-            style={{ width: '100%', fontSize: 11, gap: 6, padding: '7px 0', justifyContent: 'center', marginTop: 6 }}
-            onClick={() => setAppView('obs-setup')}
-          >
-            <ExternalLink size={13} /> Open OBS Setup Guide
-          </button>
-        </InspectorSection>
+      {/* ── Section 3: OBS BROADCAST SOURCE */}
+      <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <span className="nothing-section-label">OBS BROADCAST SOURCE</span>
+          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
+        </div>
+
+        <button
+          className="vibe-pill-btn"
+          style={{ width: '100%', justifyContent: 'center', padding: '9px 0' }}
+          onClick={handleCopyUrl}
+        >
+          <Copy size={12} />
+          <span>{copiedUrl ? '✓ Copied!' : 'Copy OBS Source URL'}</span>
+        </button>
+        <button
+          className="vibe-pill-btn"
+          style={{ width: '100%', justifyContent: 'center', padding: '9px 0' }}
+          onClick={() => setAppView('obs-setup')}
+        >
+          <Globe size={12} />
+          <span>Open OBS Setup Guide</span>
+        </button>
       </div>
     </div>
   );
 };
 
-// ─── Right Panel (Inspector) ──────────────────────────────────────────────────
+// ─── Right Panel (Inspector Wrapper) ──────────────────────────────────────────
 
 export const RightPanel: React.FC = () => {
   const { selectedIds, getSelectedWidgets, rightPanelWidth } = useEditorStore();
@@ -139,7 +178,7 @@ export const RightPanel: React.FC = () => {
 
   if (selectedIds.length === 0) {
     return (
-      <div className="right-panel" style={{ width: rightPanelWidth, height: '100%' }}>
+      <div className="right-panel" style={{ width: rightPanelWidth }}>
         <CanvasPropertiesInspector />
       </div>
     );
@@ -147,7 +186,15 @@ export const RightPanel: React.FC = () => {
 
   if (selectedIds.length > 1) {
     return (
-      <div className="right-panel" style={{ width: rightPanelWidth }}>
+      <div className="right-panel" style={{
+        width: rightPanelWidth,
+        background: '#f2f4f8',
+        borderRadius: 18,
+        margin: '8px 4px',
+        border: '1px solid rgba(255,255,255,0.9)',
+        boxShadow: '0 8px 24px rgba(166, 175, 195, 0.35)',
+        overflow: 'hidden'
+      }}>
         <div className="panel-header">
           <span className="panel-title">Multi-Selection ({selectedIds.length})</span>
         </div>
@@ -160,7 +207,15 @@ export const RightPanel: React.FC = () => {
   if (!widget) return null;
 
   return (
-    <div className="right-panel" style={{ width: rightPanelWidth }}>
+    <div className="right-panel" style={{
+      width: rightPanelWidth,
+      background: '#f2f4f8',
+      borderRadius: 18,
+      margin: '8px 4px',
+      border: '1px solid rgba(255,255,255,0.9)',
+      boxShadow: '0 8px 24px rgba(166, 175, 195, 0.35)',
+      overflow: 'hidden'
+    }}>
       <SingleInspector widget={widget} />
     </div>
   );

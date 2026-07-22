@@ -315,22 +315,20 @@ export type LeftTab = 'scenes' | 'layers' | 'assets' | 'widgets' | 'themes';
 export type AppView = 'welcome' | 'pack-browser' | 'pack-detail' | 'editor' | 'obs-setup' | 'transition-studio';
 
 export const getTimerRemaining = (timer: TimerRuntime): number => {
+  if (timer.startedAt === null) {
+    // Never started — show full configured duration
+    return Math.max(0, timer.duration + timer.timeOffset);
+  }
   if (!timer.isRunning) {
-    if (timer.startedAt === null) {
-      return Math.max(0, timer.duration + timer.timeOffset);
-    }
-    if (timer.pausedAt !== null) {
-      const elapsed = (timer.pausedAt - timer.startedAt) / 1000;
-      return Math.max(0, timer.duration + timer.timeOffset - elapsed);
-    }
+    // Paused — show time remaining at the moment of pause
+    const pausedElapsed = timer.pausedAt !== null
+      ? (timer.pausedAt - timer.startedAt) / 1000
+      : 0;
+    return Math.max(0, timer.duration + timer.timeOffset - pausedElapsed);
   }
-  
-  if (timer.startedAt !== null) {
-    const elapsed = (Date.now() - timer.startedAt) / 1000;
-    return Math.max(0, timer.duration + timer.timeOffset - elapsed);
-  }
-  
-  return Math.max(0, timer.duration + timer.timeOffset);
+  // Running — subtract elapsed time from now
+  const elapsed = (Date.now() - timer.startedAt) / 1000;
+  return Math.max(0, timer.duration + timer.timeOffset - elapsed);
 };
 
 const MAX_HISTORY = 50;
@@ -451,7 +449,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isResizing: false,
   leftTab: 'scenes',
   showPreviewMode: false,
-  editorTheme: 'dark',
+  editorTheme: 'light',
   leftPanelWidth: 280,
   rightPanelWidth: 300,
 
@@ -526,24 +524,33 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setLiveScene: (id) => {
+    const cloned = JSON.parse(JSON.stringify(get().scenes));
+    set({ liveScenes: cloned });
     get().triggerLiveTransition(id);
   },
 
   triggerLiveTransition: (toSceneId) => {
-    const { liveSceneId, editingSceneId } = get();
-    const fromId = liveSceneId || editingSceneId;
-    if (!fromId || fromId === toSceneId) {
-      set({ liveSceneId: toSceneId, editingSceneId: toSceneId });
+    const { liveSceneId, scenes } = get();
+    // If already live on this scene, nothing to do
+    if (liveSceneId === toSceneId) return;
+
+    const clonedScenes = JSON.parse(JSON.stringify(scenes));
+    const fromId = liveSceneId;
+    if (!fromId) {
+      // No current live scene — set it directly
+      set({ liveSceneId: toSceneId, liveScenes: clonedScenes });
       return;
     }
+
     const transitionStore = useTransitionStore.getState();
     const transition = transitionStore.resolveTransitionForSwitch(fromId, toSceneId);
     if (transition) {
       transitionStore.startTransition(transition.id, fromId, toSceneId, () => {
-        set({ liveSceneId: toSceneId, editingSceneId: toSceneId });
+        // Update liveSceneId & liveScenes — editor view (editingSceneId) must not be hijacked
+        set({ liveSceneId: toSceneId, liveScenes: clonedScenes });
       });
     } else {
-      set({ liveSceneId: toSceneId, editingSceneId: toSceneId });
+      set({ liveSceneId: toSceneId, liveScenes: clonedScenes });
     }
   },
   setLiveTransitionType: (t) => set({ liveTransitionType: t }),
@@ -1248,10 +1255,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set(s => ({
       liveScenes: clonedScenes,
       liveSceneId: s.liveSceneId || activeLiveId,
-      liveTimer: {
-        ...s.liveTimer,
-        ...timerSettings,
-      }
+      liveTimer: s.liveTimer.isRunning
+        // Don't disturb a running timer — only update behavior settings if timer is idle
+        ? s.liveTimer
+        : {
+            ...s.liveTimer,
+            ...timerSettings,
+          }
     }));
   },
 

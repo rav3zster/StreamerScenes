@@ -765,7 +765,7 @@ export const EditorCanvas: React.FC = () => {
           Occupies grid cell (2,2) when rulers visible, otherwise (1,1). */}
       <div style={{ gridColumn: showRulers ? 2 : 1, gridRow: showRulers ? 2 : 1, position: 'relative', overflow: 'hidden' }}>
         <div
-          className="canvas-wrapper"
+          className="canvas-wrapper vibe-canvas-bg"
           style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
         >
             <div
@@ -777,17 +777,22 @@ export const EditorCanvas: React.FC = () => {
                 top: (viewport.h - stageH) / 2 + pan.y,
                 width: stageW,
                 height: stageH,
+                borderRadius: 20 * zoom,
+                overflow: 'hidden',
+                backgroundColor: '#0b0c10',
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 ...(gridMode === 'lines'
                   ? {
                       backgroundImage: [
-                        `linear-gradient(var(--color-accent-alpha-30) 1px, transparent 1px)`,
-                        `linear-gradient(90deg, var(--color-accent-alpha-30) 1px, transparent 1px)`,
+                        `linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px)`,
+                        `linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)`,
                       ].join(','),
                       backgroundSize: `${40 * zoom}px ${40 * zoom}px`,
                     }
                   : gridMode === 'dots'
                   ? {
-                      backgroundImage: `radial-gradient(var(--color-accent-alpha-55) 1.5px, transparent 0)`,
+                      backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.12) 1.5px, transparent 0)`,
                       backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
                     }
                   : {}),
@@ -799,6 +804,27 @@ export const EditorCanvas: React.FC = () => {
                 }
               }}
             >
+              {/* Top-Left RECORDING badge matching screenshot */}
+              <div style={{
+                position: 'absolute',
+                top: 18 * zoom,
+                left: 20 * zoom,
+                zIndex: 99,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6 * zoom,
+                padding: `${4 * zoom}px ${10 * zoom}px`,
+                borderRadius: 999,
+                background: 'rgba(50, 10, 15, 0.85)',
+                border: '1px solid rgba(255, 59, 48, 0.4)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                pointerEvents: 'none',
+              }}>
+                <span style={{ width: 6 * zoom, height: 6 * zoom, borderRadius: '50%', background: '#ff3b30', boxShadow: '0 0 6px #ff3b30' }} />
+                <span style={{ fontSize: 9 * zoom, fontWeight: 800, color: '#ff4d4d', letterSpacing: '0.08em', fontFamily: 'var(--font-sans)' }}>
+                  RECORDING
+                </span>
+              </div>
               {/* Safe Area Guides */}
               {showGuides && (
                 <>

@@ -183,133 +183,74 @@ export const TopToolbar: React.FC = () => {
         )}
       </div>
 
-      {/* ── Logo + Brand ─────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 4, marginRight: 4, flexShrink: 0 }}>
+      {/* ── Logo + Brand (Nothing Dot-Matrix Style) ──────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 4, flexShrink: 0 }}>
+        {/* Nothing-style 4x4 Dot Matrix Icon */}
         <div style={{
-          width: 26, height: 26, borderRadius: 7,
-          background: 'linear-gradient(135deg,var(--color-accent),#ec4899)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 10px var(--color-accent-alpha-40)',
-          fontSize: 13, flexShrink: 0,
-        }}>
-          ⚡
+          width: 26, height: 26,
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2,
+          padding: 3,
+        }} title="StreamScenes">
+          {Array.from({ length: 16 }).map((_, i) => {
+            const redDots = [5, 6, 9, 10]; // center 2x2
+            return (
+              <div key={i} style={{
+                borderRadius: '50%',
+                background: redDots.includes(i) ? '#FF3A30' : 'rgba(255,255,255,0.2)',
+                boxShadow: redDots.includes(i) ? '0 0 4px rgba(255,58,48,0.7)' : 'none',
+              }} />
+            );
+          })}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: 11, fontWeight: 800, color: 'var(--color-text)', letterSpacing: -0.3 }}>VibeOverlay</span>
-          <span style={{ fontSize: 8, color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: 0.5 }}>STUDIO</span>
-        </div>
-      </div>
-
-      <div className="toolbar-divider" />
-
-      {/* ── Breadcrumb ─────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--color-text-muted)', flexShrink: 0 }}>
-        <span style={{ color: 'var(--color-text-3)', fontWeight: 500 }}>{projectName}</span>
-        <ChevronRight size={12} />
-        <span style={{ color: 'var(--color-text-2)', fontWeight: 600 }}>
-          {editingScene?.label ?? 'No Scene'}
+        <span className="vibe-font-pixel" style={{ fontSize: 12, fontWeight: 700, color: '#e0e0e0', letterSpacing: '0.06em' }}>
+          StreamScenes
         </span>
-        {isLive && (
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
-            borderRadius: 99, padding: '1px 7px', fontSize: 9,
-            color: '#ef4444', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', marginLeft: 4,
-          }}>
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ef4444', animation: 'live-pulse 2s ease-in-out infinite' }} />
-            LIVE
-          </span>
-        )}
       </div>
 
       <div className="toolbar-spacer" />
 
-      {/* ── History ────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-        <button className="btn-icon focus-ring" onClick={undo} disabled={!canUndo()} data-tooltip="Undo (⌘Z)" data-tooltip-position="bottom" title="Undo">
-          <Undo2 size={16} />
-        </button>
-        <button className="btn-icon focus-ring" onClick={redo} disabled={!canRedo()} data-tooltip="Redo (⌘Y)" data-tooltip-position="bottom" title="Redo">
-          <Redo2 size={16} />
-        </button>
-      </div>
-
-      <div className="toolbar-divider" />
-
-      {/* ── Transitions Studio button ────────────────────────────── */}
-      <button
-        className="btn-icon focus-ring"
-        title="Transition Studio"
-        onClick={() => useEditorStore.getState().setAppView('transition-studio')}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', fontSize: 12, fontWeight: 600 }}
-      >
-        <Zap size={15} color="var(--color-accent)" />
-        Transitions
-      </button>
-
-      <div className="toolbar-spacer" />
-
-      {/* ── Right actions ──────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {/* Editor theme toggle */}
+      {/* ── Right Actions (Nothing brand) ──────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Theme toggle — Moon = currently dark, click to go light; Sun = currently light, click to go dark */}
         <button
-          id="toolbar-theme-toggle"
-          className="btn-icon focus-ring"
+          className="btn-icon"
+          style={{ width: 32, height: 32 }}
           onClick={toggleEditorTheme}
           title={editorTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-          {editorTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          {editorTheme === 'dark' ? <Moon size={14} /> : <Sun size={14} />}
         </button>
 
-        <div className="toolbar-divider" />
-
-        {/* Preview */}
+        {/* Preview pill */}
         <button
-          className={`btn btn-secondary focus-ring${showPreviewMode ? ' active' : ''}`}
-          style={{ gap: 6, fontSize: 12, padding: '6px 14px' }}
+          className={`vibe-pill-btn${showPreviewMode ? ' active' : ''}`}
           onClick={handleTogglePreview}
           title="Preview Mode"
         >
-          <Eye size={15} />
-          Preview
+          <Eye size={13} />
+          <span>Preview</span>
         </button>
 
-        {/* Save */}
+        {/* Save pill */}
         <button
-          className="btn btn-secondary focus-ring"
-          style={{ gap: 6, fontSize: 12, padding: '6px 14px', ...(saveFlash ? { borderColor: '#10b981', color: '#10b981' } : {}) }}
+          className="vibe-pill-btn"
           onClick={handleSave}
-          title="Save (auto-saved)"
+          title="Save Project"
         >
-          <Save size={15} />
-          {saveFlash ? 'Saved!' : 'Save'}
+          <Save size={13} />
+          <span>{saveFlash ? 'Saved!' : 'Save'}</span>
         </button>
 
-        {/* Switch To Live */}
+        {/* Live Synced red pill */}
         <button
           id="toolbar-go-live"
-          className="focus-ring"
+          className="vibe-live-pill"
           onClick={switchDraftToLive}
           disabled={!editingSceneId}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '7px 16px', borderRadius: 8,
-            border: 'none', cursor: 'pointer',
-            background: isSynced
-              ? 'rgba(239,68,68,0.15)'
-              : 'linear-gradient(135deg,#ef4444,#dc2626)',
-            color: isSynced ? '#ef4444' : '#fff',
-            fontSize: 11, fontWeight: 800,
-            letterSpacing: '0.06em', textTransform: 'uppercase',
-            boxShadow: isSynced ? 'none' : '0 4px 14px rgba(239,68,68,0.3)',
-            transition: 'all 150ms ease',
-            fontFamily: 'var(--font-sans)',
-          }}
-          onMouseEnter={e => { if (!isSynced) e.currentTarget.style.filter = 'brightness(1.1)'; }}
-          onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
+          title="Live Synced"
         >
-          <Radio size={15} style={{ animation: isSynced ? 'none' : 'live-pulse 2s ease-in-out infinite' }} />
-          {isSynced ? 'Live (Synced)' : 'Switch To Live'}
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3b30', animation: 'live-pulse 2s ease-in-out infinite' }} />
+          <span>((•)) LIVE (SYNCED)</span>
         </button>
       </div>
 

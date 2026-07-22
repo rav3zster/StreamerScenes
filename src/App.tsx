@@ -55,6 +55,11 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', editorTheme);
+    // Keep .app-shell class in sync with store value (also runs on mount)
+    const shell = document.querySelector('.app-shell');
+    if (shell) {
+      shell.classList.toggle('theme-editor-light', editorTheme === 'light');
+    }
   }, [editorTheme]);
 
   useEffect(() => {

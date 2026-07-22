@@ -28,7 +28,7 @@ export const StepFinish: React.FC = () => {
           icon={<Check size={28} />}
           title="Your Stream is Ready!"
           subtitle="All custom widgets, overlays, and themes have been successfully mapped."
-          accent={pack?.accentColor || '#a855f7'}
+          accent={pack?.accentColor || 'var(--color-accent)'}
           details={stats}
         />
         <div style={{
@@ -61,7 +61,7 @@ export const StepFinish: React.FC = () => {
       icon={<Sparkles size={28} />}
       title="Building Your Stream"
       subtitle="Setting up scenes, widgets, and personalization..."
-      accent={pack?.accentColor || '#a855f7'}
+      accent={pack?.accentColor || 'var(--color-accent)'}
       details={stats}
       isBuilding
     />

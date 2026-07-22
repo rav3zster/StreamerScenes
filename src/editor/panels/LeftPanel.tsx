@@ -32,7 +32,7 @@ export const SidebarRail: React.FC = () => {
         {TABS.map(t => (
           <button
             key={t.id}
-            className={`sidebar-btn${leftTab === t.id ? ' active' : ''}`}
+            className={`sidebar-btn focus-ring${leftTab === t.id ? ' active' : ''}`}
             onClick={() => setLeftTab(t.id)}
             title={t.label}
           >
@@ -204,9 +204,23 @@ const LayersTab: React.FC = () => {
   return (
     <div className="panel-body" style={{ padding: 8 }}>
       {sorted.length === 0 ? (
-        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 11, padding: '32px 0' }}>
-          <Layers size={24} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.3 }} />
-          No items on canvas
+        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 11, padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Layers size={20} style={{ opacity: 0.4 }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, color: 'var(--color-text-2)', marginBottom: 2 }}>No Layers Yet</div>
+            <div style={{ fontSize: 10, color: 'var(--color-text-muted)', maxWidth: 180, margin: '0 auto' }}>
+              Add elements from the Library tab to build your scene layout.
+            </div>
+          </div>
+          <button
+            className="btn btn-secondary focus-ring"
+            style={{ fontSize: 10, gap: 5, padding: '5px 12px', marginTop: 4 }}
+            onClick={() => useEditorStore.getState().setLeftTab('widgets')}
+          >
+            <Plus size={11} /> Browse Widgets
+          </button>
         </div>
       ) : (
         <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 3 }}>

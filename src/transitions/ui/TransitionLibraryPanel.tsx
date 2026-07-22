@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TransitionLibraryPanel.tsx
  * Left panel for the Transition Studio.
  * Shows user transitions, built-in templates, search/filter.
@@ -27,7 +27,7 @@ export const TransitionLibraryPanel: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<TransitionCategory | 'All'>('All');
   const [activeTab, setActiveTab] = useState<'mine' | 'templates'>('templates');
 
-  const ACCENT = '#a855f7';
+  const ACCENT = 'var(--color-accent)';
 
   const filteredTemplates = useMemo(() => {
     return TRANSITION_LIBRARY.filter(t => {
@@ -67,7 +67,7 @@ export const TransitionLibraryPanel: React.FC = () => {
             style={{
               display: 'flex', alignItems: 'center', gap: 4,
               padding: '4px 8px', borderRadius: 6,
-              background: `${ACCENT}20`, border: `1px solid ${ACCENT}40`,
+              background: 'var(--color-accent-alpha-20)', border: '1px solid var(--color-accent-alpha-40)',
               color: ACCENT, fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
@@ -126,8 +126,8 @@ export const TransitionLibraryPanel: React.FC = () => {
               onClick={() => setSelectedCategory(cat as TransitionCategory | 'All')}
               style={{
                 padding: '2px 8px', borderRadius: 4, fontSize: 8, fontWeight: 700, whiteSpace: 'nowrap',
-                border: `1px solid ${selectedCategory === cat ? ACCENT + '60' : 'rgba(255,255,255,0.08)'}`,
-                background: selectedCategory === cat ? `${ACCENT}15` : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${selectedCategory === cat ? 'var(--color-accent-alpha-40)' : 'rgba(255,255,255,0.08)'}`,
+                background: selectedCategory === cat ? 'var(--color-accent-subtle)' : 'rgba(255,255,255,0.03)',
                 color: selectedCategory === cat ? ACCENT : 'rgba(255,255,255,0.4)',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}

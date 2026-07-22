@@ -12,7 +12,7 @@ import { TRANSITION_LIBRARY } from '../transitionLibrary';
 const TIMELINE_HEIGHT = 72;
 const RULER_HEIGHT = 20;
 const TRACK_HEIGHT = 36;
-const ACCENT = '#a855f7';
+const ACCENT = 'var(--color-accent)';
 const SWITCH_COLOR = '#ef4444';
 
 interface TransitionTimelineProps {
@@ -150,7 +150,7 @@ export const TransitionTimeline: React.FC<TransitionTimelineProps> = ({ transiti
             left: 0,
             width: `${(switchMarker / duration) * 100}%`,
             top: 0, bottom: 0,
-            background: `${ACCENT}18`,
+            background: 'var(--color-accent-subtle)',
             borderRadius: '4px 0 0 4px',
           }} />
           {/* Post-switch zone */}

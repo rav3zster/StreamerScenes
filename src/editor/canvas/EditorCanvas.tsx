@@ -1,5 +1,6 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import Moveable from 'react-moveable';
+import { Plus } from 'lucide-react';
 import { useEditorStore, type SceneWidget, type UserGuide } from '../../store/editorStore';
 import { SceneRenderer } from '../../renderer/SceneRenderer';
 import { TransitionOverlay } from '../../transitions/components/TransitionOverlay';
@@ -798,6 +799,39 @@ export const EditorCanvas: React.FC = () => {
                 }}
                 timerSource="preview"
               />
+
+              {widgets.length === 0 && (
+                <div style={{
+                  position: 'absolute', inset: 0, zIndex: 10,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: 12, pointerEvents: 'none', userSelect: 'none',
+                }}>
+                  <div style={{
+                    padding: '24px 36px', borderRadius: 16,
+                    background: 'rgba(14,8,26,0.6)', border: '1.5px dashed var(--color-accent-alpha-40)',
+                    backdropFilter: 'blur(8px)', textAlign: 'center',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                    maxWidth: 420,
+                  }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 12,
+                      background: 'var(--color-accent-subtle)', border: '1px solid var(--color-accent-alpha-20)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'var(--color-accent)',
+                    }}>
+                      <Plus size={22} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
+                        Canvas is Empty
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                        Drag widgets from the Left Panel onto the canvas, or double-click any widget item to add it to your scene.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Transition Studio live overlay preview */}
               <TransitionOverlay zoom={zoom} />

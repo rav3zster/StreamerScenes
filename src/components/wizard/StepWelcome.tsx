@@ -136,8 +136,8 @@ export const StepWelcome: React.FC = () => {
         <button
           onClick={handleNew}
           style={{
-            background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(236,72,153,0.08) 100%)',
-            border: '1px solid rgba(168,85,247,0.3)',
+            background: 'linear-gradient(135deg, var(--color-accent-subtle) 0%, rgba(236,72,153,0.08) 100%)',
+            border: '1px solid var(--color-accent-alpha-40)',
             borderRadius: 18, padding: '24px 22px',
             cursor: 'pointer', textAlign: 'left',
             transition: 'all 220ms cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -145,23 +145,23 @@ export const StepWelcome: React.FC = () => {
             position: 'relative', overflow: 'hidden',
             fontFamily: 'inherit',
           }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.7)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(168,85,247,0.15)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 16px 40px var(--color-accent-alpha-20)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-accent-alpha-40)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
         >
-          <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.3), transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, var(--color-accent-alpha-40), transparent 70%)', pointerEvents: 'none' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #a855f7, #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(168,85,247,0.4)' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, var(--color-accent), #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px var(--color-accent-alpha-40)' }}>
               <Sparkles size={15} color="#fff" />
             </div>
             <div>
-              <div style={{ fontSize: 9, color: 'rgba(168,85,247,0.7)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>Get Started</div>
+              <div style={{ fontSize: 9, color: 'var(--color-accent)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>Get Started</div>
             </div>
           </div>
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Create New Stream</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
             Choose a Broadcast Pack, personalize it, and go live in minutes.
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#a855f7', fontWeight: 700, marginTop: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--color-accent)', fontWeight: 700, marginTop: 6 }}>
             Get Started <ChevronRight size={12} />
           </div>
         </button>

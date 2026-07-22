@@ -9,7 +9,7 @@ interface MockMessage {
 }
 
 const MOCK_MESSAGES: MockMessage[] = [
-  { user: 'StreamFan42',  text: 'POG that was insane!',        color: '#a855f7' },
+  { user: 'StreamFan42',  text: 'POG that was insane!',        color: 'var(--color-accent)' },
   { user: 'NightOwl99',   text: 'LUL LUL LUL',                color: '#5cffe2' },
   { user: 'VibeMaster',   text: 'first time watching, love it!', color: '#f472b6' },
   { user: 'retro_racer',  text: 'clip it clip it!!',            color: '#f59e0b' },

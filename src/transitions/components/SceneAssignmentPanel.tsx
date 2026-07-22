@@ -10,7 +10,7 @@ import { useEditorStore } from '../../store/editorStore';
 import { useTransitionStore } from '../../store/transitionStore';
 import { TransitionPicker } from './TransitionPicker';
 
-const ACCENT = '#a855f7';
+const ACCENT = 'var(--color-accent)';
 
 export const SceneAssignmentPanel: React.FC = () => {
   const scenes = useEditorStore(s => s.scenes);

@@ -82,20 +82,20 @@ export const WelcomePage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 32, height: 32, borderRadius: 9,
-            background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+            background: 'linear-gradient(135deg, var(--color-accent), #ec4899)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, boxShadow: '0 0 16px rgba(168,85,247,0.5)',
+            fontSize: 16, boxShadow: '0 0 16px var(--color-accent-alpha-40)',
           }}>⚡</div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>VibeOverlay <span style={{ color: '#a855f7' }}>Studio</span></div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>VibeOverlay <span style={{ color: 'var(--color-accent)' }}>Studio</span></div>
             <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase' }}>Professional OBS Overlay Studio</div>
           </div>
         </div>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)',
+          background: 'var(--color-accent-subtle)', border: '1px solid var(--color-accent-alpha-20)',
           borderRadius: 99, padding: '5px 12px', fontSize: 10, fontWeight: 700,
-          color: 'rgba(168,85,247,0.9)', letterSpacing: 0.5,
+          color: 'var(--color-accent)', letterSpacing: 0.5,
         }}>
           <Sparkles size={10} />
           v2.0 — Architecture Rebuild
@@ -106,7 +106,7 @@ export const WelcomePage: React.FC = () => {
       <div style={{ textAlign: 'center', marginBottom: 56, position: 'relative', zIndex: 1 }}>
         <div style={{
           fontSize: 11, fontWeight: 700, letterSpacing: 4,
-          textTransform: 'uppercase', color: 'rgba(168,85,247,0.7)',
+          textTransform: 'uppercase', color: 'var(--color-accent)',
           marginBottom: 14,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
@@ -237,14 +237,14 @@ export const WelcomePage: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <div style={{
               width: 36, height: 36, borderRadius: 10,
-              background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+              background: 'linear-gradient(135deg, var(--color-accent), #ec4899)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(168,85,247,0.4)',
+              boxShadow: '0 4px 14px var(--color-accent-alpha-40)',
             }}>
               <Sparkles size={16} color="#fff" />
             </div>
             <div>
-              <div style={{ fontSize: 10, color: 'rgba(168,85,247,0.7)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>Recommended</div>
+              <div style={{ fontSize: 10, color: 'var(--color-accent)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>Recommended</div>
             </div>
           </div>
           <div>
@@ -253,7 +253,7 @@ export const WelcomePage: React.FC = () => {
               Choose from 20 professionally designed broadcast packages. Every scene included.
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#a855f7', fontWeight: 700, marginTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--color-accent)', fontWeight: 700, marginTop: 4 }}>
             Explore All Packs <ChevronRight size={13} />
           </div>
         </button>

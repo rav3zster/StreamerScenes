@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   ChevronDown, ChevronUp, MousePointer2, AlignCenter,
   Paintbrush, Type, Zap, Settings2, Sparkles,
-  Copy, Trash2, Layers, RotateCcw,
+  Copy, Trash2, Layers, RotateCcw, ClipboardPaste, CopyPlus,
+  ArrowDownToLine, ArrowUpToLine,
 } from 'lucide-react';
 import { useEditorStore, type SceneWidget } from '../../store/editorStore';
 import { LiveControlPanel } from './LiveControlPanel';
@@ -168,10 +169,10 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
           <span className="type-chip">{widget.type}</span>
           <div style={{ display: 'flex', gap: 2 }}>
-            <button className="btn-icon" style={{ width: 24, height: 24 }} title="Copy styling parameters" onClick={handleCopyStyle}><Copy size={12} /></button>
-            <button className="btn-icon" style={{ width: 24, height: 24 }} title="Paste copied styles" onClick={handlePasteStyle}><RotateCcw size={12} /></button>
-            <button className="btn-icon" style={{ width: 24, height: 24 }} title="Duplicate" onClick={() => duplicateWidget(widget.id)}><Copy size={12} /></button>
-            <button className="btn-icon" style={{ width: 24, height: 24 }} title="Delete" onClick={() => removeWidget(widget.id)}><Trash2 size={12} /></button>
+            <button className="btn-icon focus-ring" style={{ width: 24, height: 24 }} title="Copy styling parameters" onClick={handleCopyStyle}><Copy size={12} /></button>
+            <button className="btn-icon focus-ring" style={{ width: 24, height: 24 }} title="Paste copied styles" onClick={handlePasteStyle}><ClipboardPaste size={12} /></button>
+            <button className="btn-icon focus-ring" style={{ width: 24, height: 24 }} title="Duplicate element" onClick={() => duplicateWidget(widget.id)}><CopyPlus size={12} /></button>
+            <button className="btn-icon focus-ring" style={{ width: 24, height: 24 }} title="Delete element" onClick={() => removeWidget(widget.id)}><Trash2 size={12} /></button>
           </div>
         </div>
         <input
@@ -203,11 +204,11 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
             <input type="range" min={0} max={100} value={widget.opacity} onChange={e => u({ opacity: +e.target.value })} className="slider" />
             <div style={{ textAlign: 'right', fontSize: 10, color: 'var(--color-text-3)', fontFamily: 'var(--font-mono)' }}>{widget.opacity}%</div>
           </div>
-          <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
-            <button className="btn btn-secondary" style={{ flex: 1, fontSize: 9, padding: '3px 0' }} onClick={() => sendToBack(widget.id)}>Send Back</button>
-            <button className="btn btn-secondary" style={{ flex: 1, fontSize: 9, padding: '3px 0' }} onClick={() => sendBackward(widget.id)}>Move Back</button>
-            <button className="btn btn-secondary" style={{ flex: 1, fontSize: 9, padding: '3px 0' }} onClick={() => bringForward(widget.id)}>Move Front</button>
-            <button className="btn btn-secondary" style={{ flex: 1, fontSize: 9, padding: '3px 0' }} onClick={() => bringToFront(widget.id)}>Bring Front</button>
+          <div style={{ display: 'flex', gap: 3, marginTop: 6 }}>
+            <button className="btn btn-secondary focus-ring" style={{ flex: 1, fontSize: 9, padding: '4px 0', gap: 3 }} title="Send to Back" onClick={() => sendToBack(widget.id)} data-tooltip="Send to Back"><ArrowDownToLine size={11} /></button>
+            <button className="btn btn-secondary focus-ring" style={{ flex: 1, fontSize: 9, padding: '4px 0', gap: 3 }} title="Move Backward" onClick={() => sendBackward(widget.id)} data-tooltip="Move Back"><ChevronDown size={11} /></button>
+            <button className="btn btn-secondary focus-ring" style={{ flex: 1, fontSize: 9, padding: '4px 0', gap: 3 }} title="Move Forward" onClick={() => bringForward(widget.id)} data-tooltip="Move Front"><ChevronUp size={11} /></button>
+            <button className="btn btn-secondary focus-ring" style={{ flex: 1, fontSize: 9, padding: '4px 0', gap: 3 }} title="Bring to Front" onClick={() => bringToFront(widget.id)} data-tooltip="Bring to Front"><ArrowUpToLine size={11} /></button>
           </div>
         </InspectorSection>
 

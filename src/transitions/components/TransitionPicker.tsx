@@ -46,14 +46,14 @@ export const TransitionPicker: React.FC<TransitionPickerProps> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const ACCENT = '#a855f7';
+  const ACCENT = 'var(--color-accent)';
 
   const btnStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
     background: 'var(--color-surface-2)',
-    border: `1px solid ${open ? ACCENT + '80' : 'var(--color-border)'}`,
+    border: `1px solid ${open ? 'var(--color-accent-alpha-40)' : 'var(--color-border)'}`,
     borderRadius: 6,
     color: 'var(--color-text)',
     fontSize: compact ? 9 : 10,
@@ -159,7 +159,7 @@ interface PickerRowProps {
 
 const PickerRow: React.FC<PickerRowProps> = ({ label, duration, category, selected, onClick, isNone }) => {
   const [hover, setHover] = useState(false);
-  const ACCENT = '#a855f7';
+  const ACCENT = 'var(--color-accent)';
 
   return (
     <button
@@ -172,7 +172,7 @@ const PickerRow: React.FC<PickerRowProps> = ({ label, duration, category, select
         justifyContent: 'space-between',
         width: '100%',
         padding: '6px 10px',
-        background: selected ? `${ACCENT}18` : hover ? 'rgba(255,255,255,0.04)' : 'transparent',
+        background: selected ? 'var(--color-accent-subtle)' : hover ? 'rgba(255,255,255,0.04)' : 'transparent',
         border: 'none',
         borderLeft: selected ? `2px solid ${ACCENT}` : '2px solid transparent',
         color: selected ? ACCENT : 'var(--color-text)',

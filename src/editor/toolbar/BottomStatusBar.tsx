@@ -72,7 +72,7 @@ export const BottomStatusBar: React.FC = () => {
 
       {/* Zoom */}
       <div className="status-bar-item" style={{ gap: 4 }}>
-        <button onClick={zoomOut} style={statusBtn} title="Zoom Out"><ZoomOut size={10}/></button>
+        <button onClick={zoomOut} className="status-btn focus-ring" title="Zoom Out"><ZoomOut size={10}/></button>
 
         {isEditingZoom ? (
           <input
@@ -84,30 +84,26 @@ export const BottomStatusBar: React.FC = () => {
             style={{ width: 38, background: 'var(--color-surface-2)', border: '1px solid var(--color-accent)', borderRadius: 3, color: 'var(--color-text)', fontSize: 10, textAlign: 'center', padding: '1px 4px', fontFamily: 'var(--font-mono)', outline: 'none' }}
           />
         ) : (
-          <button onClick={handleZoomClick} style={{ ...statusBtn, minWidth: 36, textAlign: 'center' }} title="Set zoom">
+          <button onClick={handleZoomClick} className="status-btn focus-ring" style={{ minWidth: 36, textAlign: 'center' }} title="Set zoom">
             {zoomPct}%
           </button>
         )}
 
-        <button onClick={zoomIn} style={statusBtn} title="Zoom In"><ZoomIn size={10}/></button>
+        <button onClick={zoomIn} className="status-btn focus-ring" title="Zoom In"><ZoomIn size={10}/></button>
       </div>
 
       {/* Quick zoom presets */}
       <div style={{ display: 'flex', gap: 2 }}>
-        <button onClick={zoomToFit} style={{ ...statusBtn, border: '1px solid transparent' }} title="Fit to screen">Fit</button>
+        <button onClick={zoomToFit} className="status-btn focus-ring" title="Fit to screen">Fit</button>
       </div>
 
       <div className="status-bar-divider" />
 
       {/* Snap, Rulers & Guidelines toggle controls */}
-      <div className="status-bar-item" style={{ gap: 6 }}>
+      <div className="status-bar-item" style={{ gap: 4 }}>
         <button
           onClick={toggleSnap}
-          style={{
-            ...statusBtn,
-            color: snapEnabled ? 'var(--color-accent)' : 'var(--color-text-muted)',
-            background: snapEnabled ? 'rgba(168,85,247,0.06)' : 'none',
-          }}
+          className={`status-btn focus-ring${snapEnabled ? ' active' : ''}`}
           title="Toggle Snap to Grid / Guides"
         >
           <Magnet size={10} /><span style={{ fontSize: 9 }}>Snap</span>
@@ -115,11 +111,7 @@ export const BottomStatusBar: React.FC = () => {
 
         <button
           onClick={toggleRulers}
-          style={{
-            ...statusBtn,
-            color: showRulers ? 'var(--color-accent)' : 'var(--color-text-muted)',
-            background: showRulers ? 'rgba(168,85,247,0.06)' : 'none',
-          }}
+          className={`status-btn focus-ring${showRulers ? ' active' : ''}`}
           title="Toggle Canvas Rulers"
         >
           <Monitor size={10} /><span style={{ fontSize: 9 }}>Rulers</span>
@@ -127,11 +119,7 @@ export const BottomStatusBar: React.FC = () => {
 
         <button
           onClick={toggleGuides}
-          style={{
-            ...statusBtn,
-            color: showGuides ? 'var(--color-accent)' : 'var(--color-text-muted)',
-            background: showGuides ? 'rgba(168,85,247,0.06)' : 'none',
-          }}
+          className={`status-btn focus-ring${showGuides ? ' active' : ''}`}
           title="Toggle Alignment Guides"
         >
           <Eye size={10} /><span style={{ fontSize: 9 }}>Guides</span>
@@ -204,7 +192,8 @@ export const BottomStatusBar: React.FC = () => {
       {/* OBS link */}
       <button
         onClick={() => window.open('/output', '_blank')}
-        style={{ ...statusBtn, color: 'var(--color-cyan)', display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'none' }}
+        className="status-btn focus-ring"
+        style={{ color: 'var(--color-cyan)', display: 'flex', alignItems: 'center', gap: 4 }}
         title="Open OBS Output"
       >
         <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-cyan)', display: 'inline-block', boxShadow: '0 0 4px var(--color-cyan)' }} />
@@ -242,10 +231,10 @@ const ReadinessStatus: React.FC = () => {
     <div ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
+        className="status-btn focus-ring"
         style={{
-          ...statusBtn,
           color: isReady ? '#ef4444' : 'var(--color-text-muted)',
-          display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'none',
+          display: 'flex', alignItems: 'center', gap: 4,
           position: 'relative',
         }}
         title="Stream Readiness"
@@ -266,19 +255,4 @@ const ReadinessStatus: React.FC = () => {
       )}
     </div>
   );
-};
-
-const statusBtn: React.CSSProperties = {
-  background: 'none',
-  border: '1px solid transparent',
-  borderRadius: 3,
-  cursor: 'pointer',
-  color: 'var(--color-text-muted)',
-  fontSize: 9,
-  fontFamily: 'var(--font-mono)',
-  padding: '1px 5px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 2,
-  transition: 'all 80ms ease',
 };

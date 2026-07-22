@@ -97,7 +97,7 @@ export const OBSSetupGuide: React.FC = () => {
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Monitor size={16} color="#a855f7" />
+          <Monitor size={16} color="var(--color-accent)" />
           <span style={{ fontSize: 17, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>OBS Setup Guide</span>
         </div>
       </div>
@@ -139,7 +139,7 @@ export const OBSSetupGuide: React.FC = () => {
                       background: isDone
                         ? 'rgba(16,185,129,0.15)'
                         : isExpanded
-                        ? 'linear-gradient(135deg, #a855f7, #ec4899)'
+                        ? 'linear-gradient(135deg, var(--color-accent), #ec4899)'
                         : 'rgba(255,255,255,0.06)',
                       color: isDone ? '#10b981' : isExpanded ? '#fff' : 'rgba(255,255,255,0.3)',
                       flexShrink: 0,
@@ -238,13 +238,13 @@ export const OBSSetupGuide: React.FC = () => {
             onClick={() => window.open('/output', '_blank')}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '10px 0', borderRadius: 10, border: '1px solid rgba(168,85,247,0.3)',
-              background: 'rgba(168,85,247,0.08)', color: '#a855f7',
+              padding: '10px 0', borderRadius: 10, border: '1px solid var(--color-accent-alpha-40)',
+              background: 'var(--color-accent-subtle)', color: 'var(--color-accent)',
               fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               transition: 'all 200ms ease',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(168,85,247,0.15)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-accent-muted)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-accent-subtle)'; }}
           >
             <ExternalLink size={13} /> Open Output Page
           </button>

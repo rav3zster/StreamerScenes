@@ -118,8 +118,8 @@ export const TransitionCanvas: React.FC = () => {
                 top: w.y,
                 width: w.width,
                 height: w.height,
-                border: '2px solid #a855f7',
-                boxShadow: '0 0 12px rgba(168,85,247,0.4)',
+                border: '2px solid var(--color-accent)',
+                boxShadow: '0 0 12px var(--color-accent-alpha-40)',
                 pointerEvents: 'none',
                 zIndex: 10000,
               }}

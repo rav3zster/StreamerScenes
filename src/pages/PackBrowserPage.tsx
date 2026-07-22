@@ -120,9 +120,9 @@ export const PackBrowserPage: React.FC = () => {
               fontSize: 11, fontWeight: 600,
               cursor: 'pointer', transition: 'all 150ms ease',
               whiteSpace: 'nowrap',
-              border: activeCategory === cat ? '1px solid rgba(168,85,247,0.6)' : '1px solid rgba(255,255,255,0.08)',
-              background: activeCategory === cat ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.03)',
-              color: activeCategory === cat ? '#a855f7' : 'rgba(255,255,255,0.5)',
+              border: activeCategory === cat ? '1px solid var(--color-accent-alpha-40)' : '1px solid rgba(255,255,255,0.08)',
+              background: activeCategory === cat ? 'var(--color-accent-subtle)' : 'rgba(255,255,255,0.03)',
+              color: activeCategory === cat ? 'var(--color-accent)' : 'rgba(255,255,255,0.5)',
               fontFamily: 'inherit',
             }}
           >

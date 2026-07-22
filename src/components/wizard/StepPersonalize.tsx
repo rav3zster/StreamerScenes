@@ -56,7 +56,7 @@ export const StepPersonalize: React.FC = () => {
   const { streamerProfile, setStreamerProfile, selectedPackId } = useWizardStore();
 
   const pack = STREAM_PACKS.find(p => p.id === selectedPackId);
-  const accentColor = pack?.accentColor || '#a855f7';
+  const accentColor = pack?.accentColor || 'var(--color-accent)';
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -37,7 +37,7 @@ export const TransitionCard: React.FC<TransitionCardProps> = ({
   onEdit,
 }) => {
   const [hover, setHover] = useState(false);
-  const accent = '#a855f7';
+  const accent = 'var(--color-accent)';
   const categoryColor = CATEGORY_COLORS[transition.category] ?? accent;
 
   return (
@@ -46,8 +46,8 @@ export const TransitionCard: React.FC<TransitionCardProps> = ({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        background: selected ? `${accent}12` : hover ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.015)',
-        border: `1px solid ${selected ? accent + '60' : hover ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)'}`,
+        background: selected ? 'var(--color-accent-subtle)' : hover ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.015)',
+        border: `1px solid ${selected ? 'var(--color-accent-alpha-40)' : hover ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)'}`,
         borderRadius: 10,
         padding: '10px 12px',
         cursor: 'pointer',

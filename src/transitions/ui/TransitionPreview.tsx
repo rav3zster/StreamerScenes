@@ -109,7 +109,7 @@ export const TransitionPreview: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 6,
-          background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+          background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-solid))',
           color: '#fff',
           border: 'none',
           borderRadius: 6,

@@ -43,7 +43,7 @@ const DEFAULT_PROFILE: StreamerProfile = {
   channelName: '',
   logoUrl: '',
   avatarUrl: '',
-  accentColor: '#a855f7',
+  accentColor: 'var(--color-accent)',
   socialHandles: [
     { platform: 'twitch', handle: '' },
     { platform: 'twitter', handle: '' },

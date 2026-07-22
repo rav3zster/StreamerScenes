@@ -952,6 +952,31 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   background: rgba(0,0,0,0.35);
 }
 
+/* ── Status Bar Buttons ───────────────────────────────────────────── */
+.status-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 80ms ease;
+}
+.status-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-2);
+}
+.status-btn.active {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-alpha-20);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    MOVEABLE PREMIUM SELECTION HANDLES
    ───────────────────────────────────────────────────────────────────────────── */

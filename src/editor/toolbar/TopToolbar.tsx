@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Undo2, Redo2, ZoomIn, ZoomOut, Grid3x3, Magnet, Ruler,
-  Eye, Save, Radio, ChevronRight, Layers, Maximize2,
+  Undo2, Redo2, Eye, Save, Radio, ChevronRight, Maximize2,
   ChevronDown, FolderOpen, FilePlus, Sun, Moon, Monitor as MonitorIcon,
   Download, Copy, Zap,
 } from 'lucide-react';
@@ -13,8 +12,6 @@ import { persistenceService } from '../../persistence/persistenceService';
 
 export const TopToolbar: React.FC = () => {
   const {
-    zoom, setZoom, zoomIn, zoomOut, resetView,
-    snapEnabled, gridMode, showGuides, toggleSnap, setGridMode, toggleGuides,
     canUndo, canRedo, undo, redo,
     scenes, liveScenes, editingSceneId, liveSceneId, setLiveScene, switchDraftToLive,
     projectName, showPreviewMode, togglePreviewMode,
@@ -31,12 +28,6 @@ export const TopToolbar: React.FC = () => {
 
   const editingScene = scenes.find(s => s.id === editingSceneId);
   const isLive = editingSceneId === liveSceneId;
-  const zoomPct = Math.round(zoom * 100);
-
-  const showGrid = gridMode !== 'off';
-  const toggleGrid = () => {
-    setGridMode(gridMode === 'off' ? 'dots' : gridMode === 'dots' ? 'lines' : 'off');
-  };
 
   const handleSave = () => {
     setSaveFlash(true);
@@ -175,15 +166,7 @@ export const TopToolbar: React.FC = () => {
         </button>
 
         {fileMenuOpen && (
-          <div style={{
-            position: 'absolute', top: 'calc(100% + 6px)', left: 0,
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 10, padding: '5px',
-            boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
-            minWidth: 200, zIndex: 99999,
-            animation: 'slide-up 150ms ease',
-          }}>
+          <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: 200, zIndex: 99999 }}>
             <FileMenuItem icon={<FilePlus size={13} />} label="New Project" shortcut="⌘N" onClick={handleNewProject} />
             <FileMenuItem icon={<FolderOpen size={13} />} label="Browse Broadcast Packs" onClick={handleBrowsePacks} />
             <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
@@ -201,9 +184,9 @@ export const TopToolbar: React.FC = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 4, marginRight: 4, flexShrink: 0 }}>
         <div style={{
           width: 26, height: 26, borderRadius: 7,
-          background: 'linear-gradient(135deg,#a855f7,#ec4899)',
+          background: 'linear-gradient(135deg,var(--color-accent),#ec4899)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 10px rgba(168,85,247,0.4)',
+          boxShadow: '0 0 10px var(--color-accent-alpha-40)',
           fontSize: 13, flexShrink: 0,
         }}>
           ⚡
@@ -240,73 +223,24 @@ export const TopToolbar: React.FC = () => {
 
       {/* ── History ────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-        <button className="btn-icon" onClick={undo} disabled={!canUndo()} data-tooltip="Undo (⌘Z)" data-tooltip-position="bottom" title="Undo">
+        <button className="btn-icon focus-ring" onClick={undo} disabled={!canUndo()} data-tooltip="Undo (⌘Z)" data-tooltip-position="bottom" title="Undo">
           <Undo2 size={14} />
         </button>
-        <button className="btn-icon" onClick={redo} disabled={!canRedo()} data-tooltip="Redo (⌘Y)" data-tooltip-position="bottom" title="Redo">
+        <button className="btn-icon focus-ring" onClick={redo} disabled={!canRedo()} data-tooltip="Redo (⌘Y)" data-tooltip-position="bottom" title="Redo">
           <Redo2 size={14} />
         </button>
       </div>
 
       <div className="toolbar-divider" />
 
-      {/* ── Zoom ───────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <button className="btn-icon" onClick={zoomOut} title="Zoom Out">
-          <ZoomOut size={14} />
-        </button>
-        <button
-          onClick={resetView}
-          title="Reset View (click to fit)"
-          style={{
-            background: 'var(--color-surface-2)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 6, cursor: 'pointer',
-            color: 'var(--color-text-3)', fontSize: 11,
-            fontFamily: 'var(--font-mono)', padding: '3px 8px',
-            minWidth: 52, textAlign: 'center',
-            transition: 'all 80ms ease',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = 'var(--color-text)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-3)'; }}
-        >
-          {zoomPct}%
-        </button>
-        <button className="btn-icon" onClick={zoomIn} title="Zoom In">
-          <ZoomIn size={14} />
-        </button>
-      </div>
-
-      <div className="toolbar-divider" />
-
-      {/* ── Canvas toggles ─────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 2 }}>
-        <button className={`btn-icon${showGrid ? ' active' : ''}`} onClick={toggleGrid} data-tooltip="Grid" data-tooltip-position="bottom" title="Toggle Grid">
-          <Grid3x3 size={14} />
-        </button>
-        <button className={`btn-icon${snapEnabled ? ' active' : ''}`} onClick={toggleSnap} data-tooltip="Snap" data-tooltip-position="bottom" title="Toggle Snap">
-          <Magnet size={14} />
-        </button>
-        <button className={`btn-icon${showGuides ? ' active' : ''}`} onClick={toggleGuides} data-tooltip="Guides" data-tooltip-position="bottom" title="Toggle Guides">
-          <Ruler size={14} />
-        </button>
-      </div>
-
-      <div className="toolbar-divider" />
-
-      {/* ── Layers toggle ──────────────────────────────────────── */}
-      <button className="btn-icon" title="Layers" onClick={() => useEditorStore.getState().setLeftTab('layers')}>
-        <Layers size={14} />
-      </button>
-
       {/* ── Transitions Studio button ────────────────────────────── */}
       <button
-        className="btn-icon"
+        className="btn-icon focus-ring"
         title="Transition Studio"
         onClick={() => useEditorStore.getState().setAppView('transition-studio')}
         style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', fontSize: 11, fontWeight: 600 }}
       >
-        <Zap size={13} color="#a855f7" />
+        <Zap size={13} color="var(--color-accent)" />
         Transitions
       </button>
 
@@ -416,26 +350,8 @@ export const TopToolbar: React.FC = () => {
 // ── File Menu Item ────────────────────────────────────────────────────────────
 
 const FileMenuItem: React.FC<{ icon: React.ReactNode; label: string; shortcut?: string; onClick: () => void }> = ({ icon, label, shortcut, onClick }) => (
-  <button
-    onClick={onClick}
-    style={{
-      display: 'flex', alignItems: 'center', gap: 9,
-      width: '100%', padding: '7px 10px', borderRadius: 6,
-      background: 'transparent', border: 'none',
-      color: 'var(--color-text-2)', fontSize: 12, fontWeight: 500,
-      cursor: 'pointer', transition: 'all 100ms ease',
-      fontFamily: 'var(--font-sans)', textAlign: 'left',
-    }}
-    onMouseEnter={e => {
-      e.currentTarget.style.background = 'var(--color-surface-2)';
-      e.currentTarget.style.color = 'var(--color-text)';
-    }}
-    onMouseLeave={e => {
-      e.currentTarget.style.background = 'transparent';
-      e.currentTarget.style.color = 'var(--color-text-2)';
-    }}
-  >
-    <span style={{ color: 'var(--color-text-muted)', flexShrink: 0 }}>{icon}</span>
+  <button className="dropdown-item focus-ring" onClick={onClick}>
+    <span style={{ color: 'var(--color-text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>{icon}</span>
     <span style={{ flex: 1 }}>{label}</span>
     {shortcut && <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{shortcut}</span>}
   </button>

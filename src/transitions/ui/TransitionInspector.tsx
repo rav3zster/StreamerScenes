@@ -9,7 +9,7 @@ import { Settings, Layers, Info, Sliders } from 'lucide-react';
 import { useTransitionStore } from '../../store/transitionStore';
 import { TRANSITION_LIBRARY } from '../transitionLibrary';
 
-const ACCENT = '#a855f7';
+const ACCENT = 'var(--color-accent)';
 
 export const TransitionInspector: React.FC = () => {
   const editingId = useTransitionStore(s => s.editingTransitionId);

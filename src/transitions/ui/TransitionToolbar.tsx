@@ -11,7 +11,7 @@ import { useTransitionStore } from '../../store/transitionStore';
 import { TRANSITION_LIBRARY } from '../transitionLibrary';
 import { transitionRuntime } from '../transitionRuntime';
 
-const ACCENT = '#a855f7';
+const ACCENT = 'var(--color-accent)';
 
 export const TransitionToolbar: React.FC = () => {
   const setAppView = useEditorStore(s => s.setAppView);
@@ -152,7 +152,7 @@ export const TransitionToolbar: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            background: isPlaying ? 'rgba(239,68,68,0.2)' : `${ACCENT}25`,
+            background: isPlaying ? 'rgba(239,68,68,0.2)' : 'var(--color-accent-alpha-20)',
             border: `1px solid ${isPlaying ? '#ef4444' : ACCENT}`,
             borderRadius: 6,
             color: isPlaying ? '#ef4444' : '#fff',

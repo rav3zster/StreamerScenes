@@ -127,8 +127,8 @@ export const WelcomeWizard: React.FC = () => {
         padding: '14px 24px', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #a855f7, #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, boxShadow: '0 0 14px rgba(168,85,247,0.4)' }}>⚡</div>
-          <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>VibeOverlay <span style={{ color: '#a855f7' }}>Studio</span></span>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, var(--color-accent), var(--color-pink))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, boxShadow: '0 0 14px var(--color-accent-alpha-40)' }}>⚡</div>
+          <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>VibeOverlay <span style={{ color: 'var(--color-accent)' }}>Studio</span></span>
         </div>
 
         {wizardState !== 'WELCOME' && (
@@ -190,7 +190,7 @@ export const WelcomeWizard: React.FC = () => {
                 display: 'flex', alignItems: 'center', gap: 5,
                 padding: '8px 18px', borderRadius: 8, border: 'none',
                 background: canGoNext
-                  ? 'linear-gradient(135deg, #a855f7, #ec4899)'
+                  ? 'linear-gradient(135deg, var(--color-accent), var(--color-pink))'
                   : 'rgba(255,255,255,0.08)',
                 color: canGoNext ? '#fff' : 'rgba(255,255,255,0.3)',
                 fontSize: 11, fontWeight: 700, cursor: canGoNext ? 'pointer' : 'default',

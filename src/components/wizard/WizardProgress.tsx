@@ -42,7 +42,7 @@ export const WizardProgress: React.FC<Props> = ({ steps, wizardState, onStepClic
               <div style={{
                 width: 40, height: 1,
                 background: isCompleted
-                  ? 'linear-gradient(90deg, #a855f7, #a855f7)'
+                  ? 'var(--color-accent)'
                   : 'rgba(255,255,255,0.08)',
                 transition: 'background 300ms ease',
               }} />
@@ -54,14 +54,14 @@ export const WizardProgress: React.FC<Props> = ({ steps, wizardState, onStepClic
                 padding: '6px 12px', borderRadius: 99,
                 border: 'none', cursor: isClickable ? 'pointer' : 'default',
                 background: isActive
-                  ? 'rgba(168,85,247,0.15)'
+                  ? 'var(--color-accent-alpha-15)'
                   : isCompleted
-                  ? 'rgba(168,85,247,0.08)'
+                  ? 'var(--color-accent-alpha-08)'
                   : 'transparent',
                 color: isActive
-                  ? '#a855f7'
+                  ? 'var(--color-accent)'
                   : isCompleted
-                  ? 'rgba(168,85,247,0.7)'
+                  ? 'var(--color-accent-alpha-55)'
                   : 'rgba(255,255,255,0.25)',
                 fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
                 transition: 'all 200ms ease',
@@ -72,11 +72,11 @@ export const WizardProgress: React.FC<Props> = ({ steps, wizardState, onStepClic
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 10, fontWeight: 700,
                 background: isActive
-                  ? 'linear-gradient(135deg, #a855f7, #ec4899)'
+                  ? 'linear-gradient(135deg, var(--color-accent), var(--color-pink))'
                   : isCompleted
-                  ? 'rgba(168,85,247,0.2)'
+                  ? 'var(--color-accent-alpha-20)'
                   : 'rgba(255,255,255,0.06)',
-                color: isActive ? '#fff' : isCompleted ? '#a855f7' : 'rgba(255,255,255,0.3)',
+                color: isActive ? '#fff' : isCompleted ? 'var(--color-accent)' : 'rgba(255,255,255,0.3)',
                 flexShrink: 0,
               }}>
                 {isCompleted ? <Check size={10} /> : idx + 1}

@@ -247,7 +247,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
               </div>
             </div>
             {(widget.style.borderSize || 0) > 0 && (
-              <ColorPickerPanel label="Border Color" value={widget.style.borderColor || '#a855f7'} onChange={v => us({ borderColor: v })} />
+              <ColorPickerPanel label="Border Color" value={widget.style.borderColor || 'var(--color-accent)'} onChange={v => us({ borderColor: v })} />
             )}
           </div>
         </InspectorSection>
@@ -335,7 +335,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
             <div className="input-group-label">Glow Filter</div>
             <div className="input-row">
               <DragAdjustInput label="Radius Blur" value={widget.style.glowBlur || 0} min={0} onChange={v => us({ glowBlur: v })} />
-              <ColorPickerPanel label="Glow Color" value={widget.style.glowColor || '#a855f7'} onChange={v => us({ glowColor: v })} />
+              <ColorPickerPanel label="Glow Color" value={widget.style.glowColor || 'var(--color-accent)'} onChange={v => us({ glowColor: v })} />
             </div>
           </div>
 
@@ -461,14 +461,14 @@ const GRADIENT_PRESETS = [
   { name: 'Neon Glitch', val: 'linear-gradient(135deg, #5cffe2 0%, #a855f7 100%)' },
   { name: 'Warm Outro', val: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)' },
   { name: 'Gold Luxe', val: 'linear-gradient(135deg, #c9a227 0%, #f59e0b 100%)' },
-  { name: 'Cosmo Radial', val: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)' },
+  { name: 'Cosmo Radial', val: 'radial-gradient(circle, var(--color-accent-alpha-40) 0%, transparent 70%)' },
   { name: 'Cyan Glow', val: 'radial-gradient(circle, rgba(92,255,226,0.3) 0%, transparent 75%)' },
 ];
 
 const GLASS_PRESETS = [
   { name: 'Frosted Light', val: 'rgba(255,255,255,0.05)' },
   { name: 'Frosted Dark', val: 'rgba(0,0,0,0.45)' },
-  { name: 'Amethyst tint', val: 'rgba(168,85,247,0.08)' },
+  { name: 'Amethyst tint', val: 'var(--color-accent-alpha-08)' },
 ];
 
 const ColorPickerPanel: React.FC<ColorPickerPanelProps> = ({ label, value, onChange }) => {

@@ -133,7 +133,7 @@ export const ReadinessPanel: React.FC = () => {
               onClick={() => {
                 if (item.action) item.action();
               }}
-              onMouseEnter={e => { if (item.action) e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; }}
+              onMouseEnter={e => { if (item.action) e.currentTarget.style.background = 'var(--color-accent-alpha-06)'; }}
               onMouseLeave={e => { if (item.action) e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{
@@ -156,7 +156,7 @@ export const ReadinessPanel: React.FC = () => {
                 <span style={{
                   fontSize: 8, fontWeight: 600, color: 'var(--color-accent)',
                   padding: '1px 5px', borderRadius: 3,
-                  background: 'rgba(168,85,247,0.1)',
+                  background: 'var(--color-accent-alpha-10)',
                 }}>
                   {item.actionLabel}
                 </span>

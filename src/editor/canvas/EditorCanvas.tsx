@@ -199,6 +199,16 @@ export const EditorCanvas: React.FC = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ mx: 0, my: 0, px: 0, py: 0 });
 
+  // Live Transform HUD state
+  const [hudData, setHudData] = useState<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    rotation: number;
+    visible: boolean;
+  }>({ x: 0, y: 0, w: 0, h: 0, rotation: 0, visible: false });
+
   // Viewport tracking for scrollbars and centering offset calculations
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
 
@@ -327,7 +337,7 @@ export const EditorCanvas: React.FC = () => {
         useEditorStore.getState().redo();
       }
 
-      // Copy / Paste / Duplicate
+      // Copy / Paste / Duplicate / Group
       if (cmdCtrl && e.key.toLowerCase() === 'c') {
         e.preventDefault();
         useEditorStore.getState().copySelected();
@@ -339,6 +349,29 @@ export const EditorCanvas: React.FC = () => {
       if (cmdCtrl && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         selectedIds.forEach(id => useEditorStore.getState().duplicateWidget(id));
+      }
+      if (cmdCtrl && e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          useEditorStore.getState().ungroupSelected();
+        } else {
+          useEditorStore.getState().groupSelected();
+        }
+      }
+
+      // Precision Keyboard Nudging (1px / 10px)
+      if (selectedIds.length > 0 && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+        const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+
+        selectedIds.forEach(id => {
+          const w = widgets.find(item => item.id === id);
+          if (w) {
+            updateWidget(id, { x: w.x + dx, y: w.y + dy });
+          }
+        });
       }
 
       // Zoom Shortcuts
@@ -377,7 +410,7 @@ export const EditorCanvas: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedIds, removeSelectedWidgets, deselectAll, zoomToFit, setZoom]);
+  }, [selectedIds, removeSelectedWidgets, deselectAll, zoomToFit, setZoom, widgets, updateWidget]);
 
   // Wheel Zoom / Pan
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -524,12 +557,14 @@ export const EditorCanvas: React.FC = () => {
     setActiveGuides(guides);
     updateWidget(id, { x: nx, y: ny });
     target.style.transform = `translate(${nx * zoom}px,${ny * zoom}px) rotate(${widget.rotation}deg)`;
+    setHudData({ x: nx, y: ny, w: widget.width, h: widget.height, rotation: widget.rotation, visible: true });
   }, [widgets, zoom, snapEnabled, updateWidget]);
 
   const handleDragEnd = useCallback(() => {
     setActiveGuides([]);
     pushHistory();
     useEditorStore.getState().setIsDragging(false);
+    setTimeout(() => setHudData(prev => ({ ...prev, visible: false })), 150);
   }, [pushHistory]);
 
   // Resize handlers
@@ -541,29 +576,39 @@ export const EditorCanvas: React.FC = () => {
     const nh = Math.round(Math.max(10, e.height / zoom));
     const nx = Math.round(e.drag.beforeTranslate[0] / zoom);
     const ny = Math.round(e.drag.beforeTranslate[1] / zoom);
+    const curRot = widgets.find(w => w.id === id)?.rotation ?? 0;
     updateWidget(id, { width: nw, height: nh, x: nx, y: ny });
     target.style.width = `${nw * zoom}px`;
     target.style.height = `${nh * zoom}px`;
-    target.style.transform = `translate(${nx * zoom}px,${ny * zoom}px) rotate(${widgets.find(w => w.id === id)?.rotation ?? 0}deg)`;
+    target.style.transform = `translate(${nx * zoom}px,${ny * zoom}px) rotate(${curRot}deg)`;
+    setHudData({ x: nx, y: ny, w: nw, h: nh, rotation: curRot, visible: true });
   }, [zoom, updateWidget, widgets]);
 
   const handleResizeEnd = useCallback(() => {
     pushHistory();
     useEditorStore.getState().setIsResizing(false);
+    setTimeout(() => setHudData(prev => ({ ...prev, visible: false })), 150);
   }, [pushHistory]);
 
   // Rotate handlers
-  const handleRotate = useCallback((e: { target: SVGElement | HTMLElement; rotation: number }) => {
+  const handleRotate = useCallback((e: { target: SVGElement | HTMLElement; rotation: number; inputEvent?: any }) => {
     const target = e.target as HTMLElement;
     const id = target.dataset.id;
     if (!id) return;
-    const rot = Math.round(e.rotation);
+    let rot = Math.round(e.rotation);
+    if (e.inputEvent && e.inputEvent.shiftKey) {
+      rot = Math.round(rot / 15) * 15;
+    }
     updateWidget(id, { rotation: rot });
     const w = widgets.find(ww => ww.id === id)!;
     target.style.transform = `translate(${w.x * zoom}px,${w.y * zoom}px) rotate(${rot}deg)`;
+    setHudData({ x: w.x, y: w.y, w: w.width, h: w.height, rotation: rot, visible: true });
   }, [widgets, zoom, updateWidget]);
 
-  const handleRotateEnd = useCallback(() => { pushHistory(); }, [pushHistory]);
+  const handleRotateEnd = useCallback(() => {
+    pushHistory();
+    setTimeout(() => setHudData(prev => ({ ...prev, visible: false })), 150);
+  }, [pushHistory]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -982,6 +1027,37 @@ export const EditorCanvas: React.FC = () => {
           onRotate={handleRotate}
           onRotateEnd={handleRotateEnd}
         />
+      )}
+
+      {/* Live Transform HUD */}
+      {hudData.visible && (
+        <div
+          style={{
+            position: 'absolute',
+            top: Math.max(10, hudData.y * zoom + pan.y - 34),
+            left: Math.max(10, hudData.x * zoom + pan.x),
+            zIndex: 99999,
+            background: 'var(--surface-5, #1e1b2e)',
+            border: '1px solid var(--color-accent)',
+            borderRadius: 6,
+            padding: '3px 8px',
+            fontSize: 10,
+            fontWeight: 700,
+            fontFamily: 'var(--font-mono)',
+            color: '#ffffff',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+            pointerEvents: 'none',
+            display: 'flex',
+            gap: 8,
+            alignItems: 'center',
+          }}
+        >
+          <span>X: {hudData.x}px</span>
+          <span>Y: {hudData.y}px</span>
+          <span>W: {hudData.w}px</span>
+          <span>H: {hudData.h}px</span>
+          {hudData.rotation !== 0 && <span style={{ color: 'var(--color-accent)' }}>{hudData.rotation}°</span>}
+        </div>
       )}
 
       {/* Context Menu */}

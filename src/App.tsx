@@ -7,6 +7,7 @@ import { OBSSetupGuide } from './components/OBSSetupGuide';
 import { PackBrowserPage } from './pages/PackBrowserPage';
 import { PackDetailPage } from './pages/PackDetailPage';
 import { TransitionStudioPage } from './pages/TransitionStudioPage';
+import { CommandPalette } from './components/CommandPalette';
 import { useEditorStore } from './store/editorStore';
 
 const StudioRouter: React.FC = () => {
@@ -90,6 +91,7 @@ const App: React.FC = () => (
           <Route path="/output" element={<OutputPage />} />
           <Route path="/*" element={<StudioRouter />} />
         </Routes>
+        <CommandPalette />
       </AppShell>
     </div>
   </BrowserRouter>

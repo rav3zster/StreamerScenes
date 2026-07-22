@@ -106,14 +106,26 @@ const ScenesTab: React.FC = () => {
                 key={scene.id}
                 className={`scene-item${isEditing ? ' active' : ''}${isLive ? ' live-indicator' : ''}`}
                 onClick={() => setEditingScene(scene.id)}
+                style={{ padding: '8px 10px' }}
               >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scene.label}</span>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: isEditing ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scene.label}</span>
+                    {isLive && (
+                      <span style={{ fontSize: 8, fontWeight: 800, color: '#ef4444', background: 'rgba(239,68,68,0.12)', padding: '1px 5px', borderRadius: 99 }}>LIVE</span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 9, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    {scene.widgets.length} widget{scene.widgets.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
                 <div style={{ display: 'flex', gap: 2 }} className="scene-item-actions">
-                  <button className="btn-icon" style={{ width: 22, height: 22 }} title="Set Live Scene"
+                  <button className="btn-icon focus-ring" style={{ width: 22, height: 22 }} title="Set Live Scene"
                     onClick={e => { e.stopPropagation(); setLiveScene(scene.id); }}>
-                    <RadioIcon size={11} />
+                    <RadioIcon size={11} color={isLive ? '#ef4444' : undefined} />
                   </button>
-                  <button className="btn-icon" style={{ width: 22, height: 22 }} title="Delete"
+                  <button className="btn-icon focus-ring" style={{ width: 22, height: 22 }} title="Delete Scene"
                     onClick={e => { e.stopPropagation(); if (scenes.length > 1) deleteScene(scene.id); }}>
                     <Trash2 size={11} />
                   </button>

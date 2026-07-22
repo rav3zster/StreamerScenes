@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useEditorStore, type SceneWidget } from '../../store/editorStore';
 import { LiveControlPanel } from './LiveControlPanel';
+import { notify } from '../../components/ToastContainer';
 
 const GOOGLE_FONTS = [
   'Inter', 'Space Grotesk', 'JetBrains Mono', 'Outfit',
@@ -249,6 +250,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
   // Parameter Copy/Paste states
   const handleCopyStyle = () => {
     localStorage.setItem('vibe-copied-style', JSON.stringify(widget.style));
+    notify('Parameters copied to clipboard', 'info');
   };
 
   const handlePasteStyle = () => {
@@ -256,6 +258,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
     if (raw) {
       try {
         us(JSON.parse(raw));
+        notify('Parameters applied to selection', 'success');
       } catch (err) {
         console.error(err);
       }

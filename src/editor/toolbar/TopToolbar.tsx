@@ -10,6 +10,7 @@ import { SceneTransitioner } from '../../renderer/SceneTransitioner';
 import { TransitionOverlay } from '../../transitions/components/TransitionOverlay';
 
 import { persistenceService } from '../../persistence/persistenceService';
+import { notify } from '../../components/ToastContainer';
 
 export const TopToolbar: React.FC = () => {
   const {
@@ -44,6 +45,7 @@ export const TopToolbar: React.FC = () => {
       sceneTransitionAssignments: ts.sceneAssignments,
       updatedAt: Date.now(),
     });
+    notify('Project saved successfully', 'success');
   };
 
   const handleGoLive = () => {

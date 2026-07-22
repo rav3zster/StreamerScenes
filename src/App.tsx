@@ -8,6 +8,7 @@ import { PackBrowserPage } from './pages/PackBrowserPage';
 import { PackDetailPage } from './pages/PackDetailPage';
 import { TransitionStudioPage } from './pages/TransitionStudioPage';
 import { CommandPalette } from './components/CommandPalette';
+import { ToastContainer } from './components/ToastContainer';
 import { useEditorStore } from './store/editorStore';
 
 const StudioRouter: React.FC = () => {
@@ -92,6 +93,7 @@ const App: React.FC = () => (
           <Route path="/*" element={<StudioRouter />} />
         </Routes>
         <CommandPalette />
+        <ToastContainer />
       </AppShell>
     </div>
   </BrowserRouter>

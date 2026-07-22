@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   Film, Layers, Image, Layout, Palette,
   Plus, Trash2, Eye, EyeOff, Lock, Unlock, GripVertical,
-  Search, ChevronDown, ChevronUp, Copy, Heart, Clock, Radio as RadioIcon,
+  Search, ChevronDown, ChevronUp, Copy, Heart, Clock, Radio as RadioIcon, Star,
 } from 'lucide-react';
 import { useEditorStore, type LeftTab, type SceneWidget } from '../../store/editorStore';
 import { WIDGET_CATEGORIES } from '../../data/widgetCatalog';
@@ -83,7 +83,14 @@ export const LeftPanel: React.FC = () => {
 // ─── Scenes Tab ───────────────────────────────────────────────────────────────
 
 const ScenesTab: React.FC = () => {
-  const { scenes, editingSceneId, liveSceneId, setEditingScene, setLiveScene, addScene, deleteScene } = useEditorStore();
+  const {
+    scenes, editingSceneId, liveSceneId, favoriteSceneIds,
+    setEditingScene, setLiveScene, addScene, deleteScene,
+    toggleFavoriteScene,
+  } = useEditorStore();
+
+  const [filter, setFilter] = useState<'all' | 'favorites' | 'live'>('all');
+  const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -94,64 +101,220 @@ const ScenesTab: React.FC = () => {
     setAdding(false);
   };
 
+  const filteredScenes = scenes.filter(s => {
+    const matchSearch = s.label.toLowerCase().includes(search.toLowerCase());
+    if (!matchSearch) return false;
+    if (filter === 'favorites') return favoriteSceneIds.includes(s.id);
+    if (filter === 'live') return s.id === liveSceneId;
+    return true;
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <div className="panel-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div className="scene-list">
-          {scenes.map(scene => {
-            const isEditing = scene.id === editingSceneId;
-            const isLive = scene.id === liveSceneId;
+      {/* Search & Filter Header */}
+      <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6, borderBottom: '1px solid var(--color-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface-3)', borderRadius: 6, padding: '4px 8px' }}>
+          <Search size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+          <input
+            className="input"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search scenes..."
+            style={{ border: 'none', background: 'transparent', padding: 0, fontSize: 11, width: '100%' }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {(['all', 'favorites', 'live'] as const).map(tab => {
+            const active = filter === tab;
             return (
-              <div
-                key={scene.id}
-                className={`scene-item${isEditing ? ' active' : ''}${isLive ? ' live-indicator' : ''}`}
-                onClick={() => setEditingScene(scene.id)}
-                style={{ padding: '8px 10px' }}
+              <button
+                key={tab}
+                className="focus-ring"
+                onClick={() => setFilter(tab)}
+                style={{
+                  flex: 1,
+                  fontSize: 10,
+                  fontWeight: active ? 700 : 500,
+                  textTransform: 'capitalize',
+                  padding: '3px 0',
+                  borderRadius: 4,
+                  border: 'none',
+                  background: active ? 'var(--color-accent-alpha-15)' : 'transparent',
+                  color: active ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                  cursor: 'pointer',
+                }}
               >
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontWeight: isEditing ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scene.label}</span>
-                    {isLive && (
-                      <span style={{ fontSize: 8, fontWeight: 800, color: '#ef4444', background: 'rgba(239,68,68,0.12)', padding: '1px 5px', borderRadius: 99 }}>LIVE</span>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 9, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                    {scene.widgets.length} widget{scene.widgets.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', gap: 2 }} className="scene-item-actions">
-                  <button className="btn-icon focus-ring" style={{ width: 22, height: 22 }} title="Set Live Scene"
-                    onClick={e => { e.stopPropagation(); setLiveScene(scene.id); }}>
-                    <RadioIcon size={11} color={isLive ? '#ef4444' : undefined} />
-                  </button>
-                  <button className="btn-icon focus-ring" style={{ width: 22, height: 22 }} title="Delete Scene"
-                    onClick={e => { e.stopPropagation(); if (scenes.length > 1) deleteScene(scene.id); }}>
-                    <Trash2 size={11} />
-                  </button>
-                </div>
-              </div>
+                {tab}
+              </button>
             );
           })}
         </div>
+      </div>
+
+      {/* Broadcast Scene Cards */}
+      <div className="panel-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px' }}>
+        {filteredScenes.map(scene => {
+          const isEditing = scene.id === editingSceneId;
+          const isLive = scene.id === liveSceneId;
+          const isFav = favoriteSceneIds.includes(scene.id);
+
+          return (
+            <div
+              key={scene.id}
+              onClick={() => setEditingScene(scene.id)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: 'var(--radius-lg, 8px)',
+                background: isEditing ? 'var(--surface-3, #1e1b2e)' : 'var(--surface-2, #141222)',
+                border: isLive
+                  ? '1px solid #ef4444'
+                  : isEditing
+                  ? '1px solid var(--color-accent)'
+                  : '1px solid var(--color-border)',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'all 120ms ease-out',
+                position: 'relative',
+              }}
+            >
+              {/* 16:9 Mini Canvas Thumbnail */}
+              <div
+                style={{
+                  height: 72,
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #090713 0%, #151128 100%)',
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {/* Simulated widget representation in thumbnail */}
+                <div style={{ opacity: 0.5, fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
+                  16:9 • {scene.widgets.length} elements
+                </div>
+
+                {/* Status Badges Overlay */}
+                <div style={{ position: 'absolute', top: 6, left: 6, display: 'flex', gap: 4 }}>
+                  {isLive && (
+                    <span
+                      style={{
+                        fontSize: 8,
+                        fontWeight: 800,
+                        color: '#ffffff',
+                        background: '#ef4444',
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        letterSpacing: '0.05em',
+                        boxShadow: '0 2px 8px rgba(239,68,68,0.5)',
+                      }}
+                    >
+                      LIVE
+                    </span>
+                  )}
+                  {isEditing && !isLive && (
+                    <span
+                      style={{
+                        fontSize: 8,
+                        fontWeight: 800,
+                        color: '#ffffff',
+                        background: 'var(--color-accent)',
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      EDITING
+                    </span>
+                  )}
+                </div>
+
+                {/* Quick actions top right */}
+                <button
+                  className="btn-icon focus-ring"
+                  style={{
+                    position: 'absolute',
+                    top: 6,
+                    right: 6,
+                    width: 22,
+                    height: 22,
+                    background: 'rgba(0,0,0,0.4)',
+                    backdropFilter: 'blur(4px)',
+                  }}
+                  onClick={e => {
+                    e.stopPropagation();
+                    toggleFavoriteScene(scene.id);
+                  }}
+                  title="Favorite Scene"
+                >
+                  <Star size={11} color={isFav ? '#f59e0b' : 'gray'} fill={isFav ? '#f59e0b' : 'none'} />
+                </button>
+              </div>
+
+              {/* Scene Card Metadata Footer */}
+              <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: isEditing ? 700 : 500, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {scene.label}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    {scene.widgets.length} widget{scene.widgets.length !== 1 ? 's' : ''} • 1920×1080
+                  </div>
+                </div>
+
+                {/* Card Quick Actions */}
+                <div style={{ display: 'flex', gap: 3 }}>
+                  <button
+                    className="btn-icon focus-ring"
+                    style={{ width: 24, height: 24 }}
+                    title="Set Live Scene"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setLiveScene(scene.id);
+                    }}
+                  >
+                    <RadioIcon size={12} color={isLive ? '#ef4444' : undefined} />
+                  </button>
+                  <button
+                    className="btn-icon focus-ring"
+                    style={{ width: 24, height: 24 }}
+                    title="Delete Scene"
+                    onClick={e => {
+                      e.stopPropagation();
+                      if (scenes.length > 1) deleteScene(scene.id);
+                    }}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
 
         {adding ? (
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
             <input
               autoFocus
               className="input"
               value={newName}
               onChange={e => setNewName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setAdding(false); }}
-              placeholder="Scene Name"
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleAdd();
+                if (e.key === 'Escape') setAdding(false);
+              }}
+              placeholder="Scene Name (e.g. Starting Soon)"
               style={{ flex: 1, fontSize: 11 }}
             />
-            <button className="btn btn-primary" style={{ fontSize: 11, padding: '4px 10px' }} onClick={handleAdd}>Add</button>
+            <button className="btn btn-primary" style={{ fontSize: 11, padding: '4px 10px' }} onClick={handleAdd}>
+              Add
+            </button>
           </div>
         ) : (
           <button
-            className="btn btn-secondary"
-            style={{ width: '100%', fontSize: 11, justifyContent: 'center', gap: 6 }}
+            className="btn btn-secondary focus-ring"
+            style={{ width: '100%', fontSize: 11, justifyContent: 'center', gap: 6, marginTop: 4 }}
             onClick={() => setAdding(true)}
           >
             <Plus size={13} /> Add Scene

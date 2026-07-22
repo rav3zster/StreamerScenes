@@ -174,9 +174,11 @@ interface EditorState {
   // Favorites and Recents
   favoriteWidgets: string[];
   recentWidgets: string[];
+  favoriteSceneIds: string[];
 
   // Actions — Scenes
   setScenes: (scenes: Scene[]) => void;
+  toggleFavoriteScene: (id: string) => void;
   setLiveScenes: (liveScenes: Scene[]) => void;
   setEditingScene: (id: string) => void;
   addScene: (name: string, label: string) => void;
@@ -475,10 +477,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   favoriteWidgets: [],
   recentWidgets: [],
+  favoriteSceneIds: [],
 
   // ── Scenes ──────────────────────────────────────────────────────────────────
 
   setScenes: (scenes) => set({ scenes }),
+  toggleFavoriteScene: (id) => set(s => ({
+    favoriteSceneIds: s.favoriteSceneIds.includes(id)
+      ? s.favoriteSceneIds.filter(x => x !== id)
+      : [...s.favoriteSceneIds, id],
+  })),
   setLiveScenes: (liveScenes) => set({ liveScenes }),
 
   setEditingScene: (id) => {

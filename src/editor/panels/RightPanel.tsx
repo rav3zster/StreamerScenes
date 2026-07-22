@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  ChevronDown, ChevronUp, MousePointer2, AlignCenter,
+  ChevronDown, ChevronUp, MousePointer2, AlignCenter, AlignLeft, AlignRight, AlignStartVertical, AlignEndVertical, AlignJustify,
   Paintbrush, Type, Zap, Settings2, Sparkles,
   Copy, Trash2, Layers, RotateCcw, ClipboardPaste, CopyPlus,
-  ArrowDownToLine, ArrowUpToLine, Monitor, Grid3x3, Magnet, Ruler, Eye, Globe, ExternalLink,
+  ArrowDownToLine, ArrowUpToLine, Monitor, Grid3x3, Magnet, Ruler, Eye, Globe, ExternalLink, Search,
 } from 'lucide-react';
 import { useEditorStore, type SceneWidget } from '../../store/editorStore';
 import { LiveControlPanel } from './LiveControlPanel';
@@ -243,7 +243,10 @@ const DragAdjustInput: React.FC<DragAdjustProps> = ({ label, value, onChange, st
 // ─── Single Inspector ─────────────────────────────────────────────────────────
 
 const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
-  const { updateWidget, duplicateWidget, removeWidget, bringToFront, sendToBack, bringForward, sendBackward } = useEditorStore();
+  const { scenes, editingSceneId, updateWidget, duplicateWidget, removeWidget, bringToFront, sendToBack, bringForward, sendBackward } = useEditorStore();
+  const [propertySearch, setPropertySearch] = useState('');
+  const editingScene = scenes.find(s => s.id === editingSceneId);
+
   const u = (updates: Partial<SceneWidget>) => updateWidget(widget.id, updates);
   const us = (s: Partial<SceneWidget['style']>) => updateWidget(widget.id, { style: { ...widget.style, ...s } });
 
@@ -267,6 +270,15 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Breadcrumb Navigation */}
+      <div style={{ padding: '6px 12px', background: 'var(--surface-3)', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{editingScene?.label || 'Scene'}</span>
+        <span>›</span>
+        <span style={{ color: 'var(--color-accent)' }}>{widget.type}</span>
+        <span>›</span>
+        <span style={{ color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{widget.label}</span>
+      </div>
+
       {/* Dynamic Header */}
       <div className="panel-header" style={{ flexDirection: 'column', alignItems: 'flex-start', height: 'auto', gap: 6, padding: '10px 14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
@@ -284,6 +296,17 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
           onChange={e => u({ label: e.target.value })}
           style={{ fontSize: 12, padding: '4px 8px' }}
         />
+        {/* Property Search Input */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface-2)', borderRadius: 4, padding: '3px 8px', width: '100%', marginTop: 2 }}>
+          <Search size={11} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+          <input
+            className="input"
+            value={propertySearch}
+            onChange={e => setPropertySearch(e.target.value)}
+            placeholder="Search properties..."
+            style={{ border: 'none', background: 'transparent', padding: 0, fontSize: 10, width: '100%' }}
+          />
+        </div>
       </div>
 
       {/* Main sections */}
@@ -490,20 +513,71 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
 // ─── Multiple Selection Panel ────────────────────────────────────────────────
 
 const MultipleSelection: React.FC<{ widgets: SceneWidget[] }> = ({ widgets }) => {
-  const { removeSelectedWidgets, groupSelected, copySelected } = useEditorStore();
+  const { removeSelectedWidgets, groupSelected, copySelected, updateWidget } = useEditorStore();
+
+  const handleAlignLeft = () => {
+    if (!widgets.length) return;
+    const minX = Math.min(...widgets.map(w => w.x));
+    widgets.forEach(w => updateWidget(w.id, { x: minX }));
+  };
+
+  const handleAlignCenter = () => {
+    if (!widgets.length) return;
+    const avgCenterX = Math.round(widgets.reduce((sum, w) => sum + (w.x + w.width / 2), 0) / widgets.length);
+    widgets.forEach(w => updateWidget(w.id, { x: Math.round(avgCenterX - w.width / 2) }));
+  };
+
+  const handleAlignRight = () => {
+    if (!widgets.length) return;
+    const maxX = Math.max(...widgets.map(w => w.x + w.width));
+    widgets.forEach(w => updateWidget(w.id, { x: maxX - w.width }));
+  };
+
+  const handleAlignTop = () => {
+    if (!widgets.length) return;
+    const minY = Math.min(...widgets.map(w => w.y));
+    widgets.forEach(w => updateWidget(w.id, { y: minY }));
+  };
+
+  const handleAlignMiddle = () => {
+    if (!widgets.length) return;
+    const avgCenterY = Math.round(widgets.reduce((sum, w) => sum + (w.y + w.height / 2), 0) / widgets.length);
+    widgets.forEach(w => updateWidget(w.id, { y: Math.round(avgCenterY - w.height / 2) }));
+  };
+
+  const handleAlignBottom = () => {
+    if (!widgets.length) return;
+    const maxY = Math.max(...widgets.map(w => w.y + w.height));
+    widgets.forEach(w => updateWidget(w.id, { y: maxY - w.height }));
+  };
+
   return (
-    <div className="panel-body">
-      <div style={{ fontSize: 11, color: 'var(--color-text-3)', marginBottom: 12, textAlign: 'center' }}>
+    <div className="panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
+      <div style={{ fontSize: 11, color: 'var(--color-text-3)', textAlign: 'center', fontFamily: 'var(--font-mono)', background: 'var(--surface-3)', padding: '6px', borderRadius: 6 }}>
         {widgets.length} elements selected
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <button className="btn btn-secondary" style={{ fontSize: 11, justifyContent: 'flex-start', gap: 8 }} onClick={groupSelected}>
-          <Layers size={13} /> Group Elements
+
+      {/* Alignment Toolbar */}
+      <InspectorSection title="Batch Alignment" icon={<AlignCenter size={12} />} defaultOpen>
+        <div style={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
+          <button className="btn btn-secondary focus-ring" style={{ flex: 1, padding: 4 }} title="Align Left" onClick={handleAlignLeft}><AlignLeft size={13} /></button>
+          <button className="btn btn-secondary focus-ring" style={{ flex: 1, padding: 4 }} title="Align Horizontal Center" onClick={handleAlignCenter}><AlignCenter size={13} /></button>
+          <button className="btn btn-secondary focus-ring" style={{ flex: 1, padding: 4 }} title="Align Right" onClick={handleAlignRight}><AlignRight size={13} /></button>
+          <button className="btn btn-secondary focus-ring" style={{ flex: 1, padding: 4 }} title="Align Top" onClick={handleAlignTop}><AlignStartVertical size={13} /></button>
+          <button className="btn btn-secondary focus-ring" style={{ flex: 1, padding: 4 }} title="Align Vertical Middle" onClick={handleAlignMiddle}><AlignJustify size={13} /></button>
+          <button className="btn btn-secondary focus-ring" style={{ flex: 1, padding: 4 }} title="Align Bottom" onClick={handleAlignBottom}><AlignEndVertical size={13} /></button>
+        </div>
+      </InspectorSection>
+
+      {/* Batch Actions */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+        <button className="btn btn-secondary focus-ring" style={{ fontSize: 11, justifyContent: 'flex-start', gap: 8 }} onClick={groupSelected}>
+          <Layers size={13} /> Group Elements (⌘G)
         </button>
-        <button className="btn btn-secondary" style={{ fontSize: 11, justifyContent: 'flex-start', gap: 8 }} onClick={copySelected}>
-          <Copy size={13} /> Copy Layout Styles
+        <button className="btn btn-secondary focus-ring" style={{ fontSize: 11, justifyContent: 'flex-start', gap: 8 }} onClick={copySelected}>
+          <Copy size={13} /> Copy Layout Styles (⌘C)
         </button>
-        <button className="btn btn-danger" style={{ fontSize: 11, justifyContent: 'flex-start', gap: 8 }} onClick={removeSelectedWidgets}>
+        <button className="btn btn-danger focus-ring" style={{ fontSize: 11, justifyContent: 'flex-start', gap: 8 }} onClick={removeSelectedWidgets}>
           <Trash2 size={13} /> Delete All Selected
         </button>
       </div>

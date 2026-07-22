@@ -14,11 +14,11 @@ import { ThemeManagerPanel } from './ThemeManagerPanel';
 // ─── Sidebar Rail ─────────────────────────────────────────────────────────────
 
 const TABS: { id: LeftTab; icon: React.ReactNode; label: string }[] = [
-  { id: 'scenes', icon: <Film size={16} />, label: 'Scenes' },
-  { id: 'layers', icon: <Layers size={16} />, label: 'Layers' },
-  { id: 'assets', icon: <Image size={16} />, label: 'Assets' },
-  { id: 'widgets', icon: <Layout size={16} />, label: 'Widgets' },
-  { id: 'themes', icon: <Palette size={16} />, label: 'Themes' },
+  { id: 'scenes', icon: <Film size={18} />, label: 'Scenes' },
+  { id: 'layers', icon: <Layers size={18} />, label: 'Layers' },
+  { id: 'assets', icon: <Image size={18} />, label: 'Assets' },
+  { id: 'widgets', icon: <Layout size={18} />, label: 'Widgets' },
+  { id: 'themes', icon: <Palette size={18} />, label: 'Themes' },
 ];
 
 export const SidebarRail: React.FC = () => {

@@ -53,18 +53,18 @@ export const BottomStatusBar: React.FC = () => {
   return (
     <div className="bottom-status-bar">
       {/* Mouse coords */}
-      <div className="status-bar-item">
-        <span style={{ color: 'var(--color-text-muted)', fontSize: 9 }}>X</span>
-        <span style={{ color: 'var(--color-text-3)', minWidth: 28, textAlign: 'right' }}>{mouseCanvas.x}</span>
-        <span style={{ color: 'var(--color-text-muted)', fontSize: 9, marginLeft: 4 }}>Y</span>
-        <span style={{ color: 'var(--color-text-3)', minWidth: 28, textAlign: 'right' }}>{mouseCanvas.y}</span>
+      <div className="status-bar-item" style={{ fontSize: 11 }}>
+        <span style={{ color: 'var(--color-text-muted)', fontSize: 10, fontWeight: 700 }}>X</span>
+        <span style={{ color: 'var(--color-text-3)', minWidth: 32, textAlign: 'right' }}>{mouseCanvas.x}</span>
+        <span style={{ color: 'var(--color-text-muted)', fontSize: 10, fontWeight: 700, marginLeft: 6 }}>Y</span>
+        <span style={{ color: 'var(--color-text-3)', minWidth: 32, textAlign: 'right' }}>{mouseCanvas.y}</span>
       </div>
 
       <div className="status-bar-divider" />
 
       {/* Resolution */}
-      <div className="status-bar-item">
-        <Monitor size={10} />
+      <div className="status-bar-item" style={{ fontSize: 11 }}>
+        <Monitor size={13} />
         <span>{CANVAS_W}×{CANVAS_H}</span>
       </div>
 
@@ -72,7 +72,7 @@ export const BottomStatusBar: React.FC = () => {
 
       {/* Zoom */}
       <div className="status-bar-item" style={{ gap: 4 }}>
-        <button onClick={zoomOut} className="status-btn focus-ring" title="Zoom Out"><ZoomOut size={10}/></button>
+        <button onClick={zoomOut} className="status-btn focus-ring" title="Zoom Out"><ZoomOut size={13}/></button>
 
         {isEditingZoom ? (
           <input
@@ -81,20 +81,20 @@ export const BottomStatusBar: React.FC = () => {
             onChange={e => setZoomInput(e.target.value)}
             onBlur={handleZoomCommit}
             onKeyDown={e => { if (e.key === 'Enter') handleZoomCommit(); if (e.key === 'Escape') setIsEditingZoom(false); }}
-            style={{ width: 38, background: 'var(--color-surface-2)', border: '1px solid var(--color-accent)', borderRadius: 3, color: 'var(--color-text)', fontSize: 10, textAlign: 'center', padding: '1px 4px', fontFamily: 'var(--font-mono)', outline: 'none' }}
+            style={{ width: 44, background: 'var(--color-surface-2)', border: '1px solid var(--color-accent)', borderRadius: 4, color: 'var(--color-text)', fontSize: 11, textAlign: 'center', padding: '2px 4px', fontFamily: 'var(--font-mono)', outline: 'none' }}
           />
         ) : (
-          <button onClick={handleZoomClick} className="status-btn focus-ring" style={{ minWidth: 36, textAlign: 'center' }} title="Set zoom">
+          <button onClick={handleZoomClick} className="status-btn focus-ring" style={{ minWidth: 42, textAlign: 'center', fontSize: 11 }} title="Set zoom">
             {zoomPct}%
           </button>
         )}
 
-        <button onClick={zoomIn} className="status-btn focus-ring" title="Zoom In"><ZoomIn size={10}/></button>
+        <button onClick={zoomIn} className="status-btn focus-ring" title="Zoom In"><ZoomIn size={13}/></button>
       </div>
 
       {/* Quick zoom presets */}
       <div style={{ display: 'flex', gap: 2 }}>
-        <button onClick={zoomToFit} className="status-btn focus-ring" title="Fit to screen">Fit</button>
+        <button onClick={zoomToFit} className="status-btn focus-ring" style={{ fontSize: 11 }} title="Fit to screen">Fit</button>
       </div>
 
       <div className="status-bar-divider" />
@@ -106,7 +106,7 @@ export const BottomStatusBar: React.FC = () => {
           className={`status-btn focus-ring${snapEnabled ? ' active' : ''}`}
           title="Toggle Snap to Grid / Guides"
         >
-          <Magnet size={10} /><span style={{ fontSize: 9 }}>Snap</span>
+          <Magnet size={13} /><span style={{ fontSize: 11 }}>Snap</span>
         </button>
 
         <button
@@ -114,7 +114,7 @@ export const BottomStatusBar: React.FC = () => {
           className={`status-btn focus-ring${showRulers ? ' active' : ''}`}
           title="Toggle Canvas Rulers"
         >
-          <Monitor size={10} /><span style={{ fontSize: 9 }}>Rulers</span>
+          <Monitor size={13} /><span style={{ fontSize: 11 }}>Rulers</span>
         </button>
 
         <button
@@ -122,7 +122,7 @@ export const BottomStatusBar: React.FC = () => {
           className={`status-btn focus-ring${showGuides ? ' active' : ''}`}
           title="Toggle Alignment Guides"
         >
-          <Eye size={10} /><span style={{ fontSize: 9 }}>Guides</span>
+          <Eye size={13} /><span style={{ fontSize: 11 }}>Guides</span>
         </button>
       </div>
 
@@ -130,13 +130,13 @@ export const BottomStatusBar: React.FC = () => {
 
       {/* Grid Mode Dropdown */}
       <div className="status-bar-item" style={{ gap: 4 }}>
-        <Grid3x3 size={10} style={{ color: gridMode !== 'off' ? 'var(--color-accent)' : 'var(--color-text-muted)' }} />
+        <Grid3x3 size={13} style={{ color: gridMode !== 'off' ? 'var(--color-accent)' : 'var(--color-text-muted)' }} />
         <select
           className="select"
           value={gridMode}
           onChange={e => setGridMode(e.target.value as GridMode)}
           style={{
-            fontSize: 9,
+            fontSize: 11,
             background: 'transparent',
             border: 'none',
             color: 'var(--color-text-2)',

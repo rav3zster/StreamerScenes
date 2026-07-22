@@ -49,6 +49,11 @@ const StudioRouter: React.FC = () => {
 
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const themeOverrides = useEditorStore(s => s.themeOverrides);
+  const editorTheme = useEditorStore(s => s.editorTheme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', editorTheme);
+  }, [editorTheme]);
 
   useEffect(() => {
     const shell = document.querySelector('.app-shell') as HTMLElement | null;

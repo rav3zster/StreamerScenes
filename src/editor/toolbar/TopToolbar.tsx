@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Undo2, Redo2, Eye, Save, Radio, ChevronRight, Maximize2,
   ChevronDown, FolderOpen, FilePlus, Sun, Moon, Monitor as MonitorIcon,
-  Download, Copy, Zap,
+  Download, Copy, Zap, ArrowLeft,
 } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
 import { useTransitionStore } from '../../store/transitionStore';
 import { SceneTransitioner } from '../../renderer/SceneTransitioner';
+import { TransitionOverlay } from '../../transitions/components/TransitionOverlay';
 
 import { persistenceService } from '../../persistence/persistenceService';
 
@@ -224,10 +225,10 @@ export const TopToolbar: React.FC = () => {
       {/* ── History ────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
         <button className="btn-icon focus-ring" onClick={undo} disabled={!canUndo()} data-tooltip="Undo (⌘Z)" data-tooltip-position="bottom" title="Undo">
-          <Undo2 size={14} />
+          <Undo2 size={16} />
         </button>
         <button className="btn-icon focus-ring" onClick={redo} disabled={!canRedo()} data-tooltip="Redo (⌘Y)" data-tooltip-position="bottom" title="Redo">
-          <Redo2 size={14} />
+          <Redo2 size={16} />
         </button>
       </div>
 
@@ -238,58 +239,59 @@ export const TopToolbar: React.FC = () => {
         className="btn-icon focus-ring"
         title="Transition Studio"
         onClick={() => useEditorStore.getState().setAppView('transition-studio')}
-        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', fontSize: 11, fontWeight: 600 }}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', fontSize: 12, fontWeight: 600 }}
       >
-        <Zap size={13} color="var(--color-accent)" />
+        <Zap size={15} color="var(--color-accent)" />
         Transitions
       </button>
 
       <div className="toolbar-spacer" />
 
       {/* ── Right actions ──────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {/* Editor theme toggle */}
         <button
           id="toolbar-theme-toggle"
-          className="btn-icon"
+          className="btn-icon focus-ring"
           onClick={toggleEditorTheme}
           title={editorTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-          {editorTheme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+          {editorTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
         <div className="toolbar-divider" />
 
         {/* Preview */}
         <button
-          className={`btn btn-secondary${showPreviewMode ? ' active' : ''}`}
-          style={{ gap: 6, fontSize: 11 }}
+          className={`btn btn-secondary focus-ring${showPreviewMode ? ' active' : ''}`}
+          style={{ gap: 6, fontSize: 12, padding: '6px 14px' }}
           onClick={handleTogglePreview}
           title="Preview Mode"
         >
-          <Eye size={13} />
+          <Eye size={15} />
           Preview
         </button>
 
         {/* Save */}
         <button
-          className="btn btn-secondary"
-          style={{ gap: 6, fontSize: 11, ...(saveFlash ? { borderColor: '#10b981', color: '#10b981' } : {}) }}
+          className="btn btn-secondary focus-ring"
+          style={{ gap: 6, fontSize: 12, padding: '6px 14px', ...(saveFlash ? { borderColor: '#10b981', color: '#10b981' } : {}) }}
           onClick={handleSave}
           title="Save (auto-saved)"
         >
-          <Save size={13} />
+          <Save size={15} />
           {saveFlash ? 'Saved!' : 'Save'}
         </button>
 
         {/* Switch To Live */}
         <button
           id="toolbar-go-live"
+          className="focus-ring"
           onClick={switchDraftToLive}
           disabled={!editingSceneId}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '6px 14px', borderRadius: 8,
+            padding: '7px 16px', borderRadius: 8,
             border: 'none', cursor: 'pointer',
             background: isSynced
               ? 'rgba(239,68,68,0.15)'
@@ -304,32 +306,46 @@ export const TopToolbar: React.FC = () => {
           onMouseEnter={e => { if (!isSynced) e.currentTarget.style.filter = 'brightness(1.1)'; }}
           onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
         >
-          <Radio size={13} style={{ animation: isSynced ? 'none' : 'live-pulse 2s ease-in-out infinite' }} />
+          <Radio size={15} style={{ animation: isSynced ? 'none' : 'live-pulse 2s ease-in-out infinite' }} />
           {isSynced ? 'Live (Synced)' : 'Switch To Live'}
         </button>
       </div>
 
-      {/* Preview Mode Overlay */}
+      {/* Preview Mode Overlay — works like OutputPage with back button */}
       {showPreviewMode && (
         <div
-          onClick={togglePreviewMode}
+          onClick={handleTogglePreview}
           style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'rgba(0,0,0,0.95)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            cursor: 'zoom-out',
+            position: 'fixed',
+            inset: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 99999,
+            background: '#000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
           }}
           title="Click background to exit preview"
         >
-          <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10000, display: 'flex', gap: 8 }} onClick={e => e.stopPropagation()}>
+          {/* Top-right exit button */}
+          <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 100000, display: 'flex', gap: 8 }} onClick={e => e.stopPropagation()}>
             <button
-              onClick={togglePreviewMode}
+              onClick={handleTogglePreview}
               style={{
-                background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-                color: '#fff', borderRadius: 8, padding: '8px 18px', cursor: 'pointer',
-                fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-sans)',
-                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: '#fff',
+                borderRadius: 8,
+                padding: '8px 18px',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 700,
+                fontFamily: 'var(--font-sans)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
                 transition: 'all var(--transition-fast)',
               }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }}
@@ -338,6 +354,47 @@ export const TopToolbar: React.FC = () => {
               <Maximize2 size={13} /> Exit Preview (Esc)
             </button>
           </div>
+
+          {/* Bottom-left back button matching OutputPage design */}
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              handleTogglePreview();
+            }}
+            style={{
+              position: 'absolute',
+              bottom: 20,
+              left: 20,
+              zIndex: 100000,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              background: 'rgba(12,10,26,0.9)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: 8,
+              padding: '8px 16px',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+              transition: 'all 0.15s ease',
+              opacity: 0.85,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.opacity = '1';
+              e.currentTarget.style.background = 'var(--color-accent)';
+              e.currentTarget.style.borderColor = 'var(--color-accent)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.opacity = '0.85';
+              e.currentTarget.style.background = 'rgba(12,10,26,0.9)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+            }}
+          >
+            <ArrowLeft size={13} /> Return to Studio
+          </button>
+
           <div onClick={e => e.stopPropagation()} style={{ cursor: 'default' }}>
             <PreviewCanvas />
           </div>
@@ -362,13 +419,26 @@ import { CANVAS_W, CANVAS_H } from '../canvas/EditorCanvas';
 
 const PreviewCanvas: React.FC = () => {
   const { scenes, editingSceneId, liveTransitionType, liveTransitionDuration } = useEditorStore();
-  const scale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const s = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);
+      setScale(s);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div style={{
-      width: CANVAS_W * scale, height: CANVAS_H * scale,
-      position: 'relative', overflow: 'hidden',
-      boxShadow: '0 0 0 1px rgba(255,255,255,0.1), 0 40px 100px rgba(0,0,0,0.8)',
+      width: `${CANVAS_W * scale}px`,
+      height: `${CANVAS_H * scale}px`,
+      position: 'relative',
+      overflow: 'hidden',
     }}>
       <SceneTransitioner
         activeSceneId={editingSceneId}
@@ -379,6 +449,7 @@ const PreviewCanvas: React.FC = () => {
         transitionType={liveTransitionType}
         transitionDuration={liveTransitionDuration}
       />
+      <TransitionOverlay zoom={scale} />
     </div>
   );
 };

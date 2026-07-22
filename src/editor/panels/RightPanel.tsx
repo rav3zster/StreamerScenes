@@ -3,7 +3,7 @@ import {
   ChevronDown, ChevronUp, MousePointer2, AlignCenter,
   Paintbrush, Type, Zap, Settings2, Sparkles,
   Copy, Trash2, Layers, RotateCcw, ClipboardPaste, CopyPlus,
-  ArrowDownToLine, ArrowUpToLine,
+  ArrowDownToLine, ArrowUpToLine, Monitor, Grid3x3, Magnet, Ruler, Eye, Globe, ExternalLink,
 } from 'lucide-react';
 import { useEditorStore, type SceneWidget } from '../../store/editorStore';
 import { LiveControlPanel } from './LiveControlPanel';
@@ -15,6 +15,121 @@ const GOOGLE_FONTS = [
 
 const RECENT_COLORS_KEY = 'vibe-recent-colors';
 
+// ─── Canvas Properties Inspector (Empty Selection State) ──────────────────────
+
+const CanvasPropertiesInspector: React.FC = () => {
+  const {
+    scenes, editingSceneId,
+    gridMode, setGridMode, snapEnabled, toggleSnap,
+    showGuides, toggleGuides, showRulers, toggleRulers,
+    setAppView,
+  } = useEditorStore();
+
+  const editingScene = scenes.find(s => s.id === editingSceneId);
+  const widgets = editingScene?.widgets ?? [];
+  const [copiedUrl, setCopiedUrl] = useState(false);
+
+  const handleCopyUrl = () => {
+    const url = `${window.location.origin}/output`;
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(true);
+    setTimeout(() => setCopiedUrl(false), 2000);
+  };
+
+  const bgWidget = widgets.find(w => w.type === 'background');
+  const updateWidget = useEditorStore(s => s.updateWidget);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div className="panel-header" style={{ padding: '12px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Monitor size={15} style={{ color: 'var(--color-accent)' }} />
+          <div>
+            <div className="panel-title" style={{ fontSize: 12, fontWeight: 700 }}>Canvas & Scene</div>
+            <div style={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>1920 × 1080 (16:9)</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Active Scene summary card */}
+        {editingScene && (
+          <InspectorSection title="Active Scene" icon={<Sparkles size={13} />} defaultOpen>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)' }}>{editingScene.label}</span>
+              <span className="type-chip">{widgets.length} widget{widgets.length !== 1 ? 's' : ''}</span>
+            </div>
+
+            {/* Scene Background fill */}
+            {bgWidget && (
+              <div style={{ marginTop: 8 }}>
+                <ColorPickerPanel
+                  label="Background Fill"
+                  value={bgWidget.style.background || 'transparent'}
+                  onChange={v => updateWidget(bgWidget.id, { style: { ...bgWidget.style, background: v } })}
+                />
+              </div>
+            )}
+          </InspectorSection>
+        )}
+
+        {/* View & Alignment settings */}
+        <InspectorSection title="Display & Grid" icon={<Grid3x3 size={13} />} defaultOpen>
+          <div className="input-group" style={{ marginBottom: 8 }}>
+            <div className="input-group-label">Grid Style</div>
+            <select
+              className="select"
+              value={gridMode}
+              onChange={e => setGridMode(e.target.value as any)}
+              style={{ width: '100%', fontSize: 11, padding: '5px 8px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 6, color: 'var(--color-text)' }}
+            >
+              <option value="dots">Dots Grid</option>
+              <option value="lines">Lines Grid</option>
+              <option value="off">Disabled</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, color: 'var(--color-text-2)', fontWeight: 500 }}>Snap to Grid / Guides</span>
+              <ToggleRow value={snapEnabled} onChange={toggleSnap} label={snapEnabled ? 'On' : 'Off'} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, color: 'var(--color-text-2)', fontWeight: 500 }}>Safe Area Guides</span>
+              <ToggleRow value={showGuides} onChange={toggleGuides} label={showGuides ? 'Show' : 'Hide'} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, color: 'var(--color-text-2)', fontWeight: 500 }}>Canvas Rulers</span>
+              <ToggleRow value={showRulers} onChange={toggleRulers} label={showRulers ? 'Show' : 'Hide'} />
+            </div>
+          </div>
+        </InspectorSection>
+
+        {/* Broadcast Output Quick Access */}
+        <InspectorSection title="OBS Broadcast Source" icon={<Globe size={13} />} defaultOpen>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.5, marginBottom: 8 }}>
+            Add this Browser Source URL to OBS Studio or Streamlabs to display your live scene.
+          </div>
+          <button
+            className="btn btn-secondary focus-ring"
+            style={{ width: '100%', fontSize: 11, gap: 6, padding: '7px 0', justifyContent: 'center' }}
+            onClick={handleCopyUrl}
+          >
+            <Copy size={13} /> {copiedUrl ? 'Copied to Clipboard!' : 'Copy OBS Source URL'}
+          </button>
+          <button
+            className="btn btn-secondary focus-ring"
+            style={{ width: '100%', fontSize: 11, gap: 6, padding: '7px 0', justifyContent: 'center', marginTop: 6 }}
+            onClick={() => setAppView('obs-setup')}
+          >
+            <ExternalLink size={13} /> Open OBS Setup Guide
+          </button>
+        </InspectorSection>
+      </div>
+    </div>
+  );
+};
+
 // ─── Right Panel (Inspector) ──────────────────────────────────────────────────
 
 export const RightPanel: React.FC = () => {
@@ -23,23 +138,8 @@ export const RightPanel: React.FC = () => {
 
   if (selectedIds.length === 0) {
     return (
-      <div className="right-panel" style={{ width: rightPanelWidth, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div className="inspector-empty" style={{ flexShrink: 0, padding: '24px 16px' }}>
-            <div className="inspector-empty-icon">
-              <MousePointer2 size={24} style={{ opacity: 0.5 }} />
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', marginBottom: 4 }}>
-              Nothing Selected
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.5, textAlign: 'center' }}>
-              Click an element on the canvas to inspect its layout, styles, and animation properties
-            </div>
-          </div>
-          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
-            <LiveControlPanel />
-          </div>
-        </div>
+      <div className="right-panel" style={{ width: rightPanelWidth, height: '100%' }}>
+        <CanvasPropertiesInspector />
       </div>
     );
   }

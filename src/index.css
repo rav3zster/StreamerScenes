@@ -77,12 +77,79 @@
   --transition-base: 150ms ease-out;
   --transition-slow: 200ms ease-out;
 
-  /* ── Z-index layers ── */
   --z-canvas:  1;
   --z-panel:   20;
   --z-toolbar: 30;
   --z-modal:   40;
   --z-tooltip: 50;
+
+  --color-workspace-bg: #090713;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES (Studio Slate Palette)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="light"], .theme-light {
+  --color-bg:           #f1f3f8;
+  --color-surface:      #ffffff;
+  --color-surface-2:    #eef0f6;
+  --color-surface-3:    #e1e4ed;
+  --color-border:       rgba(15, 23, 42, 0.12);
+  --color-border-hover: rgba(15, 23, 42, 0.24);
+  --color-border-active:rgba(15, 23, 42, 0.38);
+
+  --color-text:      #0f172a;
+  --color-text-2:    #334155;
+  --color-text-3:    #475569;
+  --color-text-muted:#64748b;
+
+  --color-workspace-bg: #e2e5ec;
+
+  --shadow-sm:      0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:      0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg:      0 12px 32px rgba(0,0,0,0.12);
+  --shadow-xl:      0 20px 60px rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.25);
+}
+
+/* ── Panel Resizers ───────────────────────────────────────────────────────── */
+.resizer-v {
+  width: 5px;
+  margin: 0 -2px;
+  cursor: col-resize;
+  z-index: 50;
+  position: relative;
+  background: transparent;
+  transition: background 150ms ease;
+  flex-shrink: 0;
+}
+.resizer-v:hover,
+.resizer-v.active {
+  background: var(--color-accent);
+}
+
+/* ── Canvas Stage & Workspace ────────────────────────────────────────────────── */
+.canvas-wrapper {
+  background: var(--color-workspace-bg);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.canvas-stage {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.08);
+  transition: box-shadow 200ms ease;
+}
+
+[data-theme="light"] .canvas-stage {
+  box-shadow: 0 20px 60px rgba(15,23,42,0.18), 0 0 0 1px rgba(0,0,0,0.15);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

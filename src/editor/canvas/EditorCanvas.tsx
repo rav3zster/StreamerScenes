@@ -7,9 +7,11 @@ import { TransitionOverlay } from '../../transitions/components/TransitionOverla
 
 export const CANVAS_W = 1920;
 export const CANVAS_H = 1080;
-const SNAP_THRESHOLD = 8;
+const SNAP_THRESHOLD = 14;
+const SNAP_STICKY_THRESHOLD = 28;
 
 interface Guide { x?: number; y?: number }
+
 
 // ─── Ruler Horizontal Component ──────────────────────────────────────────────
 const RulerHorizontal: React.FC<{ zoom: number; panX: number; onDragStart: (e: React.MouseEvent) => void }> = ({ zoom, panX, onDragStart }) => {
@@ -509,9 +511,17 @@ export const EditorCanvas: React.FC = () => {
     setDraggingGuide({ type, val: type === 'x' ? cx : cy });
   };
 
-  // Snapping logic
+  // Active sticky snap tracking refs (for magnetic hysteresis)
+  const activeSnapXRef = useRef<{ snapVal: number; offsetType: 'left' | 'right' | 'center' } | null>(null);
+  const activeSnapYRef = useRef<{ snapVal: number; offsetType: 'top' | 'bottom' | 'center' } | null>(null);
+
+  // Snapping logic with magnetic sticky hysteresis
   const computeSnap = (x: number, y: number, w: number, h: number, excludeIds: string[]) => {
-    if (!snapEnabled) return { dx: 0, dy: 0, guides: [] };
+    if (!snapEnabled) {
+      activeSnapXRef.current = null;
+      activeSnapYRef.current = null;
+      return { dx: 0, dy: 0, guides: [] };
+    }
     const others = widgets.filter(ww => !excludeIds.includes(ww.id));
     const guides: Guide[] = [];
     let dx = 0, dy = 0;
@@ -531,16 +541,78 @@ export const EditorCanvas: React.FC = () => {
       snapYCandidates.push(o.y, o.y + o.height / 2, o.y + o.height);
     });
 
-    for (const sx of snapXCandidates) {
-      if (Math.abs(x - sx) < SNAP_THRESHOLD) { dx = sx - x; guides.push({ x: sx }); break; }
-      if (Math.abs(x + w - sx) < SNAP_THRESHOLD) { dx = sx - (x + w); guides.push({ x: sx }); break; }
-      if (Math.abs(x + w / 2 - sx) < SNAP_THRESHOLD) { dx = sx - (x + w / 2); guides.push({ x: sx }); break; }
+    // ── X-AXIS MAGNETIC STICKY SNAP ──────────────────────────────────────────
+    let xHandled = false;
+    if (activeSnapXRef.current) {
+      const { snapVal, offsetType } = activeSnapXRef.current;
+      const currentPos = offsetType === 'left' ? x : offsetType === 'right' ? x + w : x + w / 2;
+      const dist = Math.abs(currentPos - snapVal);
+
+      if (dist < SNAP_STICKY_THRESHOLD) {
+        dx = offsetType === 'left' ? snapVal - x : offsetType === 'right' ? snapVal - (x + w) : snapVal - (x + w / 2);
+        guides.push({ x: snapVal });
+        xHandled = true;
+      } else {
+        activeSnapXRef.current = null;
+      }
     }
-    for (const sy of snapYCandidates) {
-      if (Math.abs(y - sy) < SNAP_THRESHOLD) { dy = sy - y; guides.push({ y: sy }); break; }
-      if (Math.abs(y + h - sy) < SNAP_THRESHOLD) { dy = sy - (y + h); guides.push({ y: sy }); break; }
-      if (Math.abs(y + h / 2 - sy) < SNAP_THRESHOLD) { dy = sy - (y + h / 2); guides.push({ y: sy }); break; }
+
+    if (!xHandled) {
+      for (const sx of snapXCandidates) {
+        if (Math.abs(x - sx) < SNAP_THRESHOLD) {
+          dx = sx - x; guides.push({ x: sx });
+          activeSnapXRef.current = { snapVal: sx, offsetType: 'left' };
+          break;
+        }
+        if (Math.abs(x + w - sx) < SNAP_THRESHOLD) {
+          dx = sx - (x + w); guides.push({ x: sx });
+          activeSnapXRef.current = { snapVal: sx, offsetType: 'right' };
+          break;
+        }
+        if (Math.abs(x + w / 2 - sx) < SNAP_THRESHOLD) {
+          dx = sx - (x + w / 2); guides.push({ x: sx });
+          activeSnapXRef.current = { snapVal: sx, offsetType: 'center' };
+          break;
+        }
+      }
     }
+
+    // ── Y-AXIS MAGNETIC STICKY SNAP ──────────────────────────────────────────
+    let yHandled = false;
+    if (activeSnapYRef.current) {
+      const { snapVal, offsetType } = activeSnapYRef.current;
+      const currentPos = offsetType === 'top' ? y : offsetType === 'bottom' ? y + h : y + h / 2;
+      const dist = Math.abs(currentPos - snapVal);
+
+      if (dist < SNAP_STICKY_THRESHOLD) {
+        dy = offsetType === 'top' ? snapVal - y : offsetType === 'bottom' ? snapVal - (y + h) : snapVal - (y + h / 2);
+        guides.push({ y: snapVal });
+        yHandled = true;
+      } else {
+        activeSnapYRef.current = null;
+      }
+    }
+
+    if (!yHandled) {
+      for (const sy of snapYCandidates) {
+        if (Math.abs(y - sy) < SNAP_THRESHOLD) {
+          dy = sy - y; guides.push({ y: sy });
+          activeSnapYRef.current = { snapVal: sy, offsetType: 'top' };
+          break;
+        }
+        if (Math.abs(y + h - sy) < SNAP_THRESHOLD) {
+          dy = sy - (y + h); guides.push({ y: sy });
+          activeSnapYRef.current = { snapVal: sy, offsetType: 'bottom' };
+          break;
+        }
+        if (Math.abs(y + h / 2 - sy) < SNAP_THRESHOLD) {
+          dy = sy - (y + h / 2); guides.push({ y: sy });
+          activeSnapYRef.current = { snapVal: sy, offsetType: 'center' };
+          break;
+        }
+      }
+    }
+
     return { dx, dy, guides };
   };
 
@@ -561,6 +633,8 @@ export const EditorCanvas: React.FC = () => {
   }, [widgets, zoom, snapEnabled, updateWidget]);
 
   const handleDragEnd = useCallback(() => {
+    activeSnapXRef.current = null;
+    activeSnapYRef.current = null;
     setActiveGuides([]);
     pushHistory();
     useEditorStore.getState().setIsDragging(false);
@@ -1041,7 +1115,7 @@ export const EditorCanvas: React.FC = () => {
           resizable
           rotatable
           snappable={snapEnabled}
-          snapThreshold={SNAP_THRESHOLD * zoom}
+          snapThreshold={SNAP_STICKY_THRESHOLD * zoom}
           keepRatio={false}
           throttleDrag={0}
           onDragStart={() => useEditorStore.getState().setIsDragging(true)}

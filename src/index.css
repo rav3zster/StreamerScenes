@@ -8,11 +8,19 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* ── Colors: neutral zinc surfaces ── */
-  --color-bg:           #09090b;
-  --color-surface:      #111113;
-  --color-surface-2:    #18181b;
-  --color-surface-3:    #232327;
+  /* ── PDS V1.0 Surface Hierarchy (Surfaces 0 - 5) ── */
+  --surface-0:          #060608; /* App Shell frame */
+  --surface-1:          #0a090f; /* Workspace & Canvas area */
+  --surface-2:          #121118; /* Docked Panels */
+  --surface-3:          #1a1823; /* Interactive Editing Cards */
+  --surface-4:          #232030; /* Floating Interface */
+  --surface-5:          #2c283c; /* Modal Layer & Dialogs */
+
+  /* ── Legacy surface mappings synced to PDS V1.0 ── */
+  --color-bg:           var(--surface-0);
+  --color-surface:      var(--surface-2);
+  --color-surface-2:    var(--surface-3);
+  --color-surface-3:    var(--surface-4);
   --color-border:       rgba(255, 255, 255, 0.07);
   --color-border-hover: rgba(255, 255, 255, 0.14);
   --color-border-active:rgba(255, 255, 255, 0.24);
@@ -91,10 +99,17 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="light"], .theme-light {
-  --color-bg:           #f1f3f8;
-  --color-surface:      #ffffff;
-  --color-surface-2:    #eef0f6;
-  --color-surface-3:    #e1e4ed;
+  --surface-0:          #e8eafd;
+  --surface-1:          #f1f3f8;
+  --surface-2:          #ffffff;
+  --surface-3:          #eef0f6;
+  --surface-4:          #e1e4ed;
+  --surface-5:          #ffffff;
+
+  --color-bg:           var(--surface-0);
+  --color-surface:      var(--surface-2);
+  --color-surface-2:    var(--surface-3);
+  --color-surface-3:    var(--surface-4);
   --color-border:       rgba(15, 23, 42, 0.12);
   --color-border-hover: rgba(15, 23, 42, 0.24);
   --color-border-active:rgba(15, 23, 42, 0.38);

@@ -182,6 +182,7 @@ interface EditorState {
   setLiveScenes: (liveScenes: Scene[]) => void;
   setEditingScene: (id: string) => void;
   addScene: (name: string, label: string) => void;
+  duplicateScene: (id: string) => void;
   deleteScene: (id: string) => void;
   setLiveScene: (id: string) => void;
   createProjectFromPack: (projectName: string, packId: string) => void;
@@ -521,6 +522,29 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         : s.editingSceneId;
       return { scenes: remaining, editingSceneId: newEditId };
     });
+  },
+
+  duplicateScene: (id) => {
+    const { scenes } = get();
+    const source = scenes.find(s => s.id === id);
+    if (!source) return;
+    const newId = `scene-${Date.now()}`;
+    const clone: Scene = {
+      id: newId,
+      name: `${source.name}-copy`,
+      label: `${source.label} (Copy)`,
+      widgets: source.widgets.map(w => ({
+        ...w,
+        id: makeId(),
+        style: { ...w.style },
+        animation: { ...w.animation },
+        content: { ...w.content, settings: { ...w.content.settings } },
+      })),
+    };
+    set(s => ({
+      scenes: [...s.scenes, clone],
+      editingSceneId: newId,
+    }));
   },
 
   setLiveScene: (id) => {

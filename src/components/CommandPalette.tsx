@@ -58,6 +58,9 @@ export const CommandPalette: React.FC = () => {
   const handleToggleTheme = () => {
     const next = currentTheme === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
+    useEditorStore.getState().setEditorTheme(next);
+    const shell = document.querySelector('.app-shell');
+    if (shell) shell.classList.toggle('theme-editor-light', next === 'light');
   };
 
   const handleSave = () => {

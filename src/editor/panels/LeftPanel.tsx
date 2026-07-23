@@ -92,10 +92,12 @@ const ScenesTab: React.FC = () => {
     scenes, editingSceneId, setEditingScene,
     liveSceneId, liveScenes, setLiveScene,
     liveTimer, startLiveTimer, pauseLiveTimer, resumeLiveTimer, resetLiveTimer, adjustLiveTimer,
+    liveTransitionType, setLiveTransitionType,
+    addScene, deleteScene, duplicateScene,
   } = useEditorStore();
 
   const [search, setSearch] = useState('');
-  const [selectedTransition, setSelectedTransition] = useState('Project Default Transition');
+  const [hoveredSceneId, setHoveredSceneId] = useState<string | null>(null);
   // Live-ticking remaining seconds
   const [remaining, setRemaining] = useState(() => getTimerRemaining(liveTimer));
 
@@ -173,6 +175,11 @@ const ScenesTab: React.FC = () => {
     ? scenes.filter(s => s.label.toLowerCase().includes(search.toLowerCase()))
     : scenes;
 
+  const handleAddScene = () => {
+    const n = scenes.length + 1;
+    addScene(`scene-${n}`, `⭕ Scene ${n}`);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
@@ -180,7 +187,14 @@ const ScenesTab: React.FC = () => {
       <div style={{ padding: '16px 16px 14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <span className="nothing-section-label">SCENE MANAGER</span>
-          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
+          <button
+            className="btn-icon"
+            style={{ width: 22, height: 22 }}
+            onClick={handleAddScene}
+            title="Add New Scene"
+          >
+            <Plus size={12} />
+          </button>
         </div>
 
         {/* Search pill */}
@@ -206,7 +220,6 @@ const ScenesTab: React.FC = () => {
       <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span className="nothing-section-label">LIVE BROADCAST STATE</span>
-          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
         </div>
 
         {/* Nothing-style LED timer */}
@@ -280,14 +293,16 @@ const ScenesTab: React.FC = () => {
       <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span className="nothing-section-label">SCENE TRANSITIONS</span>
-          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
         </div>
 
         {/* Transition select pill */}
         <div style={{ position: 'relative' }}>
           <select
-            value={selectedTransition}
-            onChange={e => setSelectedTransition(e.target.value)}
+            value={liveTransitionType === 'none' ? 'none' : liveTransitionType}
+            onChange={e => {
+              const v = e.target.value;
+              setLiveTransitionType(v as 'none' | 'fade' | 'slide');
+            }}
             style={{
               width: '100%',
               appearance: 'none',
@@ -302,9 +317,9 @@ const ScenesTab: React.FC = () => {
               outline: 'none',
             }}
           >
-            <option value="Project Default Transition">Project Default Transition</option>
-            <option value="Fade Transition">Fade Transition</option>
-            <option value="Slide Transition">Slide Transition</option>
+            <option value="fade">Fade Transition</option>
+            <option value="slide">Slide Transition</option>
+            <option value="none">No Transition (Cut)</option>
           </select>
           <ChevronDown size={12} style={{ position: 'absolute', right: 12, top: 9, color: '#555', pointerEvents: 'none' }} />
         </div>
@@ -318,6 +333,8 @@ const ScenesTab: React.FC = () => {
               <div
                 key={s.id}
                 onClick={() => setEditingScene(s.id)}
+                onMouseEnter={() => setHoveredSceneId(s.id)}
+                onMouseLeave={() => setHoveredSceneId(null)}
                 className={`scene-item${isEditing ? ' active' : ''}`}
                 style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px 6px 12px' }}
               >
@@ -331,6 +348,42 @@ const ScenesTab: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  {/* Scene context menu — duplicate / delete */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (scenes.length <= 1) return; // Don't delete last scene
+                      if (confirm(`Delete scene "${s.label}"?`)) deleteScene(s.id);
+                    }}
+                    disabled={scenes.length <= 1}
+                    title="Delete Scene"
+                    style={{
+                      background: 'none', border: 'none', cursor: scenes.length > 1 ? 'pointer' : 'default',
+                      color: scenes.length > 1 ? '#555' : '#333', padding: 2, display: 'flex',
+                      opacity: hoveredSceneId === s.id ? 0.7 : 0, transition: 'opacity 150ms',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#ef4444'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.7'; e.currentTarget.style.color = '#555'; }}
+                  >
+                    <Trash2 size={10} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      duplicateScene(s.id);
+                    }}
+                    title="Duplicate Scene"
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: '#555', padding: 2, display: 'flex',
+                      opacity: hoveredSceneId === s.id ? 0.7 : 0, transition: 'opacity 150ms',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-accent)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.7'; e.currentTarget.style.color = '#555'; }}
+                  >
+                    <Copy size={10} />
+                  </button>
+
                   {/* Quick Switch Live Icon Button */}
                   <button
                     onClick={(e) => {

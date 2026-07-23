@@ -65,7 +65,7 @@ export function buildBaseStyle(s: WidgetStyle): React.CSSProperties {
         : undefined,
     boxShadow: buildBoxShadow(s),
     padding: s.padding ? `${s.padding}px` : undefined,
-    backdropFilter: s.glassEffect ? 'blur(12px) saturate(160%)' : undefined,
+    backdropFilter: s.glassEffect ? `blur(${s.blur ?? 12}px) saturate(160%)` : undefined,
     overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',

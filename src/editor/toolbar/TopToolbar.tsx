@@ -14,13 +14,24 @@ import { notify } from '../../components/ToastContainer';
 
 export const TopToolbar: React.FC = () => {
   const {
-    canUndo, canRedo, undo, redo,
+    undo, redo,
     scenes, liveScenes, editingSceneId, liveSceneId, setLiveScene, switchDraftToLive,
     projectName, showPreviewMode, togglePreviewMode,
     startPreviewTimer, resetPreviewTimer,
     setAppView,
     editorTheme, setEditorTheme,
   } = useEditorStore();
+
+  // Subscribe to history state so undo/redo enable state updates reactively.
+  // canUndo/canRedo are store functions; recompute them against live history.
+  const undoEnabled = useEditorStore(s => {
+    const id = s.editingSceneId ?? '';
+    return (s.historyIndex[id] ?? 0) > 0;
+  });
+  const redoEnabled = useEditorStore(s => {
+    const id = s.editingSceneId ?? '';
+    return (s.historyIndex[id] ?? 0) < (s.history[id]?.length ?? 1) - 1;
+  });
 
   const isSynced = JSON.stringify(scenes) === JSON.stringify(liveScenes);
 
@@ -220,6 +231,28 @@ export const TopToolbar: React.FC = () => {
         >
           {editorTheme === 'dark' ? <Moon size={14} /> : <Sun size={14} />}
         </button>
+
+        {/* Undo / Redo */}
+        <div style={{ display: 'flex', gap: 2 }}>
+          <button
+            className="btn-icon"
+            style={{ width: 32, height: 32, opacity: undoEnabled ? 1 : 0.35 }}
+            onClick={() => undoEnabled && undo()}
+            disabled={!undoEnabled}
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 size={14} />
+          </button>
+          <button
+            className="btn-icon"
+            style={{ width: 32, height: 32, opacity: redoEnabled ? 1 : 0.35 }}
+            onClick={() => redoEnabled && redo()}
+            disabled={!redoEnabled}
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 size={14} />
+          </button>
+        </div>
 
         {/* Preview pill */}
         <button

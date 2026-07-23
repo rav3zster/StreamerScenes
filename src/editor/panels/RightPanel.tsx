@@ -371,7 +371,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
         <WidgetSettingsSection widget={widget} />
 
         {/* General options */}
-        <InspectorSection title="General" icon={<Settings2 size={12} />} defaultOpen>
+        <InspectorSection title="General" icon={<Settings2 size={12} />} defaultOpen searchQuery={propertySearch}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
             <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600 }}>Visible</span>
             <ToggleRow value={widget.visible} onChange={v => u({ visible: v })} label={widget.visible ? 'Show' : 'Hide'} />
@@ -394,7 +394,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
         </InspectorSection>
 
         {/* Layout options with drag adjusting */}
-        <InspectorSection title="Layout" icon={<AlignCenter size={12} />} defaultOpen>
+        <InspectorSection title="Layout" icon={<AlignCenter size={12} />} defaultOpen searchQuery={propertySearch}>
           <div className="input-row">
             <DragAdjustInput label="X Pos" value={widget.x} onChange={v => u({ x: v })} />
             <DragAdjustInput label="Y Pos" value={widget.y} onChange={v => u({ y: v })} />
@@ -409,7 +409,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
         </InspectorSection>
 
         {/* Custom Color picking panel */}
-        <InspectorSection title="Appearance" icon={<Paintbrush size={12} />}>
+        <InspectorSection title="Appearance" icon={<Paintbrush size={12} />} searchQuery={propertySearch}>
           <ColorPickerPanel label="Background Fill" value={widget.style.background || 'transparent'} onChange={v => us({ background: v })} />
 
           <div className="input-row" style={{ marginTop: 8 }}>
@@ -435,7 +435,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
         </InspectorSection>
 
         {/* Text and Typography */}
-        <InspectorSection title="Typography" icon={<Type size={12} />}>
+        <InspectorSection title="Typography" icon={<Type size={12} />} searchQuery={propertySearch}>
           <ColorPickerPanel label="Text Color" value={widget.style.fontColor || '#ffffff'} onChange={v => us({ fontColor: v })} />
 
           <div className="input-with-label" style={{ marginTop: 6 }}>
@@ -485,7 +485,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
         </InspectorSection>
 
         {/* Advanced visual effects */}
-        <InspectorSection title="Effects" icon={<Sparkles size={12} />}>
+        <InspectorSection title="Effects" icon={<Sparkles size={12} />} searchQuery={propertySearch}>
           {/* Drop shadow */}
           <div className="input-group">
             <div className="input-group-label">Drop Shadow</div>
@@ -532,7 +532,7 @@ const SingleInspector: React.FC<{ widget: SceneWidget }> = ({ widget }) => {
         </InspectorSection>
 
         {/* Animations */}
-        <InspectorSection title="Animation" icon={<Zap size={12} />}>
+        <InspectorSection title="Animation" icon={<Zap size={12} />} searchQuery={propertySearch}>
           <div className="input-with-label">
             <select
               className="select"
@@ -647,18 +647,28 @@ interface SectionProps {
   icon: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  /** Active property-search query. When non-empty, sections whose title does
+   * not match are hidden, and matching sections are forced open. */
+  searchQuery?: string;
 }
 
-const InspectorSection: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = false }) => {
+const InspectorSection: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = false, searchQuery = '' }) => {
+  const query = searchQuery.trim().toLowerCase();
+  const matches = query === '' || title.toLowerCase().includes(query);
+  // While searching, force matching sections open; otherwise honour user toggle.
   const [open, setOpen] = useState(defaultOpen);
+  const isOpen = query !== '' ? true : open;
+
+  if (!matches) return null;
+
   return (
     <div className="inspector-section">
-      <div className="inspector-section-header" onClick={() => setOpen(o => !o)}>
+      <div className="inspector-section-header" onClick={() => query === '' && setOpen(o => !o)}>
         <span style={{ opacity: 0.7 }}>{icon}</span>
         <span style={{ flex: 1 }}>{title}</span>
-        {open ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+        {isOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
       </div>
-      {open && <div className="inspector-section-body">{children}</div>}
+      {isOpen && <div className="inspector-section-body">{children}</div>}
     </div>
   );
 };

@@ -175,6 +175,7 @@ interface EditorState {
   favoriteWidgets: string[];
   recentWidgets: string[];
   favoriteSceneIds: string[];
+  favoriteAssetIds: string[];
 
   // Actions — Scenes
   setScenes: (scenes: Scene[]) => void;
@@ -239,6 +240,7 @@ interface EditorState {
   // Actions — Favorites & Recents
   toggleFavoriteWidget: (type: string) => void;
   addRecentWidget: (type: string) => void;
+  toggleFavoriteAsset: (id: string) => void;
 
   // Actions — UI
   setLeftTab: (tab: LeftTab) => void;
@@ -477,6 +479,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   favoriteWidgets: [],
   recentWidgets: [],
   favoriteSceneIds: [],
+  favoriteAssetIds: [],
 
   // ── Scenes ──────────────────────────────────────────────────────────────────
 
@@ -1018,6 +1021,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (list.length > 8) list.pop();
     return { recentWidgets: list };
   }),
+
+  toggleFavoriteAsset: (id) => set(s => ({
+    favoriteAssetIds: s.favoriteAssetIds.includes(id)
+      ? s.favoriteAssetIds.filter(x => x !== id)
+      : [...s.favoriteAssetIds, id],
+  })),
 
   // ── UI ───────────────────────────────────────────────────────────────────────
 

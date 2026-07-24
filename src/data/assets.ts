@@ -9,6 +9,12 @@ export interface VisualAsset {
 }
 
 export const MOCK_ASSETS: VisualAsset[] = [
+  // Images
+  { id: 'ast-img-portrait', name: 'Streamer Portrait', category: 'Images', url: 'https://picsum.photos/seed/streamer-portrait/600/600', previewUrl: 'https://picsum.photos/seed/streamer-portrait/120/120', width: 600, height: 600 },
+  { id: 'ast-img-banner', name: 'Overlay Banner Art', category: 'Images', url: 'https://picsum.photos/seed/overlay-banner/1200/300', previewUrl: 'https://picsum.photos/seed/overlay-banner/200/60', width: 1200, height: 300 },
+  { id: 'ast-img-logo', name: 'Channel Logo Art', category: 'Images', url: 'https://picsum.photos/seed/channel-logo/300/300', previewUrl: 'https://picsum.photos/seed/channel-logo/120/120', width: 300, height: 300 },
+  { id: 'ast-img-team', name: 'Team Squad Photo', category: 'Images', url: 'https://picsum.photos/seed/team-squad/800/450', previewUrl: 'https://picsum.photos/seed/team-squad/160/90', width: 800, height: 450 },
+
   // Backgrounds
   { id: 'ast-bg-retro', name: 'Cyber Synth Grid', category: 'Backgrounds', url: 'linear-gradient(135deg,#07050f 0%,#1a0535 100%)', previewUrl: '#0e0b1e', width: 1920, height: 1080 },
   { id: 'ast-bg-warm', name: 'Warm Lo-fi Glow', category: 'Backgrounds', url: 'linear-gradient(135deg,#1b0e1a,#2f1934)', previewUrl: '#1b0e1a', width: 1920, height: 1080 },

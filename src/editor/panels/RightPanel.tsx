@@ -22,7 +22,7 @@ const RECENT_COLORS_KEY = 'vibe-recent-colors';
 
 const CanvasPropertiesInspector: React.FC = () => {
   const {
-    scenes, editingSceneId,
+    scenes, editingSceneId, updateWidget, addWidget,
     snapEnabled, toggleSnap,
     showGuides, toggleGuides, showRulers, toggleRulers,
     setAppView,
@@ -30,8 +30,51 @@ const CanvasPropertiesInspector: React.FC = () => {
 
   const editingScene = scenes.find(s => s.id === editingSceneId);
   const [copiedUrl, setCopiedUrl] = useState(false);
-  const [fillMode, setFillMode] = useState<'solid' | 'gradient' | 'glace'>('solid');
-  const [hexColor, setHexColor] = useState('#91970b');
+
+  // Background fill is driven by the scene's `background`-type widget.
+  const bgWidget = editingScene?.widgets.find(w => w.type === 'background');
+  const bgValue = bgWidget?.style.background || '#06040d';
+
+  // Detect fill mode from the stored background value.
+  const detectMode = (val: string): 'solid' | 'gradient' | 'glass' =>
+    /gradient/i.test(val) ? 'gradient' : /blur/i.test(val) ? 'glass' : 'solid';
+  const fillMode = detectMode(bgValue);
+
+  const setBackground = (val: string) => {
+    if (!editingScene) return;
+    if (bgWidget) {
+      updateWidget(bgWidget.id, { style: { ...bgWidget.style, background: val } });
+    } else {
+      // Auto-create a full-canvas background widget if none exists yet.
+      addWidget({
+        id: `w-${crypto.randomUUID()}`,
+        type: 'background',
+        label: 'Background',
+        x: 0, y: 0, width: 1920, height: 1080,
+        rotation: 0, opacity: 100, scale: 1, zIndex: 0,
+        visible: true, locked: false,
+        style: { background: val },
+        animation: { type: 'none', duration: 1, delay: 0, loop: false },
+        content: { type: 'background', settings: {} },
+      });
+    }
+  };
+
+  // Keep a hex string in sync with the stored value for the text input.
+  const hexInputValue = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(bgValue) ? bgValue : '';
+  const swatchStyle = bgValue;
+
+  // Cycle fill mode: selecting a mode swaps in a representative value.
+  const setMode = (mode: 'solid' | 'gradient' | 'glass') => {
+    if (mode === fillMode) return;
+    if (mode === 'solid') setBackground('#06040d');
+    else if (mode === 'gradient') setBackground('linear-gradient(135deg, #06040d 0%, #1a0535 100%)');
+    else setBackground('rgba(12,10,22,0.6)'); // glass = translucent
+  };
+
+  const sceneIdChip = editingSceneId
+    ? `#${editingSceneId.replace(/[^a-z0-9]/gi, '').slice(-6).toUpperCase()}`
+    : '#NEW';
 
   const handleCopyUrl = () => {
     const url = `${window.location.origin}/output`;
@@ -47,7 +90,6 @@ const CanvasPropertiesInspector: React.FC = () => {
       <div style={{ padding: '16px 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span className="nothing-section-label">CANVAS &amp; SCENE</span>
-          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
         </div>
 
         {/* Scene title + ID chip */}
@@ -55,7 +97,7 @@ const CanvasPropertiesInspector: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span className="nothing-live-dot" style={{ width: 6, height: 6 }} />
             <span style={{ fontSize: 12, fontWeight: 600, color: '#d0d0d0' }}>
-              {editingScene?.label ?? 'Just Chatting'}
+              {editingScene?.label ?? 'No Scene'}
             </span>
           </div>
           <span style={{
@@ -63,7 +105,7 @@ const CanvasPropertiesInspector: React.FC = () => {
             fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
             padding: '2px 8px', borderRadius: 999, fontFamily: 'var(--font-mono)'
           }}>
-            #N56675
+            {sceneIdChip}
           </span>
         </div>
 
@@ -71,11 +113,11 @@ const CanvasPropertiesInspector: React.FC = () => {
 
         {/* Segmented control */}
         <div className="vibe-segmented">
-          {(['solid', 'gradient', 'glace'] as const).map(mode => (
+          {(['solid', 'gradient', 'glass'] as const).map(mode => (
             <button
               key={mode}
               className={`vibe-segmented-btn${fillMode === mode ? ' active' : ''}`}
-              onClick={() => setFillMode(mode)}
+              onClick={() => setMode(mode)}
             >
               {mode}
             </button>
@@ -84,14 +126,21 @@ const CanvasPropertiesInspector: React.FC = () => {
 
         {/* Color swatch + hex input */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
+          <label style={{
             width: 28, height: 28, borderRadius: 8,
-            background: '#000000', border: '1px solid rgba(255,255,255,0.1)',
-            flexShrink: 0, cursor: 'pointer'
-          }} />
+            background: swatchStyle, border: '1px solid rgba(255,255,255,0.1)',
+            flexShrink: 0, cursor: 'pointer', position: 'relative',
+          }} title="Pick background color">
+            <input
+              type="color"
+              onChange={e => setBackground(e.target.value)}
+              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+            />
+          </label>
           <input
-            value={hexColor}
-            onChange={e => setHexColor(e.target.value)}
+            value={hexInputValue}
+            onChange={e => setBackground(e.target.value)}
+            placeholder="#000000 or rgba(...)"
             className="input"
             style={{ fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em' }}
           />
@@ -104,7 +153,6 @@ const CanvasPropertiesInspector: React.FC = () => {
       <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span className="nothing-section-label">DISPLAY &amp; GRID</span>
-          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 2 }}>
@@ -146,7 +194,6 @@ const CanvasPropertiesInspector: React.FC = () => {
       <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <span className="nothing-section-label">OBS BROADCAST SOURCE</span>
-          <button style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>···</button>
         </div>
 
         <button

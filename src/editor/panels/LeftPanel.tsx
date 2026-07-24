@@ -615,10 +615,9 @@ const LayersTab: React.FC = () => {
 const ASSET_CATEGORIES = ['All', 'Images', 'GIFs', 'Backgrounds', 'Icons', 'SVGs', 'Lotties'];
 
 const AssetsTab: React.FC = () => {
-  const { addWidget } = useEditorStore();
+  const { addWidget, favoriteAssetIds, toggleFavoriteAsset } = useEditorStore();
   const [activeCat, setActiveCat] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [favAssets, setFavAssets] = useState<string[]>([]);
 
   const filtered = MOCK_ASSETS.filter(a => {
     const matchCat = activeCat === 'All' || a.category === activeCat;
@@ -634,6 +633,16 @@ const AssetsTab: React.FC = () => {
     if (a.category === 'SVGs') type = 'svg';
     if (a.category === 'Lotties') type = 'lottie';
 
+    // ImageWidget reads content.settings.src / content.settings.url
+    const settings: Record<string, any> = {};
+    if (type === 'image' || type === 'gif') {
+      settings.src = a.url;
+    } else if (type === 'svg') {
+      settings.svgContent = a.url;
+    } else if (type === 'lottie') {
+      settings.lottieUrl = a.url;
+    }
+
     addWidget({
       id: `w-${crypto.randomUUID()}`,
       type,
@@ -644,12 +653,8 @@ const AssetsTab: React.FC = () => {
       visible: true, locked: false,
       style: { background: a.category === 'Backgrounds' ? a.url : undefined },
       animation: { type: 'none', duration: 1, delay: 0, loop: false },
-      content: { type, settings: { assetUrl: a.url } },
+      content: { type, settings },
     });
-  };
-
-  const toggleFavorite = (id: string) => {
-    setFavAssets(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   return (
@@ -678,7 +683,7 @@ const AssetsTab: React.FC = () => {
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
           {filtered.map(a => {
-            const isFav = favAssets.includes(a.id);
+            const isFav = favoriteAssetIds.includes(a.id);
             return (
               <div
                 key={a.id}
@@ -686,11 +691,15 @@ const AssetsTab: React.FC = () => {
                 style={{ cursor: 'grab' }}
                 draggable
                 onDragStart={e => {
+                  const wType = a.category === 'Backgrounds' ? 'background' : a.category === 'GIFs' ? 'gif' : 'image';
+                  const settings: Record<string, any> = {};
+                  if (wType === 'image' || wType === 'gif') settings.src = a.url;
                   e.dataTransfer.setData('application/widget-type', JSON.stringify({
-                    type: a.category === 'Backgrounds' ? 'background' : a.category === 'GIFs' ? 'gif' : 'image',
+                    type: wType,
                     defaultWidth: a.width,
                     defaultHeight: a.height,
                     defaultStyle: { background: a.category === 'Backgrounds' ? a.url : undefined },
+                    settings,
                   }));
                 }}
                 onClick={() => handleAssetAdd(a)}
@@ -701,13 +710,23 @@ const AssetsTab: React.FC = () => {
                     background: a.category === 'Backgrounds' ? a.url : 'rgba(255,255,255,0.02)',
                     fontSize: 22,
                     position: 'relative',
+                    overflow: 'hidden',
                   }}
                 >
-                  {a.category !== 'Backgrounds' && <span>{a.url}</span>}
+                  {a.category === 'Images' ? (
+                    <img
+                      src={a.previewUrl || a.url}
+                      alt={a.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      draggable={false}
+                    />
+                  ) : a.category !== 'Backgrounds' ? (
+                    <span>{a.url}</span>
+                  ) : null}
                   <button
                     className="btn-icon"
                     style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, background: 'rgba(0,0,0,0.5)' }}
-                    onClick={e => { e.stopPropagation(); toggleFavorite(a.id); }}
+                    onClick={e => { e.stopPropagation(); toggleFavoriteAsset(a.id); }}
                   >
                     <Heart size={10} color={isFav ? 'red' : 'gray'} fill={isFav ? 'red' : 'none'} />
                   </button>

@@ -688,7 +688,7 @@ export const EditorCanvas: React.FC = () => {
     e.preventDefault();
     const raw = e.dataTransfer.getData('application/widget-type');
     if (!raw) return;
-    const { type, defaultWidth, defaultHeight, defaultStyle } = JSON.parse(raw);
+    const { type, defaultWidth, defaultHeight, defaultStyle, settings } = JSON.parse(raw);
     const rect = stageRef.current!.getBoundingClientRect();
     const cx = Math.round((e.clientX - rect.left) / zoom);
     const cy = Math.round((e.clientY - rect.top) / zoom);
@@ -713,7 +713,7 @@ export const EditorCanvas: React.FC = () => {
       locked: false,
       style: defaultStyle ?? {},
       animation: { type: 'none', duration: 1, delay: 0, loop: false },
-      content: { type, settings: {} },
+      content: { type, settings: settings ?? {} },
     });
   }, [zoom, widgets, addWidget]);
 

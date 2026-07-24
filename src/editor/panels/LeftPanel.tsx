@@ -633,14 +633,18 @@ const AssetsTab: React.FC = () => {
     if (a.category === 'SVGs') type = 'svg';
     if (a.category === 'Lotties') type = 'lottie';
 
-    // ImageWidget reads content.settings.src / content.settings.url
+    // Set content settings using the keys that each widget actually reads.
+    // ImageWidget: settings.src / settings.url
+    // SvgWidget:   settings.src / settings.url  + settings.sourceType
+    // LottieWidget: settings.src / settings.url
     const settings: Record<string, any> = {};
     if (type === 'image' || type === 'gif') {
       settings.src = a.url;
     } else if (type === 'svg') {
-      settings.svgContent = a.url;
+      settings.src = a.url;
+      settings.sourceType = 'url';
     } else if (type === 'lottie') {
-      settings.lottieUrl = a.url;
+      settings.src = a.url;
     }
 
     addWidget({
